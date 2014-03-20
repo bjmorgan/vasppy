@@ -19,5 +19,4 @@ optional arguments:
   -s h k l, --supercell h k l
                         construct supercell by replicating (h,k,l) times along
                         [a b c]
-[morgan@kittel super]$ 
 

@@ -1,4 +1,5 @@
-usage: super [-h] [-l {1,4}] [-c] [-t {c,d}] [-g] [-s h k l] poscar
+usage: super [-h] [-l {1,4}] [-c] [-t {c,cartesian,d,direct}] [-g] [-s h k l]
+             poscar
 
 Manipulates VASP POSCAR files
 
@@ -11,9 +12,12 @@ optional arguments:
                         label coordinates with atom name at position {1,4}
   -c, --coordinates-only
                         only output coordinates
-  -t {c,d}, --coordinate-type {c,d}
-                        specify coordinate type for output {c|d}
+  -t {c,cartesian,d,direct}, --coordinate-type {c,cartesian,d,direct}
+                        specify coordinate type for output
+                        {(c)artesian|(d)irect} [default = (d)irect]
   -g, --group           group atoms within supercell
   -s h k l, --supercell h k l
                         construct supercell by replicating (h,k,l) times along
                         [a b c]
+[morgan@kittel super]$ 
+

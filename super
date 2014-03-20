@@ -5,6 +5,12 @@ import re
 import string
 import numpy as np
 import argparse
+import copy
+import signal
+
+# Handle exception produced when e.g. piping to `head`
+# http://stackoverflow.com/questions/11423225/why-does-my-python3-script-balk-at-piping-its-output-to-head-or-tail-sys-module
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 def parity( list ):
     return( sum( list )%2 )
@@ -26,9 +32,18 @@ class Poscar:
         self.atom_numbers = [ int(element) for element in lines.pop(0).split() ]
         self.coordinate_type = lines.pop(0)
         self.coordinates = np.array( [ [ float( e ) for e in lines.pop(0).split()[0:3] ] for i in range( sum( self.atom_numbers ) ) ] )
-        if self.coords_are_cartesian(): # Always use direct coordinates internally
+        if self.coords_are_cartesian(): # Use direct coordinates internally
             self.coordinates = self.fractional_coordinates()
             self.coordinate_type = 'Direct'
+
+    def in_bohr( self ):
+    	new_poscar = copy.deepcopy( self )
+    	bohr_to_angstrom = 0.529177211
+    	new_poscar.scaling *= bohr_to_angstrom
+    	new_poscar.lattice /= bohr_to_angstrom
+    	if new_poscar.coords_are_cartesian():
+    		new_poscar.coordinates /= bohr_to_angstrom
+    	return( new_poscar )
 
     def coords_are_fractional( self ):
         return re.match( r'\A[Dd]', self.coordinate_type )
@@ -121,6 +136,7 @@ parser.add_argument( '-c', '--coordinates-only', help='only output coordinates',
 parser.add_argument( '-t', '--coordinate-type', type=str, choices=[ 'c', 'cartesian', 'd', 'direct' ], default='direct', help="specify coordinate type for output {(c)artesian|(d)irect} [default = (d)irect]" )
 parser.add_argument( '-g', '--group', help='group atoms within supercell', action='store_true' )
 parser.add_argument( '-s', '--supercell', type=int, nargs=3, metavar=( 'h', 'k', 'l' ), help='construct supercell by replicating (h,k,l) times along [a b c]' )
+parser.add_argument( '-b', '--bohr', action='store_true', help='assumes the input file is in Angstrom, and converts everything to bohr')
 args = parser.parse_args()
 
 coordinate_types = { 'd' : 'Direct',
@@ -141,6 +157,9 @@ if args.supercell: # generate supercell
             if i%2==1 and i>1:
                 raise Exception( "odd supercell expansions != 1 are incompatible with automatic grouping" )
     poscar = poscar.replicate( *args.supercell, group=args.group )
+
+if args.bohr:
+	poscar = poscar.in_bohr()
 
 # output to stdout
 if args.coordinates_only:

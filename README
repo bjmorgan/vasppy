@@ -16,7 +16,5 @@ optional arguments:
                         specify coordinate type for output
                         {(c)artesian|(d)irect} [default = (d)irect]
   -g, --group           group atoms within supercell
-  -s h k l, --supercell h k l
-                        construct supercell by replicating (h,k,l) times along
-                        [a b c]
+  -s h k l, --s
 

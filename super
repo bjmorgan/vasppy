@@ -46,7 +46,7 @@ class Poscar:
         coord_opts = { 'Direct'    : self.fractional_coordinates(), 
                        'Cartesian' : self.cartesian_coordinates() }
         try:
-            np.savetxt( sys.stdout.buffer, coord_opts[ coordinate_type ], fmt='  %.10f' )
+        	[ print( ''.join( ['  % .10f' % element for element in row ] ) ) for row in coord_opts[ coordinate_type ] ]
         except KeyError: 
             raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
 
@@ -69,7 +69,9 @@ class Poscar:
     def output( self, coordinate_type='Direct', label=None ):
         print( self.title )
         print( self.scaling )
-        np.savetxt( sys.stdout.buffer, self.lattice, fmt='  %.4f' )
+        [ print( ''.join( ['   % .10f' % element for element in row ] ) ) for row in self.lattice ]
+        # np.savetxt( sys.stdout.buffer, self.lattice, fmt='  %.4f' )
+        # sys.stdout.flush()
         print( ' '.join( self.atoms ) )
         print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
         print( coordinate_type )

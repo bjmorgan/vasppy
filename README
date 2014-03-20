@@ -1,0 +1,19 @@
+usage: super [-h] [-l {1,4}] [-c] [-t {c,d}] [-g] [-s h k l] poscar
+
+Manipulates VASP POSCAR files
+
+positional arguments:
+  poscar                filename of the VASP POSCAR to be processed
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l {1,4}, --label {1,4}
+                        label coordinates with atom name at position {1,4}
+  -c, --coordinates-only
+                        only output coordinates
+  -t {c,d}, --coordinate-type {c,d}
+                        specify coordinate type for output {c|d}
+  -g, --group           group atoms within supercell
+  -s h k l, --supercell h k l
+                        construct supercell by replicating (h,k,l) times along
+                        [a b c]

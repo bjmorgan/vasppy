@@ -55,7 +55,7 @@ class Poscar:
                        'Cartesian' : self.cartesian_coordinates() } 
         if label_pos == 1:
             for ( row, label ) in zip( coord_opts[ coordinate_type ], self.labels() ):
-                print( '  %.4s' % label + ''.join( [ '  %.10f' % element for element in row ] ) )
+                print( label.ljust(6) + ''.join( [ '  %.10f' % element for element in row ] ) )
         if label_pos == 4:
             for ( row, label ) in zip( coord_opts[ coordinate_type ], self.labels() ):
                 print( ''.join( [ '  %.10f' % element for element in row ] ) + '  %.4s' % label )

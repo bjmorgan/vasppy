@@ -86,7 +86,8 @@ class Poscar:
         new_poscar = Poscar()
         new_poscar.title = self.title
         new_poscar.scaling = self.scaling
-        new_poscar.lattice = self.lattice * lattice_scaling
+        # print( lattice_scaling.dot( self.lattice ) )
+        new_poscar.lattice = ( self.lattice.T * lattice_scaling ).T
         new_poscar.coordinate_type = self.coordinate_type
         new_coordinate_list = []
         cell_shift_indices = [ [a,b,c] for a in range(h) for b in range(k) for c in range(l) ]

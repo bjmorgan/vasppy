@@ -8,17 +8,37 @@ import argparse
 import copy
 import signal
 
-# Handle exception produced when e.g. piping to `head`
-# http://stackoverflow.com/questions/11423225/why-does-my-python3-script-balk-at-piping-its-output-to-head-or-tail-sys-module
-signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+# Restore SIGPIPE back to default action
+# http://www.chiark.greenend.org.uk/ucgi/~cjwatson/blosxom/2009-07-02-python-sigpipe.html
+signal.signal( signal.SIGPIPE, signal.SIG_DFL )
 
 def parity( list ):
+    '''Calculate the parity of a list of integers.
+
+    Args:
+        list (list): the list to calculate the parity of. 
+    Returns:
+        0 if the list contains an even number of odd elements;
+        1 if the list contains an odd number of odd element.
+    Raises:
+        TypeError: if 'list' contains elements that are not integers.
+    '''
+    if not all( isinstance( item, int ) for item in list ):
+        raise TypeError
     return( sum( list )%2 )
 
 class Poscar:
+
+    def __init__( self ):
+        self.title = "Title"
+        self.scaling = 1.0
+        self.lattice = np.identity( 3 )
+        self.atoms = [ 'A' ]
+        self.atom_numbers = [ 1 ]
+        self.coordinate_type = 'Direct'
+        self.coordinates = np.array( [ [ 0.0, 0.0, 0.0 ] ] )
   
     def read_from( self, filename ):
-        self.filename = filename
         try:
             with open( filename ) as f:
                 lines = f.readlines()
@@ -37,13 +57,13 @@ class Poscar:
             self.coordinate_type = 'Direct'
 
     def in_bohr( self ):
-    	new_poscar = copy.deepcopy( self )
-    	bohr_to_angstrom = 0.529177211
-    	new_poscar.scaling *= bohr_to_angstrom
-    	new_poscar.lattice /= bohr_to_angstrom
-    	if new_poscar.coords_are_cartesian():
-    		new_poscar.coordinates /= bohr_to_angstrom
-    	return( new_poscar )
+        new_poscar = copy.deepcopy( self )
+        bohr_to_angstrom = 0.529177211
+        new_poscar.scaling *= bohr_to_angstrom
+        new_poscar.lattice /= bohr_to_angstrom
+        if new_poscar.coords_are_cartesian():
+            new_poscar.coordinates /= bohr_to_angstrom
+        return( new_poscar )
 
     def coords_are_fractional( self ):
         return re.match( r'\A[Dd]', self.coordinate_type )
@@ -61,7 +81,7 @@ class Poscar:
         coord_opts = { 'Direct'    : self.fractional_coordinates(), 
                        'Cartesian' : self.cartesian_coordinates() }
         try:
-        	[ print( ''.join( ['  % .10f' % element for element in row ] ) ) for row in coord_opts[ coordinate_type ] ]
+            [ print( ''.join( ['  % .10f' % element for element in row ] ) ) for row in coord_opts[ coordinate_type ] ]
         except KeyError: 
             raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
 
@@ -128,41 +148,41 @@ class Poscar:
         new_poscar.coordinates = np.array( new_coordinate_list )
         return new_poscar        
 
-# command line arguments
-parser = argparse.ArgumentParser( description='Manipulates VASP POSCAR files' )
-parser.add_argument( 'poscar', help="filename of the VASP POSCAR to be processed" )
-parser.add_argument( '-l', '--label', type=int, choices=[ 1, 4 ], help="label coordinates with atom name at position {1,4}" )
-parser.add_argument( '-c', '--coordinates-only', help='only output coordinates', action='store_true' )
-parser.add_argument( '-t', '--coordinate-type', type=str, choices=[ 'c', 'cartesian', 'd', 'direct' ], default='direct', help="specify coordinate type for output {(c)artesian|(d)irect} [default = (d)irect]" )
-parser.add_argument( '-g', '--group', help='group atoms within supercell', action='store_true' )
-parser.add_argument( '-s', '--supercell', type=int, nargs=3, metavar=( 'h', 'k', 'l' ), help='construct supercell by replicating (h,k,l) times along [a b c]' )
-parser.add_argument( '-b', '--bohr', action='store_true', help='assumes the input file is in Angstrom, and converts everything to bohr')
-args = parser.parse_args()
+def parse_command_line_arguments():
+    # command line arguments
+    parser = argparse.ArgumentParser( description='Manipulates VASP POSCAR files' )
+    parser.add_argument( 'poscar', help="filename of the VASP POSCAR to be processed" )
+    parser.add_argument( '-l', '--label', type=int, choices=[ 1, 4 ], help="label coordinates with atom name at position {1,4}" )
+    parser.add_argument( '-c', '--coordinates-only', help='only output coordinates', action='store_true' )
+    parser.add_argument( '-t', '--coordinate-type', type=str, choices=[ 'c', 'cartesian', 'd', 'direct' ], default='direct', help="specify coordinate type for output {(c)artesian|(d)irect} [default = (d)irect]" )
+    parser.add_argument( '-g', '--group', help='group atoms within supercell', action='store_true' )
+    parser.add_argument( '-s', '--supercell', type=int, nargs=3, metavar=( 'h', 'k', 'l' ), help='construct supercell by replicating (h,k,l) times along [a b c]' )
+    parser.add_argument( '-b', '--bohr', action='store_true', help='assumes the input file is in Angstrom, and converts everything to bohr')
+    args = parser.parse_args()
+    return( args )
 
-coordinate_types = { 'd' : 'Direct',
-                     'direct' : 'Direct',
-                     'c' : 'Cartesian',
-                     'cartesian' : 'Cartesian' }
-coordinate_type = coordinate_types[ args.coordinate_type ]
-
-# initialise
-poscar = Poscar()
-# read POSCAR file
-poscar.read_from( args.poscar )
-
-if args.supercell: # generate supercell
-    if args.group:
-        # check that if grouping is switched on, we are asking for a supercell that allows a "3D-chequerboard" pattern.
-        for (i,axis) in zip( args.supercell, range(3) ):
-            if i%2==1 and i>1:
-                raise Exception( "odd supercell expansions != 1 are incompatible with automatic grouping" )
-    poscar = poscar.replicate( *args.supercell, group=args.group )
-
-if args.bohr:
-	poscar = poscar.in_bohr()
-
-# output to stdout
-if args.coordinates_only:
-    poscar.output_coordinates_only( coordinate_type = coordinate_type, label = args.label )
-else:
-    poscar.output( coordinate_type = coordinate_type, label = args.label )
+if __name__ == "__main__":
+    args = parse_command_line_arguments()
+    coordinate_types = { 'd' : 'Direct',
+                         'direct' : 'Direct',
+                         'c' : 'Cartesian',
+                         'cartesian' : 'Cartesian' }
+    coordinate_type = coordinate_types[ args.coordinate_type ]
+    # initialise
+    poscar = Poscar()
+    # read POSCAR file
+    poscar.read_from( args.poscar )
+    if args.supercell: # generate supercell
+        if args.group:
+            # check that if grouping is switched on, we are asking for a supercell that allows a "3D-chequerboard" pattern.
+            for (i,axis) in zip( args.supercell, range(3) ):
+                if i%2==1 and i>1:
+                    raise Exception( "odd supercell expansions != 1 are incompatible with automatic grouping" )
+        poscar = poscar.replicate( *args.supercell, group=args.group )
+    if args.bohr:
+        poscar = poscar.in_bohr()
+    # output to stdout
+    if args.coordinates_only:
+        poscar.output_coordinates_only( coordinate_type = coordinate_type, label = args.label )
+    else:
+        poscar.output( coordinate_type = coordinate_type, label = args.label )

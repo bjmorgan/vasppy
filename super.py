@@ -81,7 +81,7 @@ class Poscar:
         coord_opts = { 'Direct'    : self.fractional_coordinates(), 
                        'Cartesian' : self.cartesian_coordinates() }
         try:
-            [ print( ''.join( ['  % .10f' % element for element in row ] ) ) for row in coord_opts[ coordinate_type ] ]
+            [ print( ''.join( ['  {: .10f}'.format( element ) for element in row ] ) ) for row in coord_opts[ coordinate_type ] ]
         except KeyError: 
             raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
 
@@ -90,10 +90,10 @@ class Poscar:
                        'Cartesian' : self.cartesian_coordinates() } 
         if label_pos == 1:
             for ( row, label ) in zip( coord_opts[ coordinate_type ], self.labels() ):
-                print( label.ljust(6) + ''.join( [ '  %.10f' % element for element in row ] ) )
+                print( label.ljust(6) + ''.join( [ '  {: .10f}'.format( element ) for element in row ] ) )
         if label_pos == 4:
             for ( row, label ) in zip( coord_opts[ coordinate_type ], self.labels() ):
-                print( ''.join( [ '  %.10f' % element for element in row ] ) + '  %.4s' % label )
+                print( ''.join( [ '  {: .10f}'.format( element ) for element in row ] ) + '  {:.4s}'.format( label ) )
 
     def output_coordinates_only( self, coordinate_type='Direct', label=None ):
         if label:
@@ -104,9 +104,7 @@ class Poscar:
     def output( self, coordinate_type='Direct', label=None ):
         print( self.title )
         print( self.scaling )
-        [ print( ''.join( ['   % .10f' % element for element in row ] ) ) for row in self.lattice ]
-        # np.savetxt( sys.stdout.buffer, self.lattice, fmt='  %.4f' )
-        # sys.stdout.flush()
+        [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.lattice ]
         print( ' '.join( self.atoms ) )
         print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
         print( coordinate_type )
@@ -176,7 +174,7 @@ if __name__ == "__main__":
         if args.group:
             # check that if grouping is switched on, we are asking for a supercell that allows a "3D-chequerboard" pattern.
             for (i,axis) in zip( args.supercell, range(3) ):
-                if i%2==1 and i>1:
+                if i%2 == 1 and i > 1:
                     raise Exception( "odd supercell expansions != 1 are incompatible with automatic grouping" )
         poscar = poscar.replicate( *args.supercell, group=args.group )
     if args.bohr:

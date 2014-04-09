@@ -2,6 +2,7 @@
 
 Modules:
 - poscar
+- poscar_to_xtl
 - super
 
 The following modules can be run as command line applications:

@@ -6,6 +6,18 @@ Modules:
 
 The following modules can be run as command line applications:
 
+## poscar_to_xtl.py
+
+usage: poscar_to_xtl.py [-h] poscar
+
+Converts a VASP POSCAR file to the .xtl file format
+
+positional arguments:
+  poscar      filename of the VASP POSCAR to be processed
+
+optional arguments:
+  -h, --help  show this help message and exit
+
 ## super.py
 
 usage: super.py [-h] [-l {1,4}] [-c] [-t {c,cartesian,d,direct}] [-g] [-s h k l]

@@ -3,6 +3,13 @@ import sys
 import re
 import copy
 
+def angle( x, y ):
+    dot = np.dot( x, y )
+    x_mod = np.linalg.norm( x )
+    y_mod = np.linalg.norm( y )
+    cos_angle = dot / ( x_mod * y_mod )
+    return np.degrees( np.arccos( cos_angle ) )
+
 class Poscar:
 
     def __init__( self ):
@@ -86,6 +93,16 @@ class Poscar:
         print( coordinate_type )
         self.output_coordinates_only( coordinate_type, label )
 
+    def output_as_xtl( self ):
+        print( self.title )
+        print( "CELL" )
+        cell_lengths = self.cell_lengths()
+        cell_angles  = self.cell_angles()
+        cell_data = cell_lengths + cell_angles
+        print( ''.join( ['   {: .8f}'.format( element ) for element in cell_data ] ) )
+        print( " Symmetry label P1\n\nATOMS\nNAME      X       Y     Z" )
+        self.output_coordinates_only( coordinate_type='Direct', label=True )
+
     def labels( self ):
         return( [ atom_name for ( atom_name, atom_number ) in zip( self.atoms, self.atom_numbers ) for __ in range( atom_number ) ] )
 
@@ -121,3 +138,12 @@ class Poscar:
                     new_coordinate_list.append( [ pos_in_origin_cell + np.array( [ a, b, c ] * lattice_shift ) ][0].tolist() )
         new_poscar.coordinates = np.array( new_coordinate_list )
         return new_poscar    
+
+    def cell_lengths( self ):
+        return [ np.linalg.norm( row ) for row in self.lattice * self.scaling ]
+
+    def cell_angles( self ):
+        ( a, b, c ) = [ row for row in self.lattice ]
+        return [ angle( b, c ), angle( a, c ), angle( a, b ) ]
+
+    

@@ -1,4 +1,12 @@
-# super.py
+# vasppy - a python package for manipulating VASP files
+
+Modules:
+  poscar
+  super
+
+The following modules can be run as command line applications:
+
+## super.py
 
 usage: super.py [-h] [-l {1,4}] [-c] [-t {c,cartesian,d,direct}] [-g] [-s h k l]
              poscar

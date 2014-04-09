@@ -1,13 +1,8 @@
 #! /usr/bin/env python3 
 
-import poscar
-import sys
-import re
+from vasppy.poscar import Poscar
 import string
-import numpy as np
-import argparse
-import copy
-import signal      
+import argparse      
 
 def parse_command_line_arguments():
     # command line arguments

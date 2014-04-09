@@ -1,3 +1,8 @@
+import numpy as np
+import sys
+import re
+import copy
+
 class Poscar:
 
     def __init__( self ):

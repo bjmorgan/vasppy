@@ -1,4 +1,6 @@
-usage: super [-h] [-l {1,4}] [-c] [-t {c,cartesian,d,direct}] [-g] [-s h k l]
+# super.py
+
+usage: super.py [-h] [-l {1,4}] [-c] [-t {c,cartesian,d,direct}] [-g] [-s h k l]
              poscar
 
 Manipulates VASP POSCAR files

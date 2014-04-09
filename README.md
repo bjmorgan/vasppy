@@ -1,11 +1,31 @@
 # vasppy - a python package for manipulating VASP files
 
 Modules:
+- install
 - poscar
 - poscar_to_xtl
 - super
 
+To install exectuable scripts (copied as symbolic links) use ./install.py
+For installation options use ./install.py --help
+
 The following modules can be run as command line applications:
+
+## install.py
+
+    usage: install.py [-h] [--prefix PREFIX] [--list] [-f] [-r] [name [name ...]]
+    
+    Installs exectuable python scripts Default location is $HOME/bin
+    
+    positional arguments:
+      name             name(s) of scripts to install
+    
+    optional arguments:
+      -h, --help       show this help message and exit
+      --prefix PREFIX  specify directory to install files to. (default $HOME/bin/)
+      --list           list installable scripts
+      -f, --force      force files to be overwritten on installation
+      -r, --remove     remove files
 
 ## poscar_to_xtl.py
 

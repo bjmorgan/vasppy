@@ -3,6 +3,8 @@ from vasppy import poscar
 
 class Grid:
 
+    projections = { 'x' : 0, 'y' : 1, 'z' : 2 }
+
     def read_from_filename( self, filename ):
         self.filename = filename
         self.poscar = poscar.Poscar()
@@ -21,5 +23,7 @@ class Grid:
     def read_grid( self ):
         self.grid = np.swapaxes( np.loadtxt( self.filename, skiprows = self.number_of_header_lines + 1 ).reshape( self.dimensions[::-1] ), 0, 2 )
 
-    def z_average( self ):
-        return( np.sum( np.sum( self.grid, axis=1 ), axis=0 ) / ( self.dimensions[0] * self.dimensions[1] ) )
+    def average( self, normal_axis_label ):
+        axes = [ 0, 1, 2 ]
+        axes.remove( Grid.projections[ normal_axis_label ] )
+        return( np.sum( np.sum( self.grid, axis=axes[1] ), axis=axes[0] ) / ( self.dimensions[0] * self.dimensions[1] ) )

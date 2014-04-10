@@ -6,8 +6,8 @@ Modules:
 - poscar_to_xtl
 - super
 
-To install exectuable scripts (copied as symbolic links) use ./install.py
-For installation options use ./install.py --help
+To install exectuable scripts (copied as symbolic links) use `./install.py`  
+For installation options use `./install.py --help`
 
 The following modules can be run as command line applications:
 

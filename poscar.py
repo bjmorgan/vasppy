@@ -12,6 +12,8 @@ def angle( x, y ):
 
 class Poscar:
 
+    lines_offset = 9
+
     def __init__( self ):
         self.title = "Title"
         self.scaling = 1.0

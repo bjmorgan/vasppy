@@ -13,7 +13,9 @@ def parse_command_line_arguments():
 
 if __name__ == "__main__":
     args = parse_command_line_arguments()
-    grid = grid.Grid()
-    grid.read_from_filename( args.gridfile )
+    vgrid = grid.Grid()
+    vgrid.read_from_filename( args.gridfile )
     if args.projection:
-        [ print( i ) for i in grid.average( normal_axis_label = args.projection ) ]
+        index = grid.Grid.projections[ args.projection ]
+        grid_spacing = vgrid.poscar.lattice[ index ][ index ] / vgrid.dimensions[ index ]
+        [ print( i * grid_spacing, av ) for i, av in enumerate( vgrid.average( normal_axis_label = args.projection ) ) ]

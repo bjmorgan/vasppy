@@ -2,9 +2,11 @@
 
 Modules:
 - install
+- grid
 - poscar
 - poscar_to_xtl
 - super
+- zgrid
 
 To install exectuable scripts (copied as symbolic links) use `./install.py`  
 For installation options use `./install.py --help`
@@ -60,4 +62,16 @@ The following modules can be run as command line applications:
                             {(c)artesian|(d)irect} [default = (d)irect]
       -g, --group           group atoms within supercell
       -s h k l, --s
+
+## zgrid
+
+    usage: zgrid [-h] gridfile
+    
+    z-projection of a VASP (grid format) file
+    
+    positional arguments:
+      gridfile    filename of the VASP (grid format) file to be processed
+    
+    optional arguments:
+      -h, --help  show this help message and exit
 

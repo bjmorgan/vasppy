@@ -8,7 +8,12 @@ Modules:
 - super
 - vasp_grid
 
-To install exectuable scripts (copied as symbolic links) use `./install.py`  
+Dependencies:
+- numpy
+
+## Basic installation of executable scripts
+
+To install executable scripts (copied as symbolic links, with the default destination $HOME/bin/) use `./install.py`  
 For installation options use `./install.py --help`
 
 The following modules can be run as command line applications:

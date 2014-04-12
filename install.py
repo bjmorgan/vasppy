@@ -12,7 +12,6 @@ def parse_command_line_arguments():
     parser.add_argument( '--list', action='store_true', help='list installable scripts' )
     parser.add_argument( '-f', '--force', action='store_true', help='force files to be overwritten on installation' )
     parser.add_argument( '-r', '--remove', action='store_true', help='remove files' )
-    args = parser.parse_args()
     return( args )
 
 installable_scripts = [ 'super', 'poscar_to_xtl', 'vasp_grid' ]

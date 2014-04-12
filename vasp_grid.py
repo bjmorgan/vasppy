@@ -17,5 +17,5 @@ if __name__ == "__main__":
     vgrid.read_from_filename( args.gridfile )
     if args.projection:
         index = grid.Grid.projections[ args.projection ]
-        grid_spacing = vgrid.poscar.lattice[ index ][ index ] / vgrid.dimensions[ index ]
+        grid_spacing = vgrid.poscar.cell_lengths()[ index ] / vgrid.dimensions[ index ]
         [ print( i * grid_spacing, av ) for i, av in enumerate( vgrid.average( normal_axis_label = args.projection ) ) ]

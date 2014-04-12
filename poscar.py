@@ -95,6 +95,10 @@ class Poscar:
         print( coordinate_type )
         self.output_coordinates_only( coordinate_type, label )
 
+    def write_to( self, filename, coordinate_type='Direct', label=None ):
+        with open( filename, 'w' ) as sys.stdout:
+            self.output( coordinate_type=coordinate_type, label=label )
+
     def output_as_xtl( self ):
         print( self.title )
         print( "CELL" )
@@ -147,5 +151,4 @@ class Poscar:
     def cell_angles( self ):
         ( a, b, c ) = [ row for row in self.lattice ]
         return [ angle( b, c ), angle( a, c ), angle( a, b ) ]
-
     

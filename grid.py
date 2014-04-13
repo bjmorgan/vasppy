@@ -19,6 +19,7 @@ class Grid:
             sys.stdout = file_out
             self.poscar.output()
             self.write_dimensions()
+            sys.stdout.flush()
             self.write_grid()
 
     def read_dimensions( self ):
@@ -35,8 +36,7 @@ class Grid:
         self.grid = np.swapaxes( np.loadtxt( self.filename, skiprows = self.number_of_header_lines + 1 ).reshape( self.dimensions[::-1] ), 0, 2 )
 
     def write_grid( self ):
-        for row in np.reshape( np.swapaxes( self.grid, 0, 2 ), ( -1, 5 ) ):
-            print( ''.join( [ ' {:.11E}'.format( element ) for element in row ] ) )
+        np.savetxt( sys.stdout.buffer, np.swapaxes( self.grid, 0, 2 ).reshape( -1, 5 ), fmt='%.11E' )
 
     def average( self, normal_axis_label ):
         axes = [ 0, 1, 2 ]

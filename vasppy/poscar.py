@@ -10,6 +10,9 @@ def angle( x, y ):
     cos_angle = dot / ( x_mod * y_mod )
     return np.degrees( np.arccos( cos_angle ) )
 
+def parity( list ):
+    return( sum( list )%2 )
+
 class Poscar:
 
     lines_offset = 9

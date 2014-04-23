@@ -31,7 +31,7 @@ class Poscar:
             with open( filename ) as f:
                 lines = f.readlines()
         except FileNotFoundError:
-            print( "\"" + filename + "\" not found" ) 
+            print( "\"" + filename + "\" not found", file=sys.stderr ) 
             sys.exit( -2 )
         self.title = lines.pop(0).strip()
         self.scaling = float( lines.pop(0).strip() )

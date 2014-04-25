@@ -87,24 +87,36 @@ class Poscar:
             for ( row, label ) in zip( coord_opts[ coordinate_type ], self.labels() ):
                 print( ''.join( [ '  {: .10f}'.format( element ) for element in row ] ) + '  {:.4s}'.format( label ) )
 
-    def output_coordinates_only( self, coordinate_type='Direct', label=None ):
-        if label:
-            self.labelled_coordinates_to_stdout( coordinate_type, label )
+    def numbered_coordinates_to_stdout( self, coordinate_type='Direct' ):
+        coord_opts = { 'Direct'    : self.fractional_coordinates(), 
+                       'Cartesian' : self.cartesian_coordinates() } 
+        try:
+            for i, row in enumerate( coord_opts[ coordinate_type ] ):
+                print( ''.join( ['  {: .10f}'.format( element ) for element in row ] ) + '  ' + str(i) )
+        except KeyError: 
+            raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
+
+    def output_coordinates_only( self, coordinate_type='Direct', opts={} ):
+        if opts.get( 'numbered' ):
+            self.numbered_coordinates_to_stdout( coordinate_type )
+        elif opts.get( 'label' ):
+            self.labelled_coordinates_to_stdout( coordinate_type, opts[ 'label' ] )
         else:
             self.coordinates_to_stdout( coordinate_type )
 
-    def output( self, coordinate_type='Direct', label=None ):
-        print( self.title )
-        print( self.scaling )
-        [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.lattice ]
-        print( ' '.join( self.atoms ) )
-        print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
-        print( coordinate_type )
-        self.output_coordinates_only( coordinate_type, label )
+    def output( self, coordinate_type='Direct', opts={} ):
+        if not opts.get( 'coordinates_only' ):
+            print( self.title )
+            print( self.scaling )
+            [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.lattice ]
+            print( ' '.join( self.atoms ) )
+            print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
+            print( coordinate_type )
+        self.output_coordinates_only( coordinate_type=coordinate_type, opts=opts )
 
-    def write_to( self, filename, coordinate_type='Direct', label=None ):
+    def write_to( self, filename, coordinate_type='Direct', opts={} ):
         with open( filename, 'w' ) as sys.stdout:
-            self.output( coordinate_type=coordinate_type, label=label )
+            self.output( coordinate_type=coordinate_type, opts=opts )
 
     def output_as_xtl( self ):
         print( self.title )
@@ -114,7 +126,8 @@ class Poscar:
         cell_data = cell_lengths + cell_angles
         print( ''.join( ['   {: .8f}'.format( element ) for element in cell_data ] ) )
         print( " Symmetry label P1\n\nATOMS\nNAME      X       Y     Z" )
-        self.output_coordinates_only( coordinate_type='Direct', label=True )
+        output_opts = { 'label' : True }
+        self.output_coordinates_only( coordinate_type='Direct', opts = output_opts )
 
     def labels( self ):
         return( [ atom_name for ( atom_name, atom_number ) in zip( self.atoms, self.atom_numbers ) for __ in range( atom_number ) ] )

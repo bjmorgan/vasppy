@@ -14,6 +14,7 @@ def parse_command_line_arguments():
     parser.add_argument( '-g', '--group', help='group atoms within supercell', action='store_true' )
     parser.add_argument( '-s', '--supercell', type=int, nargs=3, metavar=( 'h', 'k', 'l' ), help='construct supercell by replicating (h,k,l) times along [a b c]' )
     parser.add_argument( '-b', '--bohr', action='store_true', help='assumes the input file is in Angstrom, and converts everything to bohr')
+    parser.add_argument( '-n', '--number-atoms', action='store_true', help='label coordinates with atom number' )
     args = parser.parse_args()
     return( args )
 
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     if args.bohr:
         poscar = poscar.in_bohr()
     # output to stdout
-    if args.coordinates_only:
-        poscar.output_coordinates_only( coordinate_type = coordinate_type, label = args.label )
-    else:
-        poscar.output( coordinate_type = coordinate_type, label = args.label )
+    output_opts = { 'label'    : args.label,
+                    'numbered' : args.number_atoms,
+                    'coordinates_only' : args.coordinates_only }
+    poscar.output( coordinate_type = coordinate_type, opts = output_opts )

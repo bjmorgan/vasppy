@@ -25,6 +25,7 @@ class Poscar:
         self.atom_numbers = [ 1 ]
         self.coordinate_type = 'Direct'
         self.coordinates = np.array( [ [ 0.0, 0.0, 0.0 ] ] )
+        self.selective_dynamics = False
   
     def read_from( self, filename ):
         try:
@@ -39,6 +40,9 @@ class Poscar:
         self.atoms = lines.pop(0).split()
         self.atom_numbers = [ int(element) for element in lines.pop(0).split() ]
         self.coordinate_type = lines.pop(0)
+        if re.match( r'\A[Ss]', self.coordinate_type ): # test for 'Selective dynamics'
+            self.selective_dynamics = True
+            self.coordinate_type = lines.pop( 0 )
         self.coordinates = np.array( [ [ float( e ) for e in lines.pop(0).split()[0:3] ] for i in range( sum( self.atom_numbers ) ) ] )
         if self.coords_are_cartesian(): # Convert to direct coordinates
             self.coordinates = self.fractional_coordinates()

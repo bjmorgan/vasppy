@@ -92,7 +92,7 @@ class Poscar:
                        'Cartesian' : self.cartesian_coordinates() } 
         try:
             for i, row in enumerate( coord_opts[ coordinate_type ] ):
-                print( ''.join( ['  {: .10f}'.format( element ) for element in row ] ) + '  ' + str(i) )
+                print( ''.join( ['  {: .10f}'.format( element ) for element in row ] ) + '  ' + str(i+1) )
         except KeyError: 
             raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
 

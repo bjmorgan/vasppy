@@ -57,11 +57,11 @@ class Poscar:
             new_poscar.coordinates /= bohr_to_angstrom
         return( new_poscar )
 
-    def coords_are_fractional( self ):
-        return re.match( r'\A[Dd]', self.coordinate_type )
+    def coords_are_fractional( self ): 
+        return not self.coords_are_cartesian()
 
     def coords_are_cartesian( self ):
-        return not self.coords_are_fractional()
+        return re.match( r'\A[CcKk]', self.coordinate_type )
 
     def fractional_coordinates( self ):
         return ( self.coordinates if self.coords_are_fractional() else self.coordinates.dot( np.linalg.inv( self.lattice ) ) )

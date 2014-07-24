@@ -1,6 +1,7 @@
 # vasppy - a python package for manipulating VASP files
 
 Modules:
+- doscar
 - install
 - grid
 - poscar

@@ -96,7 +96,9 @@ class Poscar:
         except KeyError: 
             raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
 
-    def output_coordinates_only( self, coordinate_type='Direct', opts={} ):
+    def output_coordinates_only( self, coordinate_type='Direct', opts=None ):
+        if opts is None:
+            opts = {}
         if opts.get( 'numbered' ):
             self.numbered_coordinates_to_stdout( coordinate_type )
         elif opts.get( 'label' ):
@@ -104,7 +106,9 @@ class Poscar:
         else:
             self.coordinates_to_stdout( coordinate_type )
 
-    def output( self, coordinate_type='Direct', opts={} ):
+    def output( self, coordinate_type='Direct', opts=None ):
+        if opts is None:
+            opts = {}
         if not opts.get( 'coordinates_only' ):
             print( self.title )
             print( self.scaling )
@@ -114,7 +118,9 @@ class Poscar:
             print( coordinate_type )
         self.output_coordinates_only( coordinate_type=coordinate_type, opts=opts )
 
-    def write_to( self, filename, coordinate_type='Direct', opts={} ):
+    def write_to( self, filename, coordinate_type='Direct', opts=None ):
+        if opts is None:
+            opts = {}
         with open( filename, 'w' ) as sys.stdout:
             self.output( coordinate_type=coordinate_type, opts=opts )
 

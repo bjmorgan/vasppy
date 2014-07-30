@@ -21,16 +21,14 @@ class Doscar:
         self.number_of_data_points = int( self.header[5].split()[2] )
         self.fermi_energy = float( self.header[5].split()[3] )
 
-    def read_total_dos( self ):
-        # assumes spin_polarised
+    def read_total_dos( self ): # assumes spin_polarised
         start_to_read = Doscar.number_of_header_lines
         stop_reading  = start_to_read + self.number_of_data_points
         data_array = self.read_lines_to_numpy_array( start_to_read, stop_reading )
         return( Total_DOS( data = data_array, spin_polarised = True ) )
 
-    def read_atomic_dos( self, atom_number, align_fermi_energy = True ):
-        assert atom_number > 0
-        # currently assume spin-polarised, no-SO-coupling, no f-states
+    def read_atomic_dos( self, atom_number, align_fermi_energy = True ): # currently assume spin-polarised, no-SO-coupling, no f-states
+        assert atom_number > 0 
         start_to_read = Doscar.number_of_header_lines + atom_number * ( self.number_of_data_points + 1 )
         stop_reading  = start_to_read + self.number_of_data_points 
         data_array = self.read_lines_to_numpy_array( start_to_read, stop_reading )
@@ -62,13 +60,16 @@ class DOS:
     def data_using_columns( self, columns ):
         return( np.concatenate( ( self.energies_as_2D_array(), self.densities[ :, columns ] ), axis = 1 ) )
 
-    def write( self, fmt = '%.4e', invert_down_spin = True ):
+    def write( self, filename = None, fmt = '%.4e', invert_down_spin = True ):
         if invert_down_spin:
             output_data = self.data()
             output_data[ :, 2::2 ] *= -1.0
         else:
             output_data = self.data()
-        np.savetxt( sys.stdout.buffer, output_data, fmt = fmt )
+        if filename == None:
+            np.savetxt( sys.stdout.buffer, output_data, fmt = fmt )
+        else:
+            np.savetxt( filename, output_data, fmt = fmt )
 
     def energies_as_2D_array( self ):
         return( self.energies.reshape( -1, 1 ) )
@@ -106,6 +107,10 @@ class DOS:
 
     def shift_densities( self, shift ):
         self.densities += shift
+        return( self )
+
+    def shift_densities_at_set( self, shift, set ):
+        self.densities[ :, set ] += shift
         return( self )
 
     def scale_densities( self, scale ):
@@ -175,44 +180,50 @@ class Atomic_DOS( DOS ):
                                      maximum_l_quantum_number = self.maximum_l_quantum_number )
         if self.spin_polarised:
             if self.maximum_l_quantum_number == 3:
-                new_dos.densities = np.concatenate( ( self.s(), 
-                                                     self.p().up().sum(), 
-                                                     self.p().down().sum(), 
-                                                     self.d().up().sum(),
-                                                     self.d().down().sum(), 
-                                                     self.f().up().sum(),
-                                                     self.f().down().sum() ), axis = 1 )
+                new_densities = ( self.s(), 
+                                  self.p().up().sum(), 
+                                  self.p().down().sum(), 
+                                  self.d().up().sum(),
+                                  self.d().down().sum(), 
+                                  self.f().up().sum(),
+                                  self.f().down().sum() )
             else:
-                # s_up   = self.s().up().sum()
-                # s_down = self.s().down().sum()
-                # print( s_up.shape )
-                # print( s_down.shape )
-                # x = np.concatenate( ( s_up, s_down ), axis = 1 )
-                # new_dos.densities = x
-                # # print( self.p().up().sum().shape )
-                # # print( self.p().down().sum().shape )
-                # # print( self.d().up().sum().shape )
-                # # print( self.d().down().sum().shape )
-                new_dos.densities = np.concatenate( ( self.s().up().sum(),
-                                                      self.s().down().sum(),
-                                                      self.p().up().sum(), 
-                                                      self.p().down().sum(), 
-                                                      self.d().up().sum(),
-                                                      self.d().down().sum() ), axis = 1 )
+                new_densities = ( self.s().up().sum(),
+                                  self.s().down().sum(),
+                                  self.p().up().sum(), 
+                                  self.p().down().sum(), 
+                                  self.d().up().sum(),
+                                  self.d().down().sum() )
         else:
             if self.maximum_l_quantum_number == 3:
-                new_dos.densities = np.concatenate( ( self.s(). 
-                                                     self.p().sum(), 
-                                                     self.d().sum(), 
-                                                     self.f().sum() ), axis = 1 )
+                new_densities = ( self.s(). 
+                                  self.p().sum(), 
+                                  self.d().sum(), 
+                                  self.f().sum() )
             else:
-                new_dos.densities = np.concatenate( ( self.s(), 
-                                                     self.p().sum(), 
-                                                     self.d().sum() ), axis = 1 )
+                new_densities = ( self.s(), 
+                                  self.p().sum(), 
+                                  self.d().sum() )
+        new_dos.densities = np.concatenate( new_densities, axis = 1 )
         return new_dos
 
-class Summed_Atomic_DOS( DOS ):
+class Summed_Atomic_DOS( Atomic_DOS ):
 
     def __init__( self, data, spin_polarised, maximum_l_quantum_number ):
-        self.maximum_l_quantum_number = maximum_l_quantum_number
-        super( Summed_Atomic_DOS, self ).__init__( data, spin_polarised )
+        # self.maximum_l_quantum_number = maximum_l_quantum_number
+        super( Summed_Atomic_DOS, self ).__init__( data, spin_polarised, maximum_l_quantum_number )
+
+    def specific_angular_momentum( self, l ):
+        if self.spin_polarised:
+            columns = { 0 : list( range(0, 2) ),
+                        1 : list( range(2, 4) ),
+                        2 : list( range(4, 6) ),
+                        3 : list( range(6, 8) ) }
+        else:
+            columns = { 0 : list( range(0, 1) ),
+                        1 : list( range(1, 2) ),
+                        2 : list( range(2, 3) ),
+                        3 : list( range(3, 4) ) }
+        new_dos = copy.deepcopy( self )
+        new_dos.densities = self.densities[ :, columns[l] ]
+        return( new_dos )

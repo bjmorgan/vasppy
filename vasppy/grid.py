@@ -12,9 +12,7 @@ class Grid:
         self.poscar.read_from( self.filename )
         self.number_of_header_lines = sum( self.poscar.atom_numbers ) + poscar.Poscar.lines_offset
         self.read_dimensions()
-        # print( self.number_of_header_lines )
-        # print( self.dimensions )
-        self.read_grid_2()
+        self.read_grid()
 
     def write_to_filename( self, filename ):
         with open( filename, 'w' ) as file_out:

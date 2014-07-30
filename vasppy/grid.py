@@ -12,7 +12,9 @@ class Grid:
         self.poscar.read_from( self.filename )
         self.number_of_header_lines = sum( self.poscar.atom_numbers ) + poscar.Poscar.lines_offset
         self.read_dimensions()
-        self.read_grid()
+        # print( self.number_of_header_lines )
+        # print( self.dimensions )
+        self.read_grid_2()
 
     def write_to_filename( self, filename ):
         with open( filename, 'w' ) as file_out:
@@ -33,7 +35,14 @@ class Grid:
         print( "\n" + ' '.join( [ str(i) for i in self.dimensions ] ) ) 
 
     def read_grid( self ):
-        self.grid = np.swapaxes( np.loadtxt( self.filename, skiprows = self.number_of_header_lines + 1 ).reshape( self.dimensions[::-1] ), 0, 2 )
+        grid_data = []
+        grid_data_lines = ( self.dimensions[0] * self.dimensions[1] * self.dimensions[2] ) / 5
+        with open( self.filename ) as file_in:
+            for i, line in enumerate( file_in ):
+                if ( i > self.number_of_header_lines ) and ( i <= self.number_of_header_lines + grid_data_lines ):
+                    grid_data.append( line.strip() )
+        grid_data = [ float( s ) for s in ' '.join( grid_data ).split() ]
+        self.grid = np.reshape( grid_data, tuple( self.dimensions ), order = 'F' )
 
     def write_grid( self ):
         np.savetxt( sys.stdout.buffer, np.swapaxes( self.grid, 0, 2 ).reshape( -1, 5 ), fmt='%.11E' )

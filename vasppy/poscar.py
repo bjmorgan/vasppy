@@ -2,13 +2,7 @@ import numpy as np
 import sys
 import re
 import copy
-
-def angle( x, y ):
-    dot = np.dot( x, y )
-    x_mod = np.linalg.norm( x )
-    y_mod = np.linalg.norm( y )
-    cos_angle = dot / ( x_mod * y_mod )
-    return np.degrees( np.arccos( cos_angle ) )
+from vasppy import configuration, atom, cell
 
 def parity( list ):
     return( sum( list )%2 )
@@ -20,7 +14,7 @@ class Poscar:
     def __init__( self ):
         self.title = "Title"
         self.scaling = 1.0
-        self.lattice = np.identity( 3 )
+        self.cell = cell.Cell( np.identity( 3 ) )
         self.atoms = [ 'A' ]
         self.atom_numbers = [ 1 ]
         self.coordinate_type = 'Direct'
@@ -35,8 +29,8 @@ class Poscar:
             print( "\"" + filename + "\" not found", file=sys.stderr ) 
             sys.exit( -2 )
         self.title = lines.pop(0).strip()
-        self.scaling = float( lines.pop(0).strip() )
-        self.lattice = np.array( [ [ float( e ) for e in lines.pop(0).split() ] for i in range( 3 ) ] )
+        self.scaling = float( lines.pop(0).strip() ) 
+        self.cell.matrix = np.array( [ [ float( e ) for e in lines.pop(0).split() ] for i in range( 3 ) ] )
         self.atoms = lines.pop(0).split()
         self.atom_numbers = [ int(element) for element in lines.pop(0).split() ]
         self.coordinate_type = lines.pop(0)
@@ -52,7 +46,7 @@ class Poscar:
         new_poscar = copy.deepcopy( self )
         bohr_to_angstrom = 0.529177211
         new_poscar.scaling *= bohr_to_angstrom
-        new_poscar.lattice /= bohr_to_angstrom
+        new_poscar.cell.matrix /= bohr_to_angstrom
         if new_poscar.coords_are_cartesian():
             new_poscar.coordinates /= bohr_to_angstrom
         return( new_poscar )
@@ -64,10 +58,10 @@ class Poscar:
         return re.match( r'\A[CcKk]', self.coordinate_type )
 
     def fractional_coordinates( self ):
-        return ( self.coordinates if self.coords_are_fractional() else self.coordinates.dot( np.linalg.inv( self.lattice ) ) )
+        return ( self.coordinates if self.coords_are_fractional() else self.coordinates.dot( np.linalg.inv( self.cell.matrix ) ) )
 
     def cartesian_coordinates( self ):
-        return ( self.coordinates if self.coords_are_cartesian() else self.coordinates.dot( self.lattice ) )
+        return ( self.coordinates if self.coords_are_cartesian() else self.coordinates.dot( self.cell.matrix ) )
 
     def coordinates_to_stdout( self, coordinate_type='Direct' ):
         coord_opts = { 'Direct'    : self.fractional_coordinates(), 
@@ -112,7 +106,7 @@ class Poscar:
         if not opts.get( 'coordinates_only' ):
             print( self.title )
             print( self.scaling )
-            [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.lattice ]
+            [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.cell.matrix ]
             print( ' '.join( self.atoms ) )
             print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
             print( coordinate_type )
@@ -145,10 +139,10 @@ class Poscar:
         new_poscar.title = self.title
         new_poscar.scaling = self.scaling
         # print( lattice_scaling.dot( self.lattice ) )
-        new_poscar.lattice = ( self.lattice.T * lattice_scaling ).T
+        new_poscar.cell.matrix = ( self.cell.matrix.T * lattice_scaling ).T
         new_poscar.coordinate_type = self.coordinate_type
         new_coordinate_list = []
-        cell_shift_indices = [ [a,b,c] for a in range(h) for b in range(k) for c in range(l) ]
+        cell_shift_indices = [ [ a,b,c ] for a in range(h) for b in range(k) for c in range(l) ]
         # generate grouped / ungrouped atom names and numbers for supercell
         if group:
             new_poscar.atoms = [ label + group for label in self.atoms for group in ('a','b') ]
@@ -172,9 +166,17 @@ class Poscar:
         return new_poscar    
 
     def cell_lengths( self ):
-        return [ np.linalg.norm( row ) for row in self.lattice * self.scaling ]
+        return( ( self.cell.lengths() * self.scaling ).tolist() )
+        # return [ np.linalg.norm( row ) for row in self.cell.matrix * self.scaling ]
 
     def cell_angles( self ):
-        ( a, b, c ) = [ row for row in self.lattice ]
-        return [ angle( b, c ), angle( a, c ), angle( a, b ) ]
+        return( self.cell.angles() )
+        # ( a, b, c ) = [ row for row in self.cell.matrix ]
+        # return [ angle( b, c ), angle( a, c ), angle( a, b ) ]
+
+    def to_configuration( self ):
+        atoms = [ atom.Atom( label, coordinates ) for ( label, coordinates ) in zip( self.labels(), self.fractional_coordinates() ) ]
+        config = configuration.Configuration( cell.Cell( matrix = self.cell.matrix * self.scaling ), atoms )
+        return( config )
+
     

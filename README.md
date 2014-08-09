@@ -1,9 +1,12 @@
 # vasppy - a python package for manipulating VASP files
 
 Modules:
+- atom
+- configuration
 - doscar
 - install
 - grid
+- polyhedron
 - poscar
 - poscar_to_xtl
 - super

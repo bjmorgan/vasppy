@@ -34,12 +34,13 @@ class Grid:
 
     def read_grid( self ):
         grid_data = []
-        grid_data_lines = ( self.dimensions[0] * self.dimensions[1] * self.dimensions[2] ) / 5
+        grid_data_lines = ( self.dimensions[0] * self.dimensions[1] * self.dimensions[2] ) // 5
         with open( self.filename ) as file_in:
             for i, line in enumerate( file_in ):
-                if ( i > self.number_of_header_lines ) and ( i <= self.number_of_header_lines + grid_data_lines ):
+                if ( i > self.number_of_header_lines ) and ( i <= self.number_of_header_lines + grid_data_lines + 1):
                     grid_data.append( line.strip() )
-        grid_data = [ float( s ) for s in ' '.join( grid_data ).split() ]
+        grid_data = np.array( [ float( s ) for s in ' '.join( grid_data ).split() ] )
+        print( grid_data.shape )
         self.grid = np.reshape( grid_data, tuple( self.dimensions ), order = 'F' )
 
     def write_grid( self ):

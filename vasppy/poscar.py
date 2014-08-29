@@ -31,6 +31,7 @@ class Poscar:
         self.title = lines.pop(0).strip()
         self.scaling = float( lines.pop(0).strip() ) 
         self.cell.matrix = np.array( [ [ float( e ) for e in lines.pop(0).split() ] for i in range( 3 ) ] )
+        self.cell.inv_matrix = np.linalg.inv( self.cell.matrix )
         self.atoms = lines.pop(0).split()
         self.atom_numbers = [ int(element) for element in lines.pop(0).split() ]
         self.coordinate_type = lines.pop(0)
@@ -59,6 +60,8 @@ class Poscar:
 
     def fractional_coordinates( self ):
         return ( self.coordinates if self.coords_are_fractional() else self.coordinates.dot( np.linalg.inv( self.cell.matrix ) ) )
+        # return ( self.coordinates if self.coords_are_fractional() else self.cell.cartesian_to_fractional_coordinates( coordinates )
+            # need to check whether this alternative version works.
 
     def cartesian_coordinates( self ):
         return ( self.coordinates if self.coords_are_cartesian() else self.coordinates.dot( self.cell.matrix ) )

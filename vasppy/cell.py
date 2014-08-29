@@ -14,6 +14,7 @@ class Cell:
         assert type( matrix ) is np.ndarray
         assert matrix.shape == ( 3, 3 )
         self.matrix = matrix # 3 x 3 numpy Array
+        self.inv_matrix = np.linalg.inv( matrix )
 
     def dr( self, r1, r2, cutoff = None ):
         delta_r_cartesian = ( r1 - r2 ).dot( self.matrix )
@@ -29,7 +30,9 @@ class Cell:
 
     def minimum_image( self, r1, r2 ):
         delta_r = r2 - r1
-        delta_r = np.array( [ x - math.copysign( 1.0, x) if abs(x) > 0.5 else x for x in delta_r ] )
+        # print( delta_r )
+        delta_r = np.array( [ x - math.copysign( 1.0, x ) if abs(x) > 0.5 else x for x in delta_r ] )
+        # print( delta_r )
         return( delta_r )
 
     def minimum_image_dr( self, r1, r2, cutoff = None ):
@@ -45,3 +48,16 @@ class Cell:
 
     def centre( self, points ):
         print( points )
+
+    def cartesian_to_fractional_coordinates( self, coordinates ):
+        return( coordinates.dot( self.inv_matrix ) )
+
+    def fractional_to_cartesian_coordinates( self, coordinates ):
+        return( coordinates.dot( self.matrix ) )
+
+    def inside_cell( self, r ):
+        centre = np.array( [ 0.5, 0.5, 0.5 ] )
+        # print( 'r=',r )
+        new_r = self.nearest_image( centre, r )
+        # print( 'new_r=',new_r )
+        return( new_r )

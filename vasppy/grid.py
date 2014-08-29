@@ -1,8 +1,6 @@
 import numpy as np
 import sys
 import math
-import copy
-import time
 from vasppy import poscar, cell
 
 def interpolate( i, j, x ):

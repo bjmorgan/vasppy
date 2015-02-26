@@ -15,7 +15,7 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return( args )
 
-installable_scripts = [ 'super', 'poscar_to_xtl', 'vasp_grid' ]
+installable_scripts = [ 'super', 'poscar_to_xtl', 'vasp_grid', 'xdatcar_to_rdf', 'xdatcar_to_disp' ]
 home = os.path.expanduser("~")
 install_dir = os.path.join( home, "bin" )
 origin_dir = os.path.dirname( os.path.abspath( __file__ ) )

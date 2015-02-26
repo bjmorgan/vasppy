@@ -60,4 +60,7 @@ class Cell:
         # print( 'r=',r )
         new_r = self.nearest_image( centre, r )
         # print( 'new_r=',new_r )
-        return( new_r )
+        return new_r
+
+    def volume( self ):
+        return np.dot( self.matrix[0], np.cross( self.matrix[1], self.matrix[2] ) ) 

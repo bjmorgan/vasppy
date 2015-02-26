@@ -181,5 +181,3 @@ class Poscar:
         atoms = [ atom.Atom( label, coordinates ) for ( label, coordinates ) in zip( self.labels(), self.fractional_coordinates() ) ]
         config = configuration.Configuration( cell.Cell( matrix = self.cell.matrix * self.scaling ), atoms )
         return( config )
-
-    

@@ -1,4 +1,4 @@
-from vasppy import atom, cell
+from vasppy import atom, cell, rdf
 import numpy as np
 
 class Configuration:
@@ -19,6 +19,22 @@ class Configuration:
     def interatomic_distances_for_atom( self, atom1, minimum_image_convention = True ):
         return( np.array( [ self.minimum_image_dr( atom1, atom2 ) for atom2 in self.atoms ] ) )
 
-        
+    def atoms_with_label( self, label ):
+        return filter( lambda atom: atom.label == label, self.atoms )        
 
-
+    def partial_rdf( self, spec_i, spec_j, max_r, number_of_bins ):
+        this_rdf = rdf.Rdf( max_r, number_of_bins )
+        atoms_i = self.atoms_with_label( spec_i )
+        atoms_j = self.atoms_with_label( spec_j )
+        for atom_i in atoms_i:
+            for atom_j in atoms_j:
+                if atom_i is atom_j:
+                    continue
+                dr = self.minimum_image_dr( atom_i, atom_j )
+                try:
+                    this_rdf.add_dr( dr )
+                except IndexError:
+                    pass
+                except:
+                    raise
+        return this_rdf 

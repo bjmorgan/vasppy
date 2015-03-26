@@ -18,7 +18,7 @@ def parse_command_line_arguments():
 installable_scripts = [ 'super', 'poscar_to_xtl', 'poscar_to_pimaim', 'poscar_sort', 'vasp_grid', 'xdatcar_to_rdf', 'xdatcar_to_disp' ]
 home = os.path.expanduser("~")
 install_dir = os.path.join( home, "bin" )
-origin_dir = os.path.dirname( os.path.abspath( __file__ ) )
+origin_dir = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'scripts' )
 
 if __name__ == "__main__":
     args = parse_command_line_arguments()

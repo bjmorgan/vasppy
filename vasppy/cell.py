@@ -64,3 +64,6 @@ class Cell:
 
     def volume( self ):
         return np.dot( self.matrix[0], np.cross( self.matrix[1], self.matrix[2] ) ) 
+
+    def unit_vectors( self ):
+        return( ( self.matrix.transpose() / self.lengths() ).transpose() )

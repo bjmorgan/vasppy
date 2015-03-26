@@ -132,6 +132,23 @@ class Poscar:
         output_opts = { 'label' : True }
         self.output_coordinates_only( coordinate_type='Direct', opts = output_opts )
 
+    def output_as_pimaim( self, to_bohr = True ):
+        if to_bohr is True:
+            unit_scaling = 0.52918
+        else:
+            unit_scaling = 1.0
+        cell_lengths = self.cell.lengths() * self.scaling / unit_scaling
+        print( "T\nF\nF\nF" )
+        for row in self.cell_coordinates():
+            print( ' '.join( [ str( x ) for x in row ] ) )
+        for row in self.cell.unit_vectors().transpose():
+            print( ' '.join( [ str( x ) for x in row ] ) )
+        for length in self.cell_lengths():
+            print( length )
+
+    def cell_coordinates( self ):
+        return( self.coordinates * self.cell.lengths() * self.scaling )
+
     def labels( self ):
         return( [ atom_name for ( atom_name, atom_number ) in zip( self.atoms, self.atom_numbers ) for __ in range( atom_number ) ] )
 

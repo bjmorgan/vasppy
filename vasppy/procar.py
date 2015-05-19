@@ -66,7 +66,13 @@ class Procar:
         to_return = np.insert( band_energies, 0, range( 1, self.number_of_k_points + 1 ), axis = 1 )
         return to_return 
 
-    def print_weighted_band_structure( self, spins, ions, orbitals, scaling = 1.0, e_fermi = 0.0 ):
+    def print_weighted_band_structure( self, spins = None, ions = None, orbitals = None, scaling = 1.0, e_fermi = 0.0 ):
+        if not spins:
+            spins = list( range( self.spin_channels ) )
+        if not ions:
+            ions = [ self.number_of_ions ] 
+        if not orbitals:
+            orbitals = [ self.data.shape[-1] ] # !! NOT TESTED YET FOR f STATES !!
         band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands ).T
         orbital_projection = np.sum( self.data[ :, :, :, :, orbitals ], axis = 4 )
         ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 ) 

@@ -1,118 +1,78 @@
 import numpy as np
 import re
+import sys
 
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
     return( [ float( s ) for s in p.findall( string ) ] )
 
-class Occupation:
-
-    def __init__( self, s, p_x, p_y, p_z, d_xy, d_yz, d_z2, d_xz, d_x2, total ):
-        self.s = s
-        self.p = [ p_x, p_y, p_z ]
-        self.d = [ d_xy, d_yz, d_z2, d_xz, d_x2 ]
-        self.total = total
-
-class Ion:
-
-    def __init__( self, number, occupations ):
-        self.number      = number
-        self.occupations = Occupation( *occupations )
-
-class Band:
-
-    def __init__( self, number, energy, occupation, ions, total ):
-        self.number     = number
-        self.energy     = energy
-        self.occupation = occupation
-        self.ions       = ions
-        self.total      = Occupation( *total )
-
-    def sorted_ions_by_occupation( self ):
-        return( sorted( self.ions, key = lambda x: x.occupations.total ) )
-
-class KPoint:
-
-    def __init__( self, number, k_vector, weight, bands ):
-        self.number   = number
-        self.k_vector = k_vector
-        self.weight   = weight
-        self.bands    = bands
-
-    def bands_by_number( self, numbers ):
-        return( [ band for band in self.bands if band.number in numbers ] )
-
-class Spin:
-
-    def __init__( self, k_points ):
-        self.k_points = k_points
-
 class Procar:
 
-    number_of_file_header_lines = 1
-    number_of_spin_header_lines = 1
-    number_of_kpoint_header_lines = 2
-    number_of_band_header_lines = 3
-
     def __init__( self, spin = 1 ):
-        self.spin_channels = spin
+        self.spin_channels = spin # should be determined from PROCAR
+        self.number_of_k_points = None
+        self.number_of_ions = None
+        self.number_of_bands = None
+        self.data = None
 
+    def parse_projections( self ):
+        projection_data = re.findall( r"([-.\d\se]+tot.+)\n", self.read_in )
+        projection_data = [ x.replace( 'tot', '0' ) for x in projection_data ]
+        projection_data = [ x.split() for x in projection_data ]
+        try:
+            assert( self.number_of_bands * self.number_of_k_points == len( projection_data ) )
+            self.spin_channels = 1 # non-magnetic, non-spin-polarised
+        except:
+            if self.number_of_bands * self.number_of_k_points * 4 == len( projection_data ):
+                self.spin_channels = 4 # non-collinear (spin-orbit coupling)
+                pass
+            elif self.number_of_bands * self.number_of_k_points * 2 == len( projection_data ):
+                self.spin_channels = 2 # spin-polarised
+                pass
+            else:
+                raise
+        self.projection_data = np.array( projection_data, dtype = float )
+        return( projection_data )
+
+    def parse_k_points( self ):
+        k_points = re.findall( r"k-point\s+\d+\s*:\s+([-.\d\s]+)", self.read_in )
+        k_points = [ x.split() for x in k_points ]
+        assert( self.number_of_k_points == len( k_points ) )
+        self.k_points = np.array( k_points, dtype = float )
+        return( k_points )
+
+    def parse_bands( self ):
+        bands = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d\s]+)", self.read_in )
+        assert( self.number_of_bands == len( bands ) / self.number_of_k_points )
+        self.bands = np.array( bands, dtype = float )
+        return( bands )
+ 
     def read_from_file( self, filename, bands_in_range = None ):
         with open( filename, 'r' ) as file_in:
-            self.lines = [ line.strip() for line in file_in.readlines() ]
-            self.lines.pop( Procar.number_of_file_header_lines - 1 )
-            ( self.number_of_k_points, self.number_of_bands, self.number_of_ions ) = [ int( f ) for f in get_numbers_from_string( self.lines[0] ) ] 
-            if bands_in_range == None:
-                self.bands_in_range = [ 1, self.number_of_bands ]
-            else:
-                self.bands_in_range = bands_in_range # bands in range should be a list of the form ( start_number, end_number )
-            print( self.number_of_k_points )
-            self.spin = [ self.read_spin() for spin in range( self.spin_channels ) ]
+            file_in.readline()
+            self.number_of_k_points, self.number_of_bands, self.number_of_ions = [ int( f ) for f in get_numbers_from_string( file_in.readline() ) ]
+            self.read_in = file_in.read()
+        self.parse_k_points()
+        self.parse_bands()
+        self.parse_projections()
+        self.read_in = None
+        self.data = self.projection_data.reshape( self.number_of_k_points, self.number_of_bands, self.spin_channels, self.number_of_ions + 1, 11 )[:,:,:,:,1:]
 
-    def next_line( self ):
-        return( self.lines.pop( 0 ) )
+    def total_band_structure( self, spin ):
+        # note: currently gives k-points linear spacing
+        # if we know the k-vectors for each k-point can instead use their geometric separations to give the correct k-point density
+        assert( self.bands.shape == ( self.number_of_bands * self.number_of_k_points, 2 ) )
+        band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands )
+        to_return = np.insert( band_energies, 0, range( 1, self.number_of_k_points + 1 ), axis = 1 )
+        return to_return 
 
-    def pop_lines( self, i ):
-        self.lines = self.lines[i:]
-        # del( self.lines[ 0:i ] )
-
-    def read_spin( self ):
-        spin_data = self.next_line()
-        print( "spin_data", spin_data )
-        self.pop_lines( 1 )
-        k_points = [ self.read_k_point() for k_point in range( self.number_of_k_points ) ]
-        return( Spin( k_points ) )
-
-    def read_k_point( self ):
-        k_point_data = get_numbers_from_string( self.next_line() )
-        number   = int( k_point_data[0] )
-        k_vector = k_point_data[1:4]
-        weight   = k_point_data[4]
-        print( 'k_point data', number, k_vector, weight )
-        self.pop_lines( 1 )
-        bands = [ self.read_band_data() for band in range( self.number_of_bands ) ]
-        bands = [ band for band in bands if band is not None ]
-        self.pop_lines( 1 )
-        return( KPoint( number, k_vector, weight, bands ) )
-
-    def read_band_data( self ):
-        ( number, energy, occupation ) = get_numbers_from_string( self.next_line() )
-        number = int( number )
-        if not self.bands_in_range or number >= self.bands_in_range[0] and number <= self.bands_in_range[1]:
-            print( 'band_data', number, energy, occupation )
-            self.pop_lines( 2 )
-            ions  = [ self.read_ion_data() for ion in range( self.number_of_ions ) ] # read data for ion occupations
-            total = [ float( s ) for s in self.next_line().split()[1:] ] # read band total data
-            self.pop_lines( 1 )
-            return( Band( number, energy, occupation, ions, total ) )
-        else:
-            self.pop_lines( self.number_of_ions + 4 )
-            return( None )
-
-    def read_ion_data( self ):
-        ion_data = self.next_line().split()
-        number = int( ion_data[0] )
-        occupations = [ float( s ) for s in ion_data[1:] ]
-        return( Ion( number, occupations ) )
-
-
+    def print_weighted_band_structure( self, spins, ions, orbitals, scaling = 1.0, e_fermi = 0.0 ):
+        band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands ).T
+        orbital_projection = np.sum( self.data[ :, :, :, :, orbitals ], axis = 4 )
+        ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 ) 
+        spin_projection = np.sum( ion_projection[ :, :, spins ], axis = 2 )
+        for i in range( self.number_of_bands ):
+            print( '# band: {}'.format( i + 1 ) )
+            for k, ( e, p ) in enumerate( zip( band_energies[i], spin_projection.T[i] ) ):
+                print( k, e - e_fermi, p * scaling ) # k is the k_point index: currently gives linear k-point spacing
+            print()

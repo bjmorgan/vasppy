@@ -1,6 +1,5 @@
 import numpy as np
 import re
-import sys
 
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')

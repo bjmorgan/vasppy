@@ -140,7 +140,7 @@ class Poscar:
         cell_lengths = self.cell.lengths() * self.scaling / unit_scaling
         print( "T\nF\nF\nF" )
         for row in self.cell_coordinates():
-            print( ' '.join( [ str( x ) for x in row ] ) )
+            print( ' '.join( [ str( x / unit_scaling ) for x in row ] ) )
         for row in self.cell.unit_vectors().transpose():
             print( ' '.join( [ str( x ) for x in row ] ) )
         for length in cell_lengths:

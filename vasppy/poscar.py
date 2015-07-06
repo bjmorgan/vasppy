@@ -143,7 +143,7 @@ class Poscar:
             print( ' '.join( [ str( x ) for x in row ] ) )
         for row in self.cell.unit_vectors().transpose():
             print( ' '.join( [ str( x ) for x in row ] ) )
-        for length in self.cell_lengths():
+        for length in cell_lengths:
             print( length )
 
     def cell_coordinates( self ):

@@ -7,6 +7,11 @@ from vasppy import configuration, atom, cell
 def parity( list ):
     return( sum( list )%2 )
 
+def swap_axes( matrix, axes ):
+    axes_index = { 'x': 0, 'y': 1, 'z': 2 }
+    matrix[:, [ axes_index[ axes[ 0 ] ], axes_index[ axes[ 1 ] ] ] ] = matrix[:, [ axes_index[ axes[ 1 ] ], axes_index[ axes[ 0 ] ] ] ]
+    return matrix
+
 class Poscar:
 
     lines_offset = 9
@@ -198,3 +203,8 @@ class Poscar:
         atoms = [ atom.Atom( label, coordinates ) for ( label, coordinates ) in zip( self.labels(), self.fractional_coordinates() ) ]
         config = configuration.Configuration( cell.Cell( matrix = self.cell.matrix * self.scaling ), atoms )
         return( config )
+
+    def swap_axes( self, axes ):
+        new_poscar = copy.deepcopy( self )
+        new_poscar.cell = cell.Cell( swap_axes( self.cell.matrix, axes ) )
+        return new_poscar

@@ -9,7 +9,7 @@ Modules:
 - polyhedron
 - poscar
 - poscar_to_xtl
-- super
+- proc_poscar
 - vasp_grid
 
 Dependencies:
@@ -50,9 +50,9 @@ The following modules can be run as command line applications:
     optional arguments:
       -h, --help  show this help message and exit
 
-## super.py
+## proc_poscar.py
 
-    usage: super.py [-h] [-l {1,4}] [-c] [-t {c,cartesian,d,direct}] [-g] [-s h k l]
+    usage: proc_poscar.py [-h] [-l {1,4}] [-c] [-t {c,cartesian,d,direct}] [-g] [-s h k l]
                  poscar
     
     Manipulates VASP POSCAR files

@@ -3,6 +3,14 @@
 import argparse
 import os
 import sys
+import glob
+
+def glob_installable_scripts():
+    scripts_dir = 'scripts'
+    script_names = [ s.replace( '.py', '' ) for s in 
+                       [ s.replace( scripts_dir + '/', '' ) for s in glob.glob( scripts_dir + '/*.py' ) ] 
+                   ]
+    return script_names
 
 def parse_command_line_arguments():
     # command line arguments
@@ -15,15 +23,7 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return( args )
 
-installable_scripts = [ 'fat_bands', 
-                        'super', 
-                        'poscar_to_xtl', 
-                        'poscar_to_pimaim', 
-                        'poscar_sort', 
-                        'rotate_poscar',
-                        'vasp_grid', 
-                        'xdatcar_to_rdf', 
-                        'xdatcar_to_disp' ]
+installable_scripts = glob_installable_scripts()
 home = os.path.expanduser("~")
 install_dir = os.path.join( home, "bin" )
 origin_dir = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'scripts' )

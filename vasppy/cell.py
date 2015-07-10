@@ -86,4 +86,3 @@ class Cell:
 
     def rotate( self, axis, theta ):
         self.matrix = np.array( [ np.dot( rotation_matrix(axis,theta), v) for v in self.matrix ] )
-

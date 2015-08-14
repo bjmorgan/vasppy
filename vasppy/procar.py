@@ -71,7 +71,7 @@ class Procar:
         if not ions:
             ions = [ self.number_of_ions ] 
         if not orbitals:
-            orbitals = [ self.data.shape[-1] ] # !! NOT TESTED YET FOR f STATES !!
+            orbitals = [ self.data.shape[-1]-1 ] # !! NOT TESTED YET FOR f STATES !!
         band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands ).T
         orbital_projection = np.sum( self.data[ :, :, :, :, orbitals ], axis = 4 )
         ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 ) 

@@ -65,7 +65,7 @@ class Procar:
         to_return = np.insert( band_energies, 0, range( 1, self.number_of_k_points + 1 ), axis = 1 )
         return to_return 
 
-    def print_weighted_band_structure( self, spins = None, ions = None, orbitals = None, scaling = 1.0, e_fermi = 0.0 ):
+    def print_weighted_band_structure( self, spins = None, ions = None, orbitals = None, scaling = 1.0, e_fermi = 0.0, reciprocal_lattice = None ):
         if not spins:
             spins = list( range( self.spin_channels ) )
         if not ions:
@@ -76,8 +76,22 @@ class Procar:
         orbital_projection = np.sum( self.data[ :, :, :, :, orbitals ], axis = 4 )
         ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 ) 
         spin_projection = np.sum( ion_projection[ :, :, spins ], axis = 2 )
+        x_axis = self.x_axis( reciprocal_lattice )
         for i in range( self.number_of_bands ):
             print( '# band: {}'.format( i + 1 ) )
             for k, ( e, p ) in enumerate( zip( band_energies[i], spin_projection.T[i] ) ):
-                print( k, e - e_fermi, p * scaling ) # k is the k_point index: currently gives linear k-point spacing
+                print( x_axis[ k ], e - e_fermi, p * scaling ) # k is the k_point index: currently gives linear k-point spacing
             print()
+
+    def x_axis( self, reciprocal_lattice ):
+        if reciprocal_lattice is not None:
+            cartesian_k_points = np.dot( self.k_points, reciprocal_lattice )
+            x_axis = [ 0.0 ]
+            for i in range( 1, len( cartesian_k_points ) ):
+                d = cartesian_k_points[ i - 1 ] - cartesian_k_points[ i ]
+                d = np.sqrt( np.dot( d, d) )
+                x_axis.append( d + x_axis[-1] )
+            x_axis = np.array( x_axis )
+        else:
+            x_axis = np.arange( len( self.k_points ) )
+        return x_axis

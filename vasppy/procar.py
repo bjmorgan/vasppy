@@ -1,5 +1,9 @@
 import numpy as np
 import re
+import math
+
+angstrom_to_bohr = 0.52918
+ev_to_hartree = 0.036749309
 
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
@@ -60,6 +64,7 @@ class Procar:
     def total_band_structure( self, spin ):
         # note: currently gives k-points linear spacing
         # if we know the k-vectors for each k-point can instead use their geometric separations to give the correct k-point density
+        # note: correct k-spacing is already implemented in weighted_band_structure
         assert( self.bands.shape == ( self.number_of_bands * self.number_of_k_points, 2 ) )
         band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands )
         to_return = np.insert( band_energies, 0, range( 1, self.number_of_k_points + 1 ), axis = 1 )
@@ -83,14 +88,33 @@ class Procar:
                 print( x_axis[ k ], e - e_fermi, p * scaling ) # k is the k_point index: currently gives linear k-point spacing
             print()
 
+    def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, printing = False ):
+        band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands )
+        k_points = [ self.k_points[ k - 1 ] for k in k_point_indices ]
+        if printing:
+            [ print( 'k = ' + ' '.join( [ str( f ) for f in k ] ) ) for k in k_points ]
+        eigenvalues = [ band_energies[ k - 1 ][ band_index - 1 ] for k in k_point_indices ]
+        if printing:
+            [ print( 'e = ', e ) for e in eigenvalues ]
+        reciprocal_lattice = reciprocal_lattice * 2 * math.pi * angstrom_to_bohr
+        cartesian_k_points = [ np.dot( k, reciprocal_lattice ) for k in k_points ] # convert k-points to cartesian
+        dk = cartesian_k_points[ 1 ] - cartesian_k_points[ 0 ]
+        mod_dk = np.sqrt( np.dot( dk, dk ) )
+        delta_e = ( eigenvalues[ 1 ] - eigenvalues[ 0 ] ) * ev_to_hartree * 2.0
+        effective_mass = mod_dk * mod_dk / delta_e
+        if printing:
+            print( 'delta_k = ', mod_dk )
+            print( 'm* = ', effective_mass )
+        return effective_mass
+
     def x_axis( self, reciprocal_lattice ):
         if reciprocal_lattice is not None:
             cartesian_k_points = np.dot( self.k_points, reciprocal_lattice )
             x_axis = [ 0.0 ]
             for i in range( 1, len( cartesian_k_points ) ):
-                d = cartesian_k_points[ i - 1 ] - cartesian_k_points[ i ]
-                d = np.sqrt( np.dot( d, d) )
-                x_axis.append( d + x_axis[-1] )
+                dk = cartesian_k_points[ i - 1 ] - cartesian_k_points[ i ]
+                mod_dk = np.sqrt( np.dot( dk, dk ) )
+                x_axis.append( mod_dk + x_axis[-1] )
             x_axis = np.array( x_axis )
         else:
             x_axis = np.arange( len( self.k_points ) )

@@ -89,22 +89,27 @@ class Procar:
             print()
 
     def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, printing = False ):
+        assert( len( k_point_indices ) > 1 ) # we need at least 2 k-points
         band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands )
-        k_points = [ self.k_points[ k - 1 ] for k in k_point_indices ]
+        k_points = np.array( [ self.k_points[ k - 1 ] for k in k_point_indices ] )
+        eigenvalues = np.array( [ band_energies[ k - 1 ][ band_index - 1 ] for k in k_point_indices ] )
         if printing:
-            [ print( 'k = ' + ' '.join( [ str( f ) for f in k ] ) ) for k in k_points ]
-        eigenvalues = [ band_energies[ k - 1 ][ band_index - 1 ] for k in k_point_indices ]
-        if printing:
-            [ print( 'e = ', e ) for e in eigenvalues ]
+            print( '# h k l e' )
+            [ print( ' '.join( [ str( f ) for f in row ] ) ) for row in np.concatenate( ( k_points, np.array( [ eigenvalues ] ).T ), axis = 1 ) ]
         reciprocal_lattice = reciprocal_lattice * 2 * math.pi * angstrom_to_bohr
-        cartesian_k_points = [ np.dot( k, reciprocal_lattice ) for k in k_points ] # convert k-points to cartesian
-        dk = cartesian_k_points[ 1 ] - cartesian_k_points[ 0 ]
-        mod_dk = np.sqrt( np.dot( dk, dk ) )
-        delta_e = ( eigenvalues[ 1 ] - eigenvalues[ 0 ] ) * ev_to_hartree * 2.0
-        effective_mass = mod_dk * mod_dk / delta_e
-        if printing:
-            print( 'delta_k = ', mod_dk )
-            print( 'm* = ', effective_mass )
+        cartesian_k_points = np.array( [ np.dot( k, reciprocal_lattice ) for k in k_points ] ) # convert k-points to cartesian
+        # TODO Check that the cartesian_k_points fall on a straight line, e.g. http://stackoverflow.com/questions/3813681/checking-to-see-if-3-points-are-on-the-same-line
+        if len( k_point_indices ) == 2:
+            # reimplemented from Aron's fortran version
+            dk = cartesian_k_points[ 1 ] - cartesian_k_points[ 0 ]
+            mod_dk = np.sqrt( np.dot( dk, dk ) )
+            delta_e = ( eigenvalues[ 1 ] - eigenvalues[ 0 ] ) * ev_to_hartree * 2.0
+            effective_mass = mod_dk * mod_dk / delta_e
+        else:
+            dk = cartesian_k_points - cartesian_k_points[0] 
+            mod_dk = np.linalg.norm( dk, axis = 1 )
+            delta_e = eigenvalues - eigenvalues[0]
+            effective_mass = 1.0 / ( np.polyfit( mod_dk, eigenvalues, 2 )[0] * ev_to_hartree * 2.0 )
         return effective_mass
 
     def x_axis( self, reciprocal_lattice ):

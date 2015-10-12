@@ -1,3 +1,4 @@
 __pycache__
 MANIFEST
 dist
+*.pyc

@@ -25,7 +25,29 @@ class Poscar:
         self.coordinate_type = 'Direct'
         self.coordinates = np.array( [ [ 0.0, 0.0, 0.0 ] ] )
         self.selective_dynamics = False
-  
+
+    def coordinates_by_species( self, species ):
+        return self.coordinates[ self.range_by_species( species ) ]
+ 
+    def range_by_species( self, species ):
+        i = 0
+        atom_range = {}
+        for a, n in zip( self.atoms, self.atom_numbers ):
+            atom_range[ a ] = range(i, i+n)
+            i += n
+        return atom_range[ species ]
+
+    def atom_number_by_species( self, species ):
+        atom_numbers = { a : n for a, n in zip( self.atoms, self.atom_numbers ) }
+        return atom_numbers[ species ]
+
+    def sorted( self, species ):
+        new_poscar = copy.deepcopy( self )
+        new_poscar.atoms = species
+        new_poscar.atom_numbers = [ self.atom_number_by_species( s ) for s in species ]
+        new_poscar.coordinates = np.concatenate( [ self.coordinates_by_species( s ) for s in species ], axis = 0 )
+        return new_poscar 
+ 
     def read_from( self, filename ):
         try:
             with open( filename ) as f:

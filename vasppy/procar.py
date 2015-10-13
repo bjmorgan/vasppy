@@ -17,6 +17,7 @@ class Procar:
         self.number_of_ions = None
         self.number_of_bands = None
         self.data = None
+        self.number_of_projections = None
 
     def parse_projections( self ):
         projection_data = re.findall( r"([-.\d\se]+tot.+)\n", self.read_in )
@@ -35,6 +36,7 @@ class Procar:
             else:
                 raise
         self.projection_data = np.array( projection_data, dtype = float )
+        self.number_of_projections = self.projection_data.shape[1] / (self.number_of_ions + 1)
         return( projection_data )
 
     def parse_k_points( self ):
@@ -59,7 +61,7 @@ class Procar:
         self.parse_bands()
         self.parse_projections()
         self.read_in = None
-        self.data = self.projection_data.reshape( self.number_of_k_points, self.number_of_bands, self.spin_channels, self.number_of_ions + 1, 11 )[:,:,:,:,1:]
+        self.data = self.projection_data.reshape( self.number_of_k_points, self.number_of_bands, self.spin_channels, self.number_of_ions + 1, self.number_of_projections )[:,:,:,:,1:]
 
     def total_band_structure( self, spin ):
         # note: currently gives k-points linear spacing

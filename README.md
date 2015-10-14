@@ -86,3 +86,8 @@ The following modules can be run as command line applications:
       -h, --help            show this help message and exit
       -p {x,y,z}, --projection {x,y,z}
                             output averaged projection perpendicular to [x,y,z]
+
+## Contributors
+
+Benjamin J. Morgan
+Lucy Whalley

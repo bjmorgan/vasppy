@@ -17,4 +17,4 @@ if __name__ == "__main__":
     # read POSCAR file
     poscar.read_from( args.poscar )
     poscar.output_as_xtl()
-    
+

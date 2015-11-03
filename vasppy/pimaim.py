@@ -15,7 +15,7 @@ def read_restart_file( filename, number_of_atoms ):
 
     # this assumes coordinates, velocities, and dipoles are all present.
     # not sure what happens if atoms have qudrupoles, etc.
-    coordinates = lines_to_numpy_array( file_data[ 4 : 4 + number_of_atoms ] )
+    coordinates = lines_to_numpy_array( file_data[ 4 : 4 + number_of_atoms ] ) * 0.52918 # convert bohr to Angstroms
     if vel_dump_log:
         velocities = lines_to_numpy_array( file_data[ 4 + number_of_atoms : 4 + number_of_atoms * 2 ] )
     else:
@@ -25,7 +25,7 @@ def read_restart_file( filename, number_of_atoms ):
     else:
         dipoles = None
     cell_matrix = lines_to_numpy_array( file_data[ -6: -3 ] )
-    cell_lengths = lines_to_numpy_array( file_data[ -3: ] )
+    cell_lengths = lines_to_numpy_array( file_data[ -3: ] ) * 0.52918 # convert bohr to Angstroms
     full_cell_matrix = cell_matrix * cell_lengths
     # TODO! need to check this with a non-orthorhombic cell
     return( coordinates, velocities, dipoles, full_cell_matrix )
@@ -38,7 +38,7 @@ def poscar_from_pimaim_restart( filename, atom_numbers, atom_labels ):
     poscar.cell = Cell( full_cell_matrix ) # TODO: possibly this needs transposing
     poscar.atoms = atom_labels
     poscar.atom_numbers = atom_numbers
-    poscar.coordinate_type = 'Cartesian'
-    poscar.coordinates = coordinates
+    poscar.coordinate_type = 'Direct'
+    poscar.coordinates = poscar.cell.cartesian_to_fractional_coordinates( coordinates )
  
     return poscar

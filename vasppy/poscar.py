@@ -159,6 +159,20 @@ class Poscar:
         output_opts = { 'label' : True }
         self.output_coordinates_only( coordinate_type='Direct', opts = output_opts )
 
+    def output_as_cif( self ):
+        print( "#=======\n\ndata_VASP\n" )
+        print( "_pd_phase_name", '\'{}\''.format( self.title ) )
+        print( "_cell_length_a", '{}'.format( self.cell_lengths()[0] ) )
+        print( "_cell_length_b", '{}'.format( self.cell_lengths()[1] ) )
+        print( "_cell_length_c", '{}'.format( self.cell_lengths()[2] ) )
+        print( "_cell_angle_alpha", '{}'.format( self.cell_angles()[0] ) )
+        print( "_cell_angle_beta ", '{}'.format( self.cell_angles()[1] ) )
+        print( "_cell_angle_gamma", '{}'.format( self.cell_angles()[2] ) )
+        print( "\nloop_\n_symmetry_equiv_pos_as_xyz\n    'x, y, z'" )
+        print( "\nloop_\n   _atom_site_label\n    _atom_site_fract_x\n   _atom_site_fract_y\n   _atom_site_fract_z\n" ) 
+        output_opts = { 'label' : True }
+        self.output_coordinates_only( coordinate_type='Direct', opts = output_opts )
+
     def output_as_pimaim( self, to_bohr = True ):
         if to_bohr is True:
             unit_scaling = 0.52918

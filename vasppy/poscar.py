@@ -150,7 +150,7 @@ class Poscar:
             opts = {}
         with open( filename, 'w' ) as sys.stdout:
             self.output( coordinate_type=coordinate_type, opts=opts )
-
+        sys.stdout = sys.__stdout__ # make sure sys.stdout is reset
     def output_as_xtl( self ):
         print( self.title )
         print( "CELL" )

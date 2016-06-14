@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name = 'vasppy',
@@ -10,5 +10,9 @@ setup(
     url = 'https://github.com/bjmorgan/vasppy',   # use the URL to the github repo
     download_url = 'https://github.com/bjmorgan/vasppy/tarball/0.0.3',
     keywords = ['vasp'], # keywords
+    install_requires = [
+        'numpy',
+        'pymatgen'
+    ],
     classifiers = []
 )

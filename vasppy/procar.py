@@ -36,7 +36,7 @@ class Procar:
             else:
                 raise
         self.projection_data = np.array( projection_data, dtype = float )
-        self.number_of_projections = self.projection_data.shape[1] / (self.number_of_ions + 1)
+        self.number_of_projections = int( self.projection_data.shape[1] / ( self.number_of_ions + 1 ) )
         return( projection_data )
 
     def parse_k_points( self ):

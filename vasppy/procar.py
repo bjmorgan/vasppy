@@ -10,8 +10,8 @@ def get_numbers_from_string( string ):
     return( [ float( s ) for s in p.findall( string ) ] )
 
 def k_point_parser( string ):
-    regex = re.compile( 'k-point\s+\d+\s*:\s+([-.\d\s]+)' )
-    return( [ x.split() for x in regex.findall( string ) ] )
+    regex = re.compile( 'k-point\s+\d+\s*:\s+((?:[- ][01].\d{8}){3})' )
+    return( [ [ float(s) for s in [ x[0:11], x[11:22], x[22:33] ] ] for x in regex.findall( string ) ] )
 
 class Procar:
 

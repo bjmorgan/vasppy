@@ -9,6 +9,10 @@ def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
     return( [ float( s ) for s in p.findall( string ) ] )
 
+def k_point_parser( string ):
+    regex = re.compile( 'k-point\s+\d+\s*:\s+([-.\d\s]+)' )
+    return( [ x.split() for x in regex.findall( string ) ] )
+
 class Procar:
 
     def __init__( self, spin = 1 ):
@@ -40,8 +44,7 @@ class Procar:
         return( projection_data )
 
     def parse_k_points( self ):
-        k_points = re.findall( r"k-point\s+\d+\s*:\s+([-.\d\s]+)", self.read_in )
-        k_points = [ x.split() for x in k_points ]
+        k_points = k_point_parser( self.read_in )
         assert( self.number_of_k_points == len( k_points ) )
         self.k_points = np.array( k_points, dtype = float )
         return( k_points )

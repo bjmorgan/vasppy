@@ -22,6 +22,7 @@ class Procar:
         self.number_of_bands = None
         self.data = None
         self.number_of_projections = None
+        self.k_point_blocks = None
 
     def parse_projections( self ):
         projection_data = re.findall( r"([-.\d\se]+tot.+)\n", self.read_in )
@@ -30,12 +31,15 @@ class Procar:
         try:
             assert( self.number_of_bands * self.number_of_k_points == len( projection_data ) )
             self.spin_channels = 1 # non-magnetic, non-spin-polarised
+            self.k_point_blocks = 1
         except:
             if self.number_of_bands * self.number_of_k_points * 4 == len( projection_data ):
                 self.spin_channels = 4 # non-collinear (spin-orbit coupling)
+                self.k_point_blocks = 1
                 pass
             elif self.number_of_bands * self.number_of_k_points * 2 == len( projection_data ):
                 self.spin_channels = 2 # spin-polarised
+                self.k_point_blocks = 2
                 pass
             else:
                 raise
@@ -45,15 +49,21 @@ class Procar:
 
     def parse_k_points( self ):
         k_points = k_point_parser( self.read_in )
-        assert( self.number_of_k_points == len( k_points ) )
         self.k_points = np.array( k_points, dtype = float )
         return( k_points )
 
     def parse_bands( self ):
         bands = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d\s]+)", self.read_in )
-        assert( self.number_of_bands == len( bands ) / self.number_of_k_points )
         self.bands = np.array( bands, dtype = float )
         return( bands )
+
+    def sanity_check( self ):
+        expected_k_points = self.number_of_k_points
+        read_k_points = len( self.k_points ) / self.k_point_blocks
+        assert( expected_k_points == read_k_points ), "k-point number mismatch: {} in header; {} in file".format( expected_k_points, read_k_points )
+        expected_bands = self.number_of_bands
+        read_bands = len( self.bands ) / self.number_of_k_points / self.k_point_blocks
+        assert( expected_bands == read_bands ), "band mismatch: {} in header; {} in file".format( expected_bands, read_bands )
  
     def read_from_file( self, filename, bands_in_range = None ):
         with open( filename, 'r' ) as file_in:
@@ -63,6 +73,7 @@ class Procar:
         self.parse_k_points()
         self.parse_bands()
         self.parse_projections()
+        self.sanity_check()
         self.read_in = None
         self.data = self.projection_data.reshape( self.number_of_k_points, self.number_of_bands, self.spin_channels, self.number_of_ions + 1, self.number_of_projections )[:,:,:,:,1:]
 

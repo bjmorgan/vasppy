@@ -2,7 +2,9 @@ import unittest
 import os
 from vasppy import procar
 
-test_procar_filename = os.path.join( os.path.dirname( __file__ ), 'PROCAR_test' )
+test_data_dir = 'test_data'
+test_procar_filename = os.path.join( os.path.dirname( __file__ ), test_data_dir, 'PROCAR_test' )
+test_procar_spin_polarised_filename = os.path.join( os.path.dirname( __file__ ), test_data_dir, 'PROCAR_spin_polarised_test' )
 
 class ProcarTestCase( unittest.TestCase ):
     """Test for `procar.py`"""
@@ -19,6 +21,15 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( pcar.number_of_bands, 4 )
         self.assertEqual( pcar.number_of_k_points, 2 )
 
+    def test_spin_polarised_procar_is_read_from_file( self ):
+        """Checking that `PROCAR_spin_polarised_test` is read"""
+        pcar = procar.Procar()
+        pcar.read_from_file( test_procar_spin_polarised_filename )
+        self.assertEqual( pcar.spin_channels, 2 )
+        self.assertEqual( pcar.number_of_ions, 25 )
+        self.assertEqual( pcar.number_of_bands, 112 )
+        self.assertEqual( pcar.number_of_k_points, 8 )
+         
 class ParserTestCase( unittest.TestCase ):
     """Test for VASP output parsers"""
 

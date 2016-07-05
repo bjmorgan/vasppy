@@ -48,5 +48,9 @@ class ParserTestCase( unittest.TestCase ):
               [ 0.00000000, -0.01282051,  0.01282051],
               [-0.50000000,  0.00000000, -0.50000000]  ] )
 
+    def test_get_numbers_from_string( self ):
+        """Checking function for extracting numbers from a string"""
+        self.assertEqual( procar.get_numbers_from_string( 'asd834asd2.11 -23as' ), [ 834.0, 2.11, -23.0] )
+
 if __name__ == '__main__':
     unittest.main()

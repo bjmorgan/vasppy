@@ -1,6 +1,7 @@
 import unittest
 import os
 from vasppy import procar
+import numpy as np
 
 test_data_dir = 'test_data'
 test_procar_filename = os.path.join( os.path.dirname( __file__ ), test_data_dir, 'PROCAR_test' )
@@ -51,6 +52,12 @@ class ParserTestCase( unittest.TestCase ):
     def test_get_numbers_from_string( self ):
         """Checking function for extracting numbers from a string"""
         self.assertEqual( procar.get_numbers_from_string( 'asd834asd2.11 -23as' ), [ 834.0, 2.11, -23.0] )
+
+    def test_projections_are_parsed( self ):
+        """Checking that projections are parsed from PROCAR format strings"""
+        procar_string = "ion      s      p      d    tot\n  1  0.006  0.000  0.000  0.006\n  2  0.009  0.000  0.000  0.009\ntot  0.835  0.021  0.012  0.868\nion      s      p      d    tot\n  1  0.006  0.000  0.000  0.006\n  2  0.009  0.000  0.000  0.009\ntot  0.835  0.021  0.012  0.868\n"
+        self.assertEqual( procar.projections_parser( procar_string ).tolist(),
+            np.array( [ [ 1.0, 0.006, 0.0, 0.0, 0.006, 2.0, 0.009, 0.0, 0.0, 0.009, 0.0, 0.835, 0.021, 0.012, 0.868 ], [ 1.0, 0.006, 0.0, 0.0, 0.006, 2.0, 0.009, 0.0, 0.0, 0.009, 0.0, 0.835, 0.021, 0.012, 0.868 ] ] ).tolist() )
 
 if __name__ == '__main__':
     unittest.main()

@@ -7,11 +7,18 @@ ev_to_hartree = 0.036749309
 
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
-    return( [ float( s ) for s in p.findall( string ) ] )
+    return [ float( s ) for s in p.findall( string ) ] 
 
 def k_point_parser( string ):
     regex = re.compile( 'k-point\s+\d+\s*:\s+((?:[- ][01].\d{8}){3})' )
-    return( [ [ float(s) for s in [ x[0:11], x[11:22], x[22:33] ] ] for x in regex.findall( string ) ] )
+    return [ [ float(s) for s in [ x[0:11], x[11:22], x[22:33] ] ] for x in regex.findall( string ) ] 
+
+def projections_parser( string ):
+    regex = re.compile( '([-.\d\se]+tot.+)\n' )
+    data = regex.findall( string )
+    data = [ x.replace( 'tot', '0' ) for x in data ]
+    data = np.array( [ x.split() for x in data ], dtype = float )
+    return data
 
 class Procar:
 
@@ -28,30 +35,26 @@ class Procar:
         self.non_spin_polarised = None
 
     def parse_projections( self ):
-        projection_data = re.findall( r"([-.\d\se]+tot.+)\n", self.read_in )
-        projection_data = [ x.replace( 'tot', '0' ) for x in projection_data ]
-        projection_data = [ x.split() for x in projection_data ]
+        self.projection_data = projections_parser( self.read_in )
         try:
-            assert( self.number_of_bands * self.number_of_k_points == len( projection_data ) )
+            assert( self.number_of_bands * self.number_of_k_points == len( self.projection_data ) )
             self.spin_channels = 1 # non-magnetic, non-spin-polarised
             self.k_point_blocks = 1
             self.calculation[ 'non_spin_polarised' ] = True
         except:
-            if self.number_of_bands * self.number_of_k_points * 4 == len( projection_data ):
+            if self.number_of_bands * self.number_of_k_points * 4 == len( self.projection_data ):
                 self.spin_channels = 4 # non-collinear (spin-orbit coupling)
                 self.k_point_blocks = 1
                 self.calculation[ 'non_collinear' ] = True
                 pass
-            elif self.number_of_bands * self.number_of_k_points * 2 == len( projection_data ):
+            elif self.number_of_bands * self.number_of_k_points * 2 == len( self.projection_data ):
                 self.spin_channels = 2 # spin-polarised
                 self.k_point_blocks = 2
                 self.calculation[ 'spin_polarised' ] = True
                 pass
             else:
                 raise
-        self.projection_data = np.array( projection_data, dtype = float )
         self.number_of_projections = int( self.projection_data.shape[1] / ( self.number_of_ions + 1 ) )
-        return( projection_data )
 
     def parse_k_points( self ):
         k_points = k_point_parser( self.read_in )

@@ -27,7 +27,7 @@ def orbitals_with_l( l ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument( '-i', '--ions', help='ion indices for band projection (default: sum over all ions)', nargs='+', type=int )
-    parser.add_argument( '-s', '--spins', help='spin indices for band projection (default 0)', nargs='+', type=int, default=[ 0 ] )
+    parser.add_argument( '-s', '--spins', help='spin indices for band projection (default [ 1 ])', nargs='+', type=int, default=[ 1 ] )
     parser.add_argument( '-o', '--orbitals', help='orbital indices for band projection (default: sum over all orbitals)', nargs='+', type=int )
     parser.add_argument( '-e', '--efermi', help='set fermi energy as reference for energy scale', type=float, default=0.0 )
     parser.add_argument( '-l', '--l-angular-momentum', help='select all orbitals with angular momentum L for band projection. This supercedes the --orbitals option', choices=[ 's', 'p', 'd', 'f', 'all' ] )

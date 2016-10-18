@@ -7,6 +7,11 @@ from pymatgen import Lattice as pmg_Lattice
 from pymatgen import Structure as pmg_Structure
 from pymatgen.io.cif import CifWriter
 
+# Ignore SIG_PIPE and don't throw exceptions on it... 
+# http://newbebweb.blogspot.co.uk/2012/02/python-head-ioerror-errno-32-broken.html
+from signal import signal, SIGPIPE, SIG_DFL
+signal( SIGPIPE, SIG_DFL ) 
+
 def parity( list ):
     return( sum( list )%2 )
 

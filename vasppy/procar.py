@@ -7,7 +7,18 @@ ev_to_hartree = 0.036749309
 
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
-    return( [ float( s ) for s in p.findall( string ) ] )
+    return [ float( s ) for s in p.findall( string ) ] 
+
+def k_point_parser( string ):
+    regex = re.compile( 'k-point\s+\d+\s*:\s+((?:[- ][01].\d{8}){3})' )
+    return [ [ float(s) for s in [ x[0:11], x[11:22], x[22:33] ] ] for x in regex.findall( string ) ] 
+
+def projections_parser( string ):
+    regex = re.compile( '([-.\d\se]+tot.+)\n' )
+    data = regex.findall( string )
+    data = [ x.replace( 'tot', '0' ) for x in data ]
+    data = np.array( [ x.split() for x in data ], dtype = float )
+    return data
 
 class Procar:
 
@@ -17,40 +28,49 @@ class Procar:
         self.number_of_ions = None
         self.number_of_bands = None
         self.data = None
+        self.bands = None
         self.number_of_projections = None
+        self.k_point_blocks = None
+        self.calculation = { 'non_spin_polarised': False, 'non_collinear': False, 'spin_polarised': False }
+        self.non_spin_polarised = None
 
     def parse_projections( self ):
-        projection_data = re.findall( r"([-.\d\se]+tot.+)\n", self.read_in )
-        projection_data = [ x.replace( 'tot', '0' ) for x in projection_data ]
-        projection_data = [ x.split() for x in projection_data ]
+        self.projection_data = projections_parser( self.read_in )
         try:
-            assert( self.number_of_bands * self.number_of_k_points == len( projection_data ) )
+            assert( self.number_of_bands * self.number_of_k_points == len( self.projection_data ) )
             self.spin_channels = 1 # non-magnetic, non-spin-polarised
+            self.k_point_blocks = 1
+            self.calculation[ 'non_spin_polarised' ] = True
         except:
-            if self.number_of_bands * self.number_of_k_points * 4 == len( projection_data ):
+            if self.number_of_bands * self.number_of_k_points * 4 == len( self.projection_data ):
                 self.spin_channels = 4 # non-collinear (spin-orbit coupling)
+                self.k_point_blocks = 1
+                self.calculation[ 'non_collinear' ] = True
                 pass
-            elif self.number_of_bands * self.number_of_k_points * 2 == len( projection_data ):
+            elif self.number_of_bands * self.number_of_k_points * 2 == len( self.projection_data ):
                 self.spin_channels = 2 # spin-polarised
+                self.k_point_blocks = 2
+                self.calculation[ 'spin_polarised' ] = True
                 pass
             else:
                 raise
-        self.projection_data = np.array( projection_data, dtype = float )
-        self.number_of_projections = self.projection_data.shape[1] / (self.number_of_ions + 1)
-        return( projection_data )
+        self.number_of_projections = int( self.projection_data.shape[1] / ( self.number_of_ions + 1 ) )
 
     def parse_k_points( self ):
-        k_points = re.findall( r"k-point\s+\d+\s*:\s+([-.\d\s]+)", self.read_in )
-        k_points = [ x.split() for x in k_points ]
-        assert( self.number_of_k_points == len( k_points ) )
+        k_points = k_point_parser( self.read_in )
         self.k_points = np.array( k_points, dtype = float )
-        return( k_points )
 
     def parse_bands( self ):
         bands = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d\s]+)", self.read_in )
-        assert( self.number_of_bands == len( bands ) / self.number_of_k_points )
         self.bands = np.array( bands, dtype = float )
-        return( bands )
+
+    def sanity_check( self ):
+        expected_k_points = self.number_of_k_points
+        read_k_points = len( self.k_points ) / self.k_point_blocks
+        assert( expected_k_points == read_k_points ), "k-point number mismatch: {} in header; {} in file".format( expected_k_points, read_k_points )
+        expected_bands = self.number_of_bands
+        read_bands = len( self.bands ) / self.number_of_k_points / self.k_point_blocks
+        assert( expected_bands == read_bands ), "band mismatch: {} in header; {} in file".format( expected_bands, read_bands )
  
     def read_from_file( self, filename, bands_in_range = None ):
         with open( filename, 'r' ) as file_in:
@@ -60,26 +80,34 @@ class Procar:
         self.parse_k_points()
         self.parse_bands()
         self.parse_projections()
+        self.sanity_check()
         self.read_in = None
-        self.data = self.projection_data.reshape( self.number_of_k_points, self.number_of_bands, self.spin_channels, self.number_of_ions + 1, self.number_of_projections )[:,:,:,:,1:]
+        if self.calculation[ 'spin_polarised' ]:
+            self.data = self.projection_data.reshape( self.spin_channels, self.number_of_k_points, self.number_of_bands, self.number_of_ions + 1, self.number_of_projections )[:,:,:,:,1:].swapaxes( 0, 1).swapaxes( 1, 2 )
+        else:
+            self.data = self.projection_data.reshape( self.number_of_k_points, self.number_of_bands, self.spin_channels, self.number_of_ions + 1, self.number_of_projections )[:,:,:,:,1:]
 
     def total_band_structure( self, spin ):
         # note: currently gives k-points linear spacing
         # if we know the k-vectors for each k-point can instead use their geometric separations to give the correct k-point density
         # note: correct k-spacing is already implemented in weighted_band_structure
         assert( self.bands.shape == ( self.number_of_bands * self.number_of_k_points, 2 ) )
-        band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands )
         to_return = np.insert( band_energies, 0, range( 1, self.number_of_k_points + 1 ), axis = 1 )
         return to_return 
 
     def print_weighted_band_structure( self, spins = None, ions = None, orbitals = None, scaling = 1.0, e_fermi = 0.0, reciprocal_lattice = None ):
-        if not spins:
+        if spins:
+            spins = [ s - 1 for s in spins ]
+        else:
             spins = list( range( self.spin_channels ) )
         if not ions:
             ions = [ self.number_of_ions ] 
         if not orbitals:
             orbitals = [ self.data.shape[-1]-1 ] # !! NOT TESTED YET FOR f STATES !!
-        band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands ).T
+        if self.calculation[ 'spin_polarised' ]:
+            band_energies = self.bands[:,1:].reshape( self.spin_channels, self.number_of_k_points, self.number_of_bands )[ spins[0] ].T
+        else:
+            band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands ).T
         orbital_projection = np.sum( self.data[ :, :, :, :, orbitals ], axis = 4 )
         ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 ) 
         spin_projection = np.sum( ion_projection[ :, :, spins ], axis = 2 )
@@ -90,11 +118,12 @@ class Procar:
                 print( x_axis[ k ], e - e_fermi, p * scaling ) # k is the k_point index: currently gives linear k-point spacing
             print()
 
-    def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, printing = False ):
+    def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, spin = 1, printing = False ):
+        assert( spin <= self.k_point_blocks )
         assert( len( k_point_indices ) > 1 ) # we need at least 2 k-points
-        band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands )
+        band_energies = self.bands[:,1:].reshape( self.k_point_blocks, self.number_of_k_points, self.number_of_bands )
         k_points = np.array( [ self.k_points[ k - 1 ] for k in k_point_indices ] )
-        eigenvalues = np.array( [ band_energies[ k - 1 ][ band_index - 1 ] for k in k_point_indices ] )
+        eigenvalues = np.array( [ band_energies[ spin - 1 ][ k - 1 ][ band_index - 1 ] for k in k_point_indices ] )
         if printing:
             print( '# h k l e' )
             [ print( ' '.join( [ str( f ) for f in row ] ) ) for row in np.concatenate( ( k_points, np.array( [ eigenvalues ] ).T ), axis = 1 ) ]

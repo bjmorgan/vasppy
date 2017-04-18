@@ -3,6 +3,15 @@ import sys
 import re
 import copy
 from vasppy import configuration, atom, cell
+from pymatgen import Lattice as pmg_Lattice
+from pymatgen import Structure as pmg_Structure
+from pymatgen.io.cif import CifWriter
+from collections import Counter
+
+# Ignore SIG_PIPE and don't throw exceptions on it... 
+# http://newbebweb.blogspot.co.uk/2012/02/python-head-ioerror-errno-32-broken.html
+from signal import signal, SIGPIPE, SIG_DFL
+signal( SIGPIPE, SIG_DFL ) 
 
 def parity( list ):
     return( sum( list )%2 )
@@ -147,7 +156,7 @@ class Poscar:
             opts = {}
         with open( filename, 'w' ) as sys.stdout:
             self.output( coordinate_type=coordinate_type, opts=opts )
-
+        sys.stdout = sys.__stdout__ # make sure sys.stdout is reset
     def output_as_xtl( self ):
         print( self.title )
         print( "CELL" )
@@ -159,19 +168,8 @@ class Poscar:
         output_opts = { 'label' : True }
         self.output_coordinates_only( coordinate_type='Direct', opts = output_opts )
 
-    def output_as_cif( self ):
-        print( "#=======\n\ndata_VASP\n" )
-        print( "_pd_phase_name", '\'{}\''.format( self.title ) )
-        print( "_cell_length_a", '{}'.format( self.cell_lengths()[0] ) )
-        print( "_cell_length_b", '{}'.format( self.cell_lengths()[1] ) )
-        print( "_cell_length_c", '{}'.format( self.cell_lengths()[2] ) )
-        print( "_cell_angle_alpha", '{}'.format( self.cell_angles()[0] ) )
-        print( "_cell_angle_beta ", '{}'.format( self.cell_angles()[1] ) )
-        print( "_cell_angle_gamma", '{}'.format( self.cell_angles()[2] ) )
-        print( "\nloop_\n_symmetry_equiv_pos_as_xyz\n    'x, y, z'" )
-        print( "\nloop_\n   _atom_site_label\n    _atom_site_fract_x\n   _atom_site_fract_y\n   _atom_site_fract_z\n" ) 
-        output_opts = { 'label' : True }
-        self.output_coordinates_only( coordinate_type='Direct', opts = output_opts )
+    def output_as_cif( self, symprec = None ):
+        print( CifWriter( self.to_pymatgen_structure(), symprec ) )
 
     def output_as_pimaim( self, to_bohr = True ):
         if to_bohr is True:
@@ -244,3 +242,22 @@ class Poscar:
         new_poscar = copy.deepcopy( self )
         new_poscar.cell = cell.Cell( swap_axes( self.cell.matrix, axes ) )
         return new_poscar
+
+    def to_pymatgen_structure( self ):
+        lattice = pmg_Lattice( self.cell.matrix )
+        structure = pmg_Structure( lattice, self.labels(), self.coordinates )
+        return structure 
+
+    @property
+    def stoichiometry( self ):
+        """
+        Stoichiometry for this POSCAR, as a Counter.
+        e.g. AB_2O_4 -> Counter( { 'A': 1, 'B': 2, O: 4 } )
+        
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        return Counter( { label: number for label, number in zip( self.atoms, self.atom_numbers ) } )

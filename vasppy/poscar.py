@@ -6,6 +6,7 @@ from vasppy import configuration, atom, cell
 from pymatgen import Lattice as pmg_Lattice
 from pymatgen import Structure as pmg_Structure
 from pymatgen.io.cif import CifWriter
+from collections import Counter
 
 # Ignore SIG_PIPE and don't throw exceptions on it... 
 # http://newbebweb.blogspot.co.uk/2012/02/python-head-ioerror-errno-32-broken.html
@@ -246,3 +247,17 @@ class Poscar:
         lattice = pmg_Lattice( self.cell.matrix )
         structure = pmg_Structure( lattice, self.labels(), self.coordinates )
         return structure 
+
+    @property
+    def stoichiometry( self ):
+        """
+        Stoichiometry for this POSCAR, as a Counter.
+        e.g. AB_2O_4 -> Counter( { 'A': 1, 'B': 2, O: 4 } )
+        
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        return Counter( { label: number for label, number in zip( self.atoms, self.atom_numbers ) } )

@@ -8,6 +8,7 @@ import vasppy.pimaim
 
 def parse_command_line_arguments():
     parser = argparse.ArgumentParser( description = 'TODO' )
+    parser.add_argument( '-f', '--filename', help="PIMAIM restart file filename" )
     parser.add_argument( '-l', '--labels', nargs='+', help="labels for each species", required = True )
     parser.add_argument( '-n', '--atom-numbers', nargs='+', help="atom numbers for each species", required = True, type = int )
     args = parser.parse_args()
@@ -17,7 +18,8 @@ def parse_command_line_arguments():
     return args 
 
 if __name__ == '__main__':
-    filename = 'testout.rst'
     args = parse_command_line_arguments()
-    poscar = vasppy.pimaim.poscar_from_pimaim_restart( filename, args.atom_numbers, args.labels )
+    if args.filename is None:
+        args.filename = 'testout.rst'
+    poscar = vasppy.pimaim.poscar_from_pimaim_restart( args.filename, args.atom_numbers, args.labels )
     poscar.output_as_xtl()

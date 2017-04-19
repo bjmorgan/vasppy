@@ -24,7 +24,7 @@ class VASPMeta:
         self.notes = notes
         expected_status = [ 'to-run', 'incomplete', 'finished', 'dropped' ]
         if status not in expected_status:
-            raise ValueError
+            raise ValueError( status )
         self.status = status
 
     @classmethod

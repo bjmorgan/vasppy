@@ -9,7 +9,7 @@ Expects a series of directories (listed in `result_dirs`) that each contain:
 
 from vasppy.summary import Summary, find_vasp_calculations
 
-to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'energy', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'md5', 'directory' ]
+to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'md5', 'directory' ]
 
 if __name__ == "__main__":
     for path in sorted( find_vasp_calculations() ):

@@ -84,8 +84,8 @@ class Summary:
     def __init__( self, directory='.' ):
         self.directory = directory
         with cd( directory ):
-            self.vasprun = Vasprun( 'vasprun.xml', parse_potcar_file=False )
             self.meta = VASPMeta.from_file( 'vaspmeta.yaml' )
+            self.vasprun = Vasprun( 'vasprun.xml', parse_potcar_file=False )
         self.print_methods = { 'title': self.print_title,
                                'status': self.print_status,
                                'stoichiometry': self.print_stoichiometry,
@@ -109,7 +109,7 @@ class Summary:
         print( "---" )
         for p in to_print:
             self.print_methods[ p ]()
-        print()
+        print( '', flush=True )
         
     def print_title( self ):
         print( "title: {}".format( self.meta.title ) )
@@ -157,12 +157,13 @@ class Summary:
         print( "directory: {}".format( self.directory ) )
 
     def print_plus_u( self ):
-        lqn = { 0: 's', 1: 'p', 2: 'd', 3: 'f' }
-        ldauu = self.vasprun.incar[ 'LDAUU' ]
-        ldauj = self.vasprun.incar[ 'LDAUJ' ]
-        ldaul = self.vasprun.incar[ 'LDAUL' ]
-        if any( v != 0 for v in ldauu ):
-            print( 'ldau:' )
-            for e, u, j, l in zip( self.elements, ldauu, ldauj, ldaul ):
-                if u != 0:
-                    print( "    - {}: {} {} {}".format( e, lqn[l], u, j ) )
+        if 'LDAUU' in self.vasprun.incar:
+            lqn = { 0: 's', 1: 'p', 2: 'd', 3: 'f' }
+            ldauu = self.vasprun.incar[ 'LDAUU' ]
+            ldauj = self.vasprun.incar[ 'LDAUJ' ]
+            ldaul = self.vasprun.incar[ 'LDAUL' ]
+            if any( v != 0 for v in ldauu ):
+                print( 'ldau:' )
+                for e, u, j, l in zip( self.stoich, ldauu, ldauj, ldaul ):
+                    if u != 0:
+                        print( "    - {}: {} {} {}".format( e, lqn[l], u, j ) )

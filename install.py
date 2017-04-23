@@ -51,12 +51,15 @@ if __name__ == "__main__":
             if args.force:
                 os.remove( to_install )
                 print( 'deleting '+to_install )
-        print( "linking "+ script +'.py --> '+ to_install )
-        try:
-            os.symlink( os.path.join( origin_dir, script+'.py' ), to_install )
-        except FileExistsError:
-            print( '  '+script+' already exists in '+install_dir )
-            print( '  linking failed' )
-            sys.exit( -1 )
+            print( "linking "+ script +'.py --> '+ to_install )
+            try:
+                os.symlink( os.path.join( origin_dir, script+'.py' ), to_install )
+            except FileExistsError:
+                print( '  '+script+' already exists in '+install_dir )
+                print( '  linking failed' )
+                sys.exit( -1 )
+        else:
+            print( "  \"{}\" not found in ./scripts directory".format( to_install.split('/')[-1] ) )
+            print( "  try: install.py --list" ) 
 
 

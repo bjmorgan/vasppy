@@ -51,24 +51,6 @@ def vasprun_md5( filename ):
         vasprun = f.read()
     return( md5sum( vasprun ) )
 
-def functional( str ):
-    """
-    Identifies the calculation functional as PBE or PBEsol based on the `GGA` INCAR tag.
-
-    Args:
-        str (Str): The GGA INCAR tag
-
-    Returns:
-        (Str): PBE | PBEsol
-
-    Notes:
-        Not tested whether this works for PBE calculations, where the GGA tag might be missing.
-    """
-    if str == 'PS':
-        f = 'PBEsol'
-    else:
-        f = 'PBE'
-    return f
    
 @contextmanager
 def cd( path ):
@@ -105,6 +87,51 @@ class Summary:
     def stoich( self ):
         return self.vasprun.final_structure.composition.get_el_amt_dict()
 
+    @property
+    def functional( self ):
+        """
+        Identifies the calculation functional as PBE or PBEsol based on the `GGA` INCAR tag.
+
+        Args:
+            str (Str): The GGA INCAR tag
+
+        Returns:
+            (Str): PBE | PBEsol
+        """
+        if self.potcars_are_pbe(): # PBE base funtional
+            if 'LHFCALC' in self.vasprun.parameters:
+                alpha = float( self.vasprun.parameters['AEXX'] )
+            else:
+                alpha = 0.0
+            if 'HFSCREEN' in self.vasprun.parameters:
+                mu = float( self.vasprun.parameters['HFSCREEN'] )
+            else:
+                mu = 0
+            if alpha == 0.25:
+                if mu == 0: # PBE0
+                    f = 'PBE0'
+                else: # Some form of HSE
+                    if mu == 0.2: # HSE06
+                        f = 'HSE06'
+                    else:
+                        f = "screened hybrid. alpha={}, mu={}".format( alpha, mu )
+            elif alpha > 0: # hybrid with alpha != 0.25
+                if mu > 0: # Screened hybrid
+                    f = "screened hybrid. alpha={}, mu={}".format( alpha, mu )
+                else: # Standard hybrid
+                    f = "hybrid. alpha={}".format( alpha )
+            else: # not hybrid. Plain PBE or some variant.
+                if self.vasprun.parameters['GGA'] == 'PS':
+                    f = 'PBEsol'
+                else:
+                    f = 'PBE'
+        else:
+            f = 'not recognised'    
+        return f
+
+    def potcars_are_pbe( self ):
+        return all( 'PBE' in s for s in self.vasprun.potcar_symbols )
+
     def output( self, to_print ):
         print( "---" )
         for p in to_print:
@@ -136,7 +163,7 @@ class Summary:
         print( "    grid: {}".format( " ".join( str( k ) for k in self.vasprun.kpoints.kpts[0] ) ) )
 
     def print_functional( self ):
-        print( "functional: {}".format( functional( self.vasprun.parameters['GGA'] ) ) )
+        print( "functional: {}".format( self.functional ) )
 
     def print_ibrion( self ):
         print( "ibrion: {}".format( self.vasprun.incar['IBRION'] ) )
@@ -145,7 +172,11 @@ class Summary:
         print( "ediffg: {}".format( self.vasprun.incar['EDIFFG'] ) )
 
     def print_encut( self ):
-        print( "encut: {}".format( self.vasprun.incar['ENCUT'] ) )
+        if 'ENCUT' in self.vasprun.incar:
+            print( "encut: {}".format( self.vasprun.incar['ENCUT'] ) )
+        elif 'ENMAX' in self.vasprun.incar:
+            print( "encut: {}".format( self.vasprun.incar['ENMAX'] ) )
+
 
     def print_converged( self ):
         print( "converged: {}".format( self.vasprun.converged ) )

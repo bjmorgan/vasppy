@@ -1,6 +1,6 @@
 # vasppy - a python package for manipulating VASP files
 
-![test coverage](https://github.com/vasppy/tests/coverage.svg)
+![test coverage](https://rawgithub.com/vasppy/tests/coverage.svg)
 
 Modules:
 - atom

@@ -45,5 +45,18 @@ status: finished\
         mock_VASPMeta.assert_called_with( 'title', 'description', 'finished', notes='notes' )
         self.assertEqual( vaspmeta, mock_VASPMeta.return_value )
 
+    def test_from_file_with_no_notes_entry( self ):
+        example_file = """\
+title: title
+description: description
+status: finished\
+"""
+        with patch( 'vasppy.vaspmeta.VASPMeta' ) as mock_VASPMeta:
+            mock_VASPMeta.return_value = 'my VASP metadata'
+            with patch( 'builtins.open', mock_open( read_data=example_file), create=True ) as m:
+                vaspmeta = VASPMeta.from_file( example_file )
+        mock_VASPMeta.assert_called_with( 'title', 'description', 'finished' )
+        self.assertEqual( vaspmeta, mock_VASPMeta.return_value )
+
 if __name__ == '__main__':
     unittest.main()

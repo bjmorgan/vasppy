@@ -13,7 +13,9 @@ setup(
     install_requires = [
         'numpy',
         'pymatgen',
-        'PyYAML'
+        'PyYAML', 
+        'coveralls',
+        'python-coveralls'
     ],
     classifiers = []
 )

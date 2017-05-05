@@ -1,0 +1,5 @@
+numpy
+pymatgen
+PyYAML 
+coveralls
+python-coveralls

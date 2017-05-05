@@ -1,5 +1,7 @@
 # vasppy - a python package for manipulating VASP files
 
+[![Build Status](https://travis-ci.org/bjmorgan/vasppy.svg?branch=master)](https://travis-ci.org/bjmorgan/vasppy)
+
 Modules:
 - atom
 - configuration

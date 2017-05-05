@@ -11,7 +11,7 @@ class RdfTestCase( unittest.TestCase ):
         self.assertEqual( rdf.number_of_bins, number_of_bins )
         self.assertEqual( rdf.max_r, max_r )
         self.assertEqual( rdf.dr, 1.0 )
-        # check rdf.data is zeroed
+        # TODO check rdf.data is zeroed
 
     def test_add_dr( self ):
         max_r = 10.0

@@ -13,4 +13,6 @@ python:
 install: pip install -r requirements.txt
 # command to run tests
 script: coverage run --rcfile=.coveragerc -m unittest discover
-after_success: coveralls --config_file .coveragerc
+after_success: |
+coveralls --config_file .coveragerc
+codeclimate-test-reporter --token $CODECLIMATE_REPO_TOKEN

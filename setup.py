@@ -15,7 +15,8 @@ setup(
         'pymatgen',
         'PyYAML', 
         'coveralls',
-        'python-coveralls'
+        'python-coveralls',
+        'codeclimate-test-reporter'
     ],
     classifiers = []
 )

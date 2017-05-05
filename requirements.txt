@@ -3,3 +3,4 @@ pymatgen
 PyYAML 
 coveralls
 python-coveralls
+codeclimate-test-reporter

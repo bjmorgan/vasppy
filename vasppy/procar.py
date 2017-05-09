@@ -32,7 +32,21 @@ def area_of_a_triangle_in_cartesian_space( a, b, c ):
     Returns:
         (float): the area of the triangle.
     """
-    pass
+    return 0.5 * np.linalg.norm( np.cross( b-a, c-a ) )
+
+def points_are_in_a_straight_line( points, tolerance ):
+    """
+    Check whether a set of points fall on a straight line.
+    Calculates the areas of triangles formed by triplets of the points.
+    Returns False is any of these areas are larger than the tolerance.
+    
+    Args:
+        points (list(np.array)): list of Cartesian coordinates for each point.
+        tolerance (float): the maximum triangle size for these points to be considered colinear.
+
+    Returns:
+        (bool): True if all points fall on a straight line (within the allowed tolerance).
+    """
 
 class Procar:
 

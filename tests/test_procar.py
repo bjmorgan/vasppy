@@ -59,5 +59,14 @@ class ParserTestCase( unittest.TestCase ):
         self.assertEqual( procar.projections_parser( procar_string ).tolist(),
             np.array( [ [ 1.0, 0.006, 0.0, 0.0, 0.006, 2.0, 0.009, 0.0, 0.0, 0.009, 0.0, 0.835, 0.021, 0.012, 0.868 ], [ 1.0, 0.006, 0.0, 0.0, 0.006, 2.0, 0.009, 0.0, 0.0, 0.009, 0.0, 0.835, 0.021, 0.012, 0.868 ] ] ).tolist() )
 
+class ProcarSupportFunctionsTestCase( unittest.TestCase ):
+    """Test for the support functions in procar.py"""
+
+    def test_area_of_a_triangle_in_cartesian_space( self ):
+        a = np.array( [ 0.0, 0.0, 0.0 ] )
+        b = np.array( [ 4.0, 0.0, 0.0 ] )
+        c = np.array( [ 0.0, 3.0, 0.0 ] )
+        self.assertEqual( procar.area_of_a_triangle_in_cartesian_space( a, b, c ), 6.0 )
+
 if __name__ == '__main__':
     unittest.main()

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument( '-b', '--band-index', help='index of band for calculating effective mass', type=int, required=True )
     parser.add_argument( '-f', '--procar', help='PROCAR filename (default PROCAR)', type=str, default='PROCAR' )
     parser.add_argument( '-v', '--verbose', help='Verbose output', action='store_true' )
-    parser.add_argument( '-o', '--outcar', help='OUTCAR filename (default OUTCAR)', type=str, default='OUTAR' )
+    parser.add_argument( '-o', '--outcar', help='OUTCAR filename (default OUTCAR)', type=str, default='OUTCAR' )
     parser.add_argument( '-s', '--spin', help='select spin channel (default 1 / non-spin-polarised)', type=int, default='1' )
     args = parser.parse_args()
 

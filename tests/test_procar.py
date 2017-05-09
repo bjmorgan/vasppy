@@ -8,7 +8,7 @@ test_procar_filename = os.path.join( os.path.dirname( __file__ ), test_data_dir,
 test_procar_spin_polarised_filename = os.path.join( os.path.dirname( __file__ ), test_data_dir, 'PROCAR_spin_polarised_test' )
 
 class ProcarTestCase( unittest.TestCase ):
-    """Test for `procar.py`"""
+    """Test for procar.py"""
 
     def setUp( self ):
         self.procar = procar.Procar()
@@ -67,6 +67,22 @@ class ProcarSupportFunctionsTestCase( unittest.TestCase ):
         b = np.array( [ 4.0, 0.0, 0.0 ] )
         c = np.array( [ 0.0, 3.0, 0.0 ] )
         self.assertEqual( procar.area_of_a_triangle_in_cartesian_space( a, b, c ), 6.0 )
+
+    def test_points_are_in_a_straight_line( self ):
+        a = np.array( [ 0.0, 0.0, 0.0 ] )
+        b = np.array( [ 2.0, 0.0, 0.0 ] )
+        c = np.array( [ 3.0, 0.0, 0.0 ] )
+        points = [ a, b, c ]
+        tolerance = 1e-7
+        self.assertEqual( procar.points_are_in_a_straight_line( points, tolerance ), True )
+
+    def test_points_are_not_in_a_straight_line( self ):
+        a = np.array( [ 0.0, 0.0, 0.0 ] )
+        b = np.array( [ 2.0, 1.0, 0.0 ] )
+        c = np.array( [ 3.0, 0.0, 0.0 ] )
+        points = [ a, b, c ]
+        tolerance = 1e-7
+        self.assertEqual( procar.points_are_in_a_straight_line( points, tolerance ), False )
 
 if __name__ == '__main__':
     unittest.main()

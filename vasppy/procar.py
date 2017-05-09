@@ -47,6 +47,12 @@ def points_are_in_a_straight_line( points, tolerance ):
     Returns:
         (bool): True if all points fall on a straight line (within the allowed tolerance).
     """
+    a = points[0]
+    b = points[1]
+    for c in points[2:]:
+        if area_of_a_triangle_in_cartesian_space( a, b, c ) > tolerance:
+            return False
+    return True
 
 class Procar:
 
@@ -158,6 +164,7 @@ class Procar:
         reciprocal_lattice = reciprocal_lattice * 2 * math.pi * angstrom_to_bohr
         cartesian_k_points = np.array( [ np.dot( k, reciprocal_lattice ) for k in k_points ] ) # convert k-points to cartesian
         # TODO Check that the cartesian_k_points fall on a straight line, e.g. http://stackoverflow.com/questions/3813681/checking-to-see-if-3-points-are-on-the-same-line
+        # TODO this method can (and should) be refactored. e.g. the effective mass calculations can be split out into separate funtions.
         if len( k_point_indices ) == 2:
             # reimplemented from Aron's fortran version
             dk = cartesian_k_points[ 1 ] - cartesian_k_points[ 0 ]

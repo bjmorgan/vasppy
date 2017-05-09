@@ -20,6 +20,20 @@ def projections_parser( string ):
     data = np.array( [ x.split() for x in data ], dtype = float )
     return data
 
+def area_of_a_triangle_in_cartesian_space( a, b, c ):
+    """
+    Returns the area of a triangle defined by three points in Cartesian space.
+    
+    Args:
+        a (np.array): Cartesian coordinates of point A.
+        b (np.array): Cartesian coordinates of point B.
+        c (np.array): Cartesian coordinates of point C.
+
+    Returns:
+        (float): the area of the triangle.
+    """
+    pass
+
 class Procar:
 
     def __init__( self, spin = 1 ):

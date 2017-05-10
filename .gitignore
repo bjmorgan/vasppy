@@ -3,3 +3,5 @@ MANIFEST
 dist
 *.pyc
 *.swp
+.coverage
+tests/.coverage

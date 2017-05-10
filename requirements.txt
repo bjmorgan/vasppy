@@ -1,5 +1,5 @@
 numpy
 pymatgen
 PyYAML 
-coverage=4.3.4
+coverage==4.3.4
 codeclimate-test-reporter

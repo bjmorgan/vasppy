@@ -2,6 +2,7 @@ import unittest
 import os
 from vasppy import procar
 import numpy as np
+from unittest.mock import patch
 
 test_data_dir = 'test_data'
 test_procar_filename = os.path.join( os.path.dirname( __file__ ), test_data_dir, 'PROCAR_test' )
@@ -30,7 +31,8 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( pcar.number_of_ions, 25 )
         self.assertEqual( pcar.number_of_bands, 112 )
         self.assertEqual( pcar.number_of_k_points, 8 )
-         
+    
+                 
 class ParserTestCase( unittest.TestCase ):
     """Test for VASP output parsers"""
 
@@ -83,6 +85,25 @@ class ProcarSupportFunctionsTestCase( unittest.TestCase ):
         points = [ a, b, c ]
         tolerance = 1e-7
         self.assertEqual( procar.points_are_in_a_straight_line( points, tolerance ), False )
+
+    def test_least_squares_effective_mass( self ):
+        k_points = np.array( [ [ 0.0, 0.0, 0.0 ],
+                               [ 1.0, 0.0, 0.0 ],
+                               [ 2.0, 0.0, 0.0 ] ] )
+        eigenvalues = np.array( [ 0.0, 1.0, 4.0 ] )
+        with patch( 'vasppy.procar.points_are_in_a_straight_line' ) as mock_straight_line_test:
+            mock_straight_line_test.return_value = True
+            self.assertAlmostEqual( procar.least_squares_effective_mass( k_points, eigenvalues ), 13.605698001 )  
+ 
+    def test_least_squares_effective_mass_raises_valueerror_if_points_are_not_collinear( self ):
+        k_points = np.array( [ [ 0.0, 0.0, 0.0 ],
+                               [ 1.0, 0.0, 1.0 ],
+                               [ 2.0, 0.0, 0.0 ] ] )
+        eigenvalues = np.array( [ 0.0, 1.0, 4.0 ] )
+        with patch( 'vasppy.procar.points_are_in_a_straight_line' ) as mock_straight_line_test:
+            mock_straight_line_test.return_value = False
+            with self.assertRaises( ValueError ):
+                procar.least_squares_effective_mass( k_points, eigenvalues )
 
 if __name__ == '__main__':
     unittest.main()

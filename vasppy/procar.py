@@ -34,7 +34,7 @@ def area_of_a_triangle_in_cartesian_space( a, b, c ):
     """
     return 0.5 * np.linalg.norm( np.cross( b-a, c-a ) )
 
-def points_are_in_a_straight_line( points, tolerance ):
+def points_are_in_a_straight_line( points, tolerance=1e-7 ):
     """
     Check whether a set of points fall on a straight line.
     Calculates the areas of triangles formed by triplets of the points.
@@ -42,7 +42,7 @@ def points_are_in_a_straight_line( points, tolerance ):
     
     Args:
         points (list(np.array)): list of Cartesian coordinates for each point.
-        tolerance (float): the maximum triangle size for these points to be considered colinear.
+        tolerance (optional:float): the maximum triangle size for these points to be considered colinear. Default is 1e-7.
 
     Returns:
         (bool): True if all points fall on a straight line (within the allowed tolerance).
@@ -53,6 +53,38 @@ def points_are_in_a_straight_line( points, tolerance ):
         if area_of_a_triangle_in_cartesian_space( a, b, c ) > tolerance:
             return False
     return True
+
+def two_point_effective_mass( cartesian_k_points, eigenvalues ):
+    assert( cartesian_k_points.size == 2 )
+    assert( eigenvalues.size == 2 )
+    # reimplemented from Aron Walsh's fortran version
+    dk = cartesian_k_points[ 1 ] - cartesian_k_points[ 0 ]
+    mod_dk = np.sqrt( np.dot( dk, dk ) )
+    delta_e = ( eigenvalues[ 1 ] - eigenvalues[ 0 ] ) * ev_to_hartree * 2.0
+    effective_mass = mod_dk * mod_dk / delta_e
+    return effective_mass
+
+def least_squares_effective_mass( cartesian_k_points, eigenvalues ):
+    """
+    Calculate the effective mass using a least squares quadratic fit.
+
+    Args:
+        cartesian_k_points (np.array): Cartesian reciprocal coordinates for the k-points
+        eigenvalues (np.array):        Energy eigenvalues at each k-point to be used in the fit.
+
+    Returns:
+        (float): The fitted effective mass
+
+    Notes:
+        If the k-points do not sit on a straight line a ValueError will be raised.
+    """
+    if not points_are_in_a_straight_line( cartesian_k_points ):
+        raise ValueError( 'k-points are not collinear' )
+    dk = cartesian_k_points - cartesian_k_points[0]
+    mod_dk = np.linalg.norm( dk, axis = 1 )
+    delta_e = eigenvalues - eigenvalues[0]
+    effective_mass = 1.0 / ( np.polyfit( mod_dk, eigenvalues, 2 )[0] * ev_to_hartree * 2.0 )
+    return effective_mass
 
 class Procar:
 
@@ -163,20 +195,11 @@ class Procar:
             [ print( ' '.join( [ str( f ) for f in row ] ) ) for row in np.concatenate( ( k_points, np.array( [ eigenvalues ] ).T ), axis = 1 ) ]
         reciprocal_lattice = reciprocal_lattice * 2 * math.pi * angstrom_to_bohr
         cartesian_k_points = np.array( [ np.dot( k, reciprocal_lattice ) for k in k_points ] ) # convert k-points to cartesian
-        # TODO Check that the cartesian_k_points fall on a straight line, e.g. http://stackoverflow.com/questions/3813681/checking-to-see-if-3-points-are-on-the-same-line
-        # TODO this method can (and should) be refactored. e.g. the effective mass calculations can be split out into separate funtions.
         if len( k_point_indices ) == 2:
-            # reimplemented from Aron's fortran version
-            dk = cartesian_k_points[ 1 ] - cartesian_k_points[ 0 ]
-            mod_dk = np.sqrt( np.dot( dk, dk ) )
-            delta_e = ( eigenvalues[ 1 ] - eigenvalues[ 0 ] ) * ev_to_hartree * 2.0
-            effective_mass = mod_dk * mod_dk / delta_e
+            effective_mass_function = two_point_effective_mass
         else:
-            dk = cartesian_k_points - cartesian_k_points[0] 
-            mod_dk = np.linalg.norm( dk, axis = 1 )
-            delta_e = eigenvalues - eigenvalues[0]
-            effective_mass = 1.0 / ( np.polyfit( mod_dk, eigenvalues, 2 )[0] * ev_to_hartree * 2.0 )
-        return effective_mass
+            effective_mass_function = linear_interpolation_effective_mass
+        return effective_mass_function( cartesian_k_points, eigenvalues )
 
     def x_axis( self, reciprocal_lattice ):
         if reciprocal_lattice is not None:

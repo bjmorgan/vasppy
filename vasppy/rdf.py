@@ -1,14 +1,36 @@
 import numpy as np
 
 class Rdf:
+    """
+    class for radial distribution functions
+    """
 
     def __init__( self, max_r, number_of_bins ):
+        """
+        Initialise a Rdf object for manipulating radial distribution functions.
+        
+        Args:
+            max_r (Float): the maximum r value stored for g(r).
+            number_of_bins (Int): number of bins for storing data about g(r).
+
+        Returns:
+            None
+        """
         self.max_r = max_r
         self.number_of_bins = number_of_bins
         self.data = np.zeros( number_of_bins )
         self.dr = max_r / number_of_bins
  
     def add_dr( self, dr ):
+        """
+        Add an observed interatomic distance to the g(r) data at dr.
+
+        Args:
+            dr (Float): the interatomic distance, dr.
+
+        Returns:
+            None
+        """ 
         this_bin = int( dr / self.dr ) 
         if this_bin > self.number_of_bins:
             raise IndexError( 'dr is larger than rdf max_r' )

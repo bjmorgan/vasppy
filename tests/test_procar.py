@@ -105,5 +105,11 @@ class ProcarSupportFunctionsTestCase( unittest.TestCase ):
             with self.assertRaises( ValueError ):
                 procar.least_squares_effective_mass( k_points, eigenvalues )
 
+    def test_two_point_effective_mass( self ):
+        k_points = np.array( [ [ 0.0, 0.0, 0.0 ],
+                               [ 1.0, 0.0, 0.0 ] ] )
+        eigenvalues = np.array( [ 0.0, 1.0 ] )
+        self.assertAlmostEqual( procar.two_point_effective_mass( k_points, eigenvalues ), 13.605698001 )
+
 if __name__ == '__main__':
     unittest.main()

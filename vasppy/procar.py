@@ -55,9 +55,19 @@ def points_are_in_a_straight_line( points, tolerance=1e-7 ):
     return True
 
 def two_point_effective_mass( cartesian_k_points, eigenvalues ):
-    assert( cartesian_k_points.size == 2 )
+    """
+    Calculate the effective mass given eigenvalues at two k-points.
+    Reimplemented from Aron Walsh's original effective mass Fortran code.
+    
+    Args:
+        cartesian_k_points (np.array): 2D numpy array containing the k-points in (reciprocal) Cartesian coordinates. 
+        eigenvalues (np.array):        numpy array containing the eigenvalues at each k-point.
+
+    Returns:
+        (float): The effective mass
+    """
+    assert( cartesian_k_points.shape[0] == 2 )
     assert( eigenvalues.size == 2 )
-    # reimplemented from Aron Walsh's fortran version
     dk = cartesian_k_points[ 1 ] - cartesian_k_points[ 0 ]
     mod_dk = np.sqrt( np.dot( dk, dk ) )
     delta_e = ( eigenvalues[ 1 ] - eigenvalues[ 0 ] ) * ev_to_hartree * 2.0

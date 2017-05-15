@@ -198,7 +198,7 @@ class Procar:
         if len( k_point_indices ) == 2:
             effective_mass_function = two_point_effective_mass
         else:
-            effective_mass_function = linear_interpolation_effective_mass
+            effective_mass_function = least_squares_effective_mass
         return effective_mass_function( cartesian_k_points, eigenvalues )
 
     def x_axis( self, reciprocal_lattice ):

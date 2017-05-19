@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import Mock, patch, mock_open
+from collections import Counter
 
 from vasppy.calculation import Calculation, delta_E, delta_stoichiometry
 import numpy as np
@@ -61,6 +62,13 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
         with self.assertRaises( ValueError ):
             delta_E( reactants=[ calculations[0] ], products=calculations[1:3] )
         mock_delta_stoichiometry.assert_called_with( [ calculations[0] ], calculations[1:3] )
+
+    def test_delta_stoichiometry( self ):
+        titles = [ 'A', 'B', 'C' ]
+        energies = [ -50.5, -23.2, -10.1 ]
+        stoichiometries = [ { 'B': 1, 'C': 2 }, { 'D': 1, 'C': 1 }, { 'C': 1 } ]
+        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries ) ]
+        self.assertEqual( delta_stoichiometry( reactants=[ calculations[0] ], products=calculations[1:3] ), { 'B': -1, 'D': 1 } )
 
 if __name__ == '__main__':
     unittest.main()

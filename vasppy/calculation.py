@@ -60,7 +60,7 @@ class Calculation:
             scaling (float): The scaling factor.
 
         Returns:
-            (dict(Str:Int)): The scaled stoichiometry as a dictionary of label: stoichiometry pairs
+            (Counter(Str:Int)): The scaled stoichiometry as a Counter of label: stoichiometry pairs
         """ 
         return { k:v*scaling for k,v in self.stoichiometry.items() }
     
@@ -82,6 +82,16 @@ def delta_E( reactants, products, check_balance=True ):
     return sum( [ r.energy for r in products ] ) - sum( [ r.energy for r in reactants ] )
 
 def delta_stoichiometry( reactants, products ):
+    """
+    Calculate the change in stoichiometry for reactants --> products.
+
+    Args:
+        reactants (list(vasppy.Calculation): A list of vasppy.Calculation objects. The initial state.
+        products  (list(vasppy.Calculation): A list of vasppy.Calculation objects. The final state.
+
+    Returns:
+        (Counter): The change in stoichiometry.
+    """ 
     totals = Counter()
     for r in reactants:
         totals.update( ( r * -1.0 ).stoichiometry )

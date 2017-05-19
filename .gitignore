@@ -5,3 +5,4 @@ dist
 *.swp
 .coverage
 tests/.coverage
+

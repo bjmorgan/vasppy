@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch, mock_open
 
-from vasppy.calculation import Calculation
+from vasppy.calculation import Calculation, delta_E, delta_stoichiometry
 import numpy as np
 
 class CalculationTestCase( unittest.TestCase ):
@@ -36,12 +36,31 @@ class CalculationTestCase( unittest.TestCase ):
             new_calculation = calculation / 2
             mock_mul.assert_called_with( 0.5 )
 
-    def scale_stoichiometry( self ):
+    def test_scale_stoichiometry( self ):
         title = 'A'
         energy = -100.0
         stoichiometry = { 'B': 1, 'C': 2 }
         calculation = Calculation( title=title, energy=energy, stoichiometry=stoichiometry )
         self.assertEqual( calculation.scale_stoichiometry( 2 ), { 'B': 2, 'C': 4 } )
      
+class CalculationSupportFunctionsTestCase( unittest.TestCase ):
+
+    def test_delta_E( self ):
+        titles = [ 'A', 'B', 'C' ]
+        energies = [ -50.5, -23.2, -10.1 ]
+        stoichiometries = [ { 'B': 1, 'C': 2 }, { 'B': 1, 'C': 1 }, { 'C': 1 } ]
+        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries ) ]
+        self.assertAlmostEqual( delta_E( reactants=[ calculations[0] ], products=calculations[1:3] ), +17.2 ) 
+
+    @patch( 'vasppy.calculation.delta_stoichiometry' )
+    def test_delta_E_raises_value_error_if_not_balanced( self, mock_delta_stoichiometry ):
+        titles = [ 'A', 'B', 'C' ]
+        energies = [ -50.5, -23.2, -10.1 ]
+        stoichiometries = [ { 'B': 1, 'C': 2 }, { 'B': 1, 'C': 1 }, { 'C': 2 } ]
+        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries ) ]
+        with self.assertRaises( ValueError ):
+            delta_E( reactants=[ calculations[0] ], products=calculations[1:3] )
+        mock_delta_stoichiometry.assert_called_with( [ calculations[0] ], calculations[1:3] )
+
 if __name__ == '__main__':
     unittest.main()

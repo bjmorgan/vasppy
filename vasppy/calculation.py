@@ -49,13 +49,33 @@ class Calculation:
         Returns:
             (vasppy.Calculation): The scaled Calculation.
         """
-
         return self * ( 1 / scaling )
         
     def scale_stoichiometry( self, scaling ):
+        """
+        Scale the Calculation stoichiometry
+        Returns the stoichiometry, scaled by the argument scaling.
+
+        Args:
+            scaling (float): The scaling factor.
+
+        Returns:
+            (dict(Str:Int)): The scaled stoichiometry as a dictionary of label: stoichiometry pairs
+        """ 
         return { k:v*scaling for k,v in self.stoichiometry.items() }
     
 def delta_E( reactants, products, check_balance=True ):
+    """
+    Calculate the change in energy for reactants --> products.
+    
+    Args:
+        reactants (list(vasppy.Calculation): A list of vasppy.Calculation objects. The initial state.
+        products  (list(vasppy.Calculation): A list of vasppy.Calculation objects. The final state.
+        check_balance (bool:optional): Check that the reaction stoichiometry is balanced. Default: True.
+
+    Returns:
+        (float) The change in energy.
+    """
     if check_balance:
         if delta_stoichiometry( reactants, products ) != {}:
             raise ValueError( "reaction is not balanced: {}".format( delta_stoichiometry( reactants, products) ) )

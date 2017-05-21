@@ -18,5 +18,11 @@ class Test_Cell( unittest.TestCase ):
             np.testing.assert_array_equal( cell.matrix, cell_matrix )
             np.testing.assert_array_equal( cell.inv_matrix, mock_invert.return_value )
 
+    def test_angle( self ):
+        test_data = [ [ np.array( [ 1.0, 0.0, 0.0 ] ), np.array( [ 0.0, 1.0, 0.0 ] ), 90.0 ],
+                      [ np.array( [ 2.0, 2.0, 0.0 ] ), np.array( [ 0.5, 0.0, 0.0 ] ), 45.0 ] ]
+        for data in test_data:
+            self.assertAlmostEqual( angle( data[0], data[1] ), data[2] )
+
 if __name__ == '__main__':
     unittest.main() 

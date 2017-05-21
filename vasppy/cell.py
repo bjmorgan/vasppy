@@ -27,6 +27,15 @@ def rotation_matrix(axis, theta):
 class Cell:
 
     def __init__( self, matrix ):
+        """
+        Initialise a Cell object.
+
+        Args:
+            matrix (np.array): 3x3 numpy array containing the cell matrix.
+
+        Returns:
+            None
+        """
         assert type( matrix ) is np.ndarray
         assert matrix.shape == ( 3, 3 )
         self.matrix = matrix # 3 x 3 numpy Array

@@ -34,6 +34,22 @@ class Test_Cell( unittest.TestCase ):
         r2 = np.array( [ 0.1, 0.4, 0.1 ] )
         self.assertEqual( self.cell.dr( r1, r2, cutoff=1.0 ), None )
 
+    def test_nearest_image( self ):
+        r1 = np.array( [ 0.5, 0.1, 0.1 ] )
+        r2 = np.array( [ 0.1, 0.4, 0.1 ] )
+        self.cell.minimum_image = Mock( return_value=np.array( [ -0.4, 0.3, 0.0 ] ) )
+        np.testing.assert_array_almost_equal( self.cell.nearest_image( r1, r2 ), r2 )
+
+    def test_minimum_image( self ):
+        r1 = np.array( [ 0.5, 0.1, 0.1 ] )
+        r2 = np.array( [ 0.1, 0.4, 0.1 ] )
+        np.testing.assert_array_almost_equal( self.cell.minimum_image( r1, r2 ), np.array( [ -0.4, 0.3, 0.0 ] ) )
+
+    def test_minimum_image_2( self ):
+        r1 = np.array( [ 0.5, 0.1, 0.1 ] )
+        r2 = np.array( [ 0.6, 0.8, 0.8 ] )
+        np.testing.assert_array_almost_equal( self.cell.minimum_image( r1, r2 ), np.array( [ 0.1, -0.3, -0.3 ] ) )
+	
 class Test_Cell_Support_Functions( unittest.TestCase ):
 
     def test_angle( self ):

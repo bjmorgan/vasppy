@@ -72,16 +72,34 @@ class Cell:
         return( math.sqrt( delta_r_squared ) )
 
     def nearest_image( self, origin, point ):
+        """
+        Find the fractional_coordinates of the nearest periodic image to a point of origin.
+
+        Args:
+            origin (np.array): fractional coordinates of the point of origin.
+            point  (np.array): fractional coordinates of the other point.
+
+        Returns:
+            (np.array): the fractional coordinates of the nearest image of `point` to `origin`.
+        """
         return( origin + self.minimum_image( origin, point ) )
 
     def minimum_image( self, r1, r2 ):
+        """
+        Find the minimum image vector from point r1 to point r2.
+
+        Args:
+            r1 (np.array): fractional coordinates of point r1.
+            r2 (np.array): fractional coordaintes of point r2.
+
+        Returns:
+            (np.array): the fractional coordinate vector from r1 to the nearest image of r2.
+        """
         delta_r = r2 - r1
-        # print( delta_r )
         delta_r = np.array( [ x - math.copysign( 1.0, x ) if abs(x) > 0.5 else x for x in delta_r ] )
-        # print( delta_r )
         return( delta_r )
 
-    def minimum_image_dr( self, r1, r2, cutoff = None ):
+    def minimum_image_dr( self, r1, r2, cutoff=None ):
         delta_r_vector = self.minimum_image( r1, r2 )
         return( self.dr( np.zeros( 3 ), delta_r_vector, cutoff ) )
 
@@ -103,9 +121,7 @@ class Cell:
 
     def inside_cell( self, r ):
         centre = np.array( [ 0.5, 0.5, 0.5 ] )
-        # print( 'r=',r )
         new_r = self.nearest_image( centre, r )
-        # print( 'new_r=',new_r )
         return new_r
 
     def volume( self ):

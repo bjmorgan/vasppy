@@ -51,7 +51,18 @@ class Cell:
         self.matrix = matrix # 3 x 3 numpy Array
         self.inv_matrix = np.linalg.inv( matrix )
 
-    def dr( self, r1, r2, cutoff = None ):
+    def dr( self, r1, r2, cutoff=None ):
+        """
+        Calculate the distance between two fractional coordinates in the cell.
+        
+        Args:
+            r1 (np.array): fractional coordinates for position 1.
+            r2 (np.array): fractional coordinates for position 2.
+            cutoff (optional:Bool): If set, returns None for distances greater than the cutoff. Default None (unset).
+
+        Returns:
+            (float): the distance between r1 and r2.
+        """
         delta_r_cartesian = ( r1 - r2 ).dot( self.matrix )
         delta_r_squared = sum( delta_r_cartesian**2 )
         if cutoff != None:

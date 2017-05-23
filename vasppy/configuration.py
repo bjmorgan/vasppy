@@ -2,6 +2,9 @@ from vasppy import atom, cell, rdf
 import numpy as np
 
 class Configuration:
+    """
+    A Configuration object stores a single structure.
+    """
 
     def __init__( self, cell, atoms ):
         self.cell  = cell 

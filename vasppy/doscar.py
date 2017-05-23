@@ -117,7 +117,7 @@ class DOS:
         self.densities *= scale
         return self
 
-    @attribute
+    @property
     def up( self ):
         assert self.spin_polarised == True
         new_dos = copy.deepcopy( self )
@@ -125,7 +125,7 @@ class DOS:
         new_dos.densities = self.densities[ :, 0::2 ]
         return new_dos
 
-    @attribute
+    @property
     def down( self ):
         assert self.spin_polarised == True
         new_dos = copy.deepcopy( self )
@@ -133,7 +133,7 @@ class DOS:
         new_dos.densities = self.densities[ :, 1::2 ]
         return new_dos
 
-    @attribute
+    @property
     def sum( self, columns = None ):
         if columns == None:
             columns = list( range( 0, self.densities.shape[1] ) )
@@ -150,19 +150,19 @@ class Atomic_DOS( DOS ):
         self.maximum_l_quantum_number = maximum_l_quantum_number
         super( Atomic_DOS, self ).__init__( data, spin_polarised )
 
-    @attribute
+    @property
     def s( self ):
         return self.specific_angular_momentum( 0 )
 
-    @attribute
+    @property
     def p( self ):
         return self.specific_angular_momentum( 1 )
 
-    @attribute
+    @property
     def d( self ):
         return self.specific_angular_momentum( 2 )
 
-    @attribute
+    @property
     def f( self ):
         return( self.specific_angular_momentum( 3 ) )
 

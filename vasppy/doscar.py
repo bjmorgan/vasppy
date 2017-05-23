@@ -117,6 +117,7 @@ class DOS:
         self.densities *= scale
         return self
 
+    @attribute
     def up( self ):
         assert self.spin_polarised == True
         new_dos = copy.deepcopy( self )
@@ -124,6 +125,7 @@ class DOS:
         new_dos.densities = self.densities[ :, 0::2 ]
         return new_dos
 
+    @attribute
     def down( self ):
         assert self.spin_polarised == True
         new_dos = copy.deepcopy( self )
@@ -131,6 +133,7 @@ class DOS:
         new_dos.densities = self.densities[ :, 1::2 ]
         return new_dos
 
+    @attribute
     def sum( self, columns = None ):
         if columns == None:
             columns = list( range( 0, self.densities.shape[1] ) )
@@ -147,15 +150,19 @@ class Atomic_DOS( DOS ):
         self.maximum_l_quantum_number = maximum_l_quantum_number
         super( Atomic_DOS, self ).__init__( data, spin_polarised )
 
+    @attribute
     def s( self ):
         return self.specific_angular_momentum( 0 )
 
+    @attribute
     def p( self ):
         return self.specific_angular_momentum( 1 )
 
+    @attribute
     def d( self ):
         return self.specific_angular_momentum( 2 )
 
+    @attribute
     def f( self ):
         return( self.specific_angular_momentum( 3 ) )
 
@@ -180,30 +187,30 @@ class Atomic_DOS( DOS ):
                                      maximum_l_quantum_number = self.maximum_l_quantum_number )
         if self.spin_polarised:
             if self.maximum_l_quantum_number == 3:
-                new_densities = ( self.s(), 
-                                  self.p().up().sum(), 
-                                  self.p().down().sum(), 
-                                  self.d().up().sum(),
-                                  self.d().down().sum(), 
-                                  self.f().up().sum(),
-                                  self.f().down().sum() )
+                new_densities = ( self.s, 
+                                  self.p.up.sum, 
+                                  self.p.down.sum, 
+                                  self.d.up.sum,
+                                  self.d.down.sum, 
+                                  self.f.up.sum,
+                                  self.f.down.sum )
             else:
-                new_densities = ( self.s().up().sum(),
-                                  self.s().down().sum(),
-                                  self.p().up().sum(), 
-                                  self.p().down().sum(), 
-                                  self.d().up().sum(),
-                                  self.d().down().sum() )
+                new_densities = ( self.s.up.sum,
+                                  self.s.down.sum,
+                                  self.p.up.sum, 
+                                  self.p.down.sum, 
+                                  self.d.up.sum,
+                                  self.d.down.sum )
         else:
             if self.maximum_l_quantum_number == 3:
-                new_densities = ( self.s(). 
-                                  self.p().sum(), 
-                                  self.d().sum(), 
-                                  self.f().sum() )
+                new_densities = ( self.s. 
+                                  self.p.sum, 
+                                  self.d.sum, 
+                                  self.f.sum )
             else:
-                new_densities = ( self.s(), 
-                                  self.p().sum(), 
-                                  self.d().sum() )
+                new_densities = ( self.s, 
+                                  self.p.sum, 
+                                  self.d.sum )
         new_dos.densities = np.concatenate( new_densities, axis = 1 )
         return new_dos
 

@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import Mock, patch, mock_open
+from collections import Counter
 
-from vasppy.calculation import Calculation, delta_E, delta_stoichiometry
+from vasppy.calculation import Calculation, delta_E, delta_stoichiometry, energy_string_to_float, import_calculations_from_file
+
 import numpy as np
 
 class CalculationTestCase( unittest.TestCase ):
@@ -62,5 +64,34 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
             delta_E( reactants=[ calculations[0] ], products=calculations[1:3] )
         mock_delta_stoichiometry.assert_called_with( [ calculations[0] ], calculations[1:3] )
 
+    def test_delta_stoichiometry( self ):
+        titles = [ 'A', 'B', 'C' ]
+        energies = [ -50.5, -23.2, -10.1 ]
+        stoichiometries = [ { 'B': 1, 'C': 2 }, { 'D': 1, 'C': 1 }, { 'C': 1 } ]
+        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries ) ]
+        self.assertEqual( delta_stoichiometry( reactants=[ calculations[0] ], products=calculations[1:3] ), { 'B': -1, 'D': 1 } )
+
+    def test_energy_string_to_float( self ):
+        test_strings = { '-1.2345 eV': -1.2345,
+                          '0.2341 eV':  0.2341 }
+        for k, v in test_strings.items():
+            self.assertEqual( energy_string_to_float( k ), v )
+
+    @patch( 'vasppy.calculation.energy_string_to_float' )
+    @patch( 'vasppy.calculation.Calculation' )
+    def test_import_calculation_from_file( self, mock_Calculation, mock_energy_converter ):
+        mock_energy_converter.side_effect = [ -0.2414 ]
+        example_yaml = """
+        title: this_calculation
+        stoichiometry:
+            - A: 2
+            - B: 4
+        energy: -0.2414 eV
+        """
+        with patch( 'builtins.open', mock_open( read_data=example_yaml ), create=True ) as m:
+            import_calculations_from_file( 'example_file' )
+            mock_Calculation.assert_called_with( energy=-0.2414, stoichiometry=Counter({'B': 4, 'A': 2}), title='this_calculation' )
+            mock_energy_converter.assert_called_with( '-0.2414 eV' )
+ 
 if __name__ == '__main__':
     unittest.main()

@@ -60,7 +60,7 @@ class Calculation:
             scaling (float): The scaling factor.
 
         Returns:
-            (dict(Str:Int)): The scaled stoichiometry as a dictionary of label: stoichiometry pairs
+            (Counter(Str:Int)): The scaled stoichiometry as a Counter of label: stoichiometry pairs
         """ 
         return { k:v*scaling for k,v in self.stoichiometry.items() }
     
@@ -82,6 +82,16 @@ def delta_E( reactants, products, check_balance=True ):
     return sum( [ r.energy for r in products ] ) - sum( [ r.energy for r in reactants ] )
 
 def delta_stoichiometry( reactants, products ):
+    """
+    Calculate the change in stoichiometry for reactants --> products.
+
+    Args:
+        reactants (list(vasppy.Calculation): A list of vasppy.Calculation objects. The initial state.
+        products  (list(vasppy.Calculation): A list of vasppy.Calculation objects. The final state.
+
+    Returns:
+        (Counter): The change in stoichiometry.
+    """ 
     totals = Counter()
     for r in reactants:
         totals.update( ( r * -1.0 ).stoichiometry )
@@ -94,10 +104,35 @@ def delta_stoichiometry( reactants, products ):
     return to_return
 
 def energy_string_to_float( string ):
+    """
+    Convert a string of a calculation energy, e.g. '-1.2345 eV' to a float.
+
+    Args:
+        string (str): The string to convert.
+  
+    Return
+        (float) 
+    """
     energy_re = re.compile( "(-?\d+\.\d+)" )
-    return float( energy_re.match( string )[0] )
+    return float( energy_re.match( string ).group(0) )
     
 def import_calculations_from_file( filename ):
+    """
+    Construct a list of Calculation objects by reading a YAML file.
+    Each YAML document should include 'title', 'stoichiometry', and 'energy' fields. e.g.
+        title: my calculation
+        stoichiometry:
+            - A: 1
+            - B: 2
+        energy: -0.1234 eV
+    Separate calculations should be distinct YAML documents, separated by `---`
+    
+    Args:
+        filename (str): Name of the YAML file to read.
+
+    Returns:
+        (dict(vasppy.Calculation)): A dictionary of Calculation objects. For each Calculation object, the 'title' field from the YAML input is used as the dictionary key.
+    """
     calcs = {}
     with open( filename, 'r' ) as stream:
         docs = yaml.load_all( stream )

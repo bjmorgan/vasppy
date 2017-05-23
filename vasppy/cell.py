@@ -2,6 +2,16 @@ import math
 import numpy as np
 
 def angle( x, y ):
+    """
+    Calculate the angle between two vectors, in degrees.
+
+    Args:
+        x (np.array): one vector.
+        y (np.array): the other vector.
+
+    Returns
+        (float):      the angle between x and y in degrees.
+    """
     dot = np.dot( x, y )
     x_mod = np.linalg.norm( x )
     y_mod = np.linalg.norm( y )
@@ -27,6 +37,15 @@ def rotation_matrix(axis, theta):
 class Cell:
 
     def __init__( self, matrix ):
+        """
+        Initialise a Cell object.
+
+        Args:
+            matrix (np.array): 3x3 numpy array containing the cell matrix.
+
+        Returns:
+            None
+        """
         assert type( matrix ) is np.ndarray
         assert matrix.shape == ( 3, 3 )
         self.matrix = matrix # 3 x 3 numpy Array

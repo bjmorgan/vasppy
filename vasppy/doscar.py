@@ -134,7 +134,7 @@ class DOS:
     def sum( self, columns = None ):
         if columns == None:
             columns = list( range( 0, self.densities.shape[1] ) )
-        return( np.sum( self.densities[ :, columns ], axis = 1 ).reshape( -1, 1 ) )
+        return np.sum( self.densities[ :, columns ], axis = 1 ).reshape( -1, 1 )
 
 class Total_DOS( DOS ):
 
@@ -148,13 +148,13 @@ class Atomic_DOS( DOS ):
         super( Atomic_DOS, self ).__init__( data, spin_polarised )
 
     def s( self ):
-        return( self.specific_angular_momentum( 0 ) )
+        return self.specific_angular_momentum( 0 )
 
     def p( self ):
-        return( self.specific_angular_momentum( 1 ) )
+        return self.specific_angular_momentum( 1 )
 
     def d( self ):
-        return( self.specific_angular_momentum( 2 ) )
+        return self.specific_angular_momentum( 2 )
 
     def f( self ):
         return( self.specific_angular_momentum( 3 ) )

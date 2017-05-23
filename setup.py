@@ -1,21 +1,36 @@
-from setuptools import setup
+import os
 
-setup(
-    name = 'vasppy',
-    packages = ['vasppy'], # this must be the same as the name above
-    version = '0.1.0',
-    description = 'A library for manipulating VASP input / output files',
-    author = 'Benjamin J. Morgan',
-    author_email = 'bjm42@bath.ac.uk',
-    url = 'https://github.com/bjmorgan/vasppy',   # use the URL to the github repo
-    download_url = 'https://github.com/bjmorgan/vasppy/tarball/0.1.0',
-    keywords = ['vasp'], # keywords
-    install_requires = [
-        'numpy',
-        'pymatgen',
-        'PyYAML', 
-        'coverage',
-        'codeclimate-test-reporter'
-    ],
-    classifiers = []
-)
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
+readme = 'README.md'
+try:
+    import pypandoc
+    long_description = pypandoc.convert( readme, 'rst')
+except ImportError:
+    long_description = open( readme ).read()
+
+from vasppy import __version__ as VERSION
+
+config = {
+    'name': 'vasppy',
+    'description': 'A library for manipulating VASP input / output files',
+    'long_description': long_description,
+    'author': 'Benjamin J. Morgan',
+    'author_email':'bjm42@bath.ac.uk',
+    'url': 'https://github.com/bjmorgan/vasppy', 
+    'download_url': "https://github.com/bjmorgan/vasppy/archive/%s.tar.gz" % (VERSION),
+    'version': VERSION,
+    'keywords': ['vasp'], # keywords
+    'packages': ['vasppy'], 
+    'license': 'MIT'
+    'install_requires': [ 'numpy',
+                          'pymatgen',
+                          'PyYAML', 
+                          'coverage==4.3.4',
+                          'codeclimate-test-reporter' ]
+}
+
+setup(**config)

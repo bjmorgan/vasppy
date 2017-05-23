@@ -11,10 +11,20 @@ class Configuration:
         self.atoms = atoms
 
     def dr( self, atom1, atom2 ):
+        """
+        Calculate the distance between two atoms.
+
+        Args:
+            atom1 (vasppy.Atom): Atom 1.
+            atom2 (vasppy.Atom): Atom 2.
+
+        Returns:
+            (float): The distance between Atom 1 and Atom 2.
+        """
         return self.cell.dr( atom1.r, atom2.r )
 
-    def minimum_image_dr( self, atom1, atom2, cutoff = None ):
-        return self.cell.minimum_image_dr( atom1.r, atom2.r, cutoff = cutoff )
+    def minimum_image_dr( self, atom1, atom2, cutoff=None ):
+        return self.cell.minimum_image_dr( atom1.r, atom2.r, cutoff=cutoff )
 
     def interatomic_distances( self, minimum_image_convention = True ):
         return np.array( [ [ self.minimum_image_dr( atom_i, atom_j ) for atom_j in self.atoms ] for atom_i in self.atoms ] )

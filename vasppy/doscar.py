@@ -25,7 +25,7 @@ class Doscar:
         start_to_read = Doscar.number_of_header_lines
         stop_reading  = start_to_read + self.number_of_data_points
         data_array = self.read_lines_to_numpy_array( start_to_read, stop_reading )
-        return( Total_DOS( data = data_array, spin_polarised = True ) )
+        return Total_DOS( data = data_array, spin_polarised = True ) 
 
     def read_atomic_dos( self, atom_number, align_fermi_energy = True ): # currently assume spin-polarised, no-SO-coupling, no f-states
         assert atom_number > 0 
@@ -35,7 +35,7 @@ class Doscar:
         new_dos = Atomic_DOS( data = data_array, spin_polarised = True, maximum_l_quantum_number = 2 )
         if align_fermi_energy:
             new_dos.shift_energies( -self.fermi_energy )
-        return( new_dos )
+        return new_dos
 
     def read_lines_to_numpy_array( self, start, end ):
         data = []
@@ -44,7 +44,7 @@ class Doscar:
             for i, line in enumerate( file_in ):
                 if i in line_numbers:
                     data.append( [ float( s ) for s in line.split() ] )
-        return( np.array( data ) )
+        return np.array( data )
 
 class DOS:
 
@@ -55,10 +55,10 @@ class DOS:
         self.spin_polarised = spin_polarised
 
     def data( self ):
-        return( np.concatenate( ( self.energies_as_2D_array(), self.densities ), axis = 1 ) )
+        return np.concatenate( ( self.energies_as_2D_array(), self.densities ), axis = 1 )
 
     def data_using_columns( self, columns ):
-        return( np.concatenate( ( self.energies_as_2D_array(), self.densities[ :, columns ] ), axis = 1 ) )
+        return np.concatenate( ( self.energies_as_2D_array(), self.densities[ :, columns ] ), axis = 1 )
 
     def write( self, filename = None, fmt = '%.4e', invert_down_spin = True ):
         if invert_down_spin:
@@ -72,7 +72,7 @@ class DOS:
             np.savetxt( filename, output_data, fmt = fmt )
 
     def energies_as_2D_array( self ):
-        return( self.energies.reshape( -1, 1 ) )
+        return self.energies.reshape( -1, 1 )
 
     def __add__( self, other ):
         """Add two densities of states.
@@ -81,13 +81,13 @@ class DOS:
         assert ( self.energies == other.energies ).all(), "DOS energies are not equal"
         new_dos = copy.deepcopy( self )
         new_dos.densities = np.add( self.densities, other.densities )
-        return( new_dos )
+        return new_dos
 
     def __radd__( self, other ):
         if other == 0:
-            return( self )
+            return self
         else:
-            return( self + other )
+            return self + other
 
     def __sub__( self, other ):
         """Subtract one densities of states from another.
@@ -96,40 +96,40 @@ class DOS:
         assert ( self.energies == other.energies ).all(), "DOS energies are not equal"
         new_dos = copy.deepcopy( self )
         new_dos.densities = np.subtract( self.densities, other.densities )
-        return( new_dos )
+        return new_dos
 
     def __str__( self ):
-        return( str( self.data() ) )
+        return str( self.data() )
 
     def shift_energies( self, shift ):
         self.energies += shift
-        return( self )
+        return self
 
     def shift_densities( self, shift ):
         self.densities += shift
-        return( self )
+        return self
 
     def shift_densities_at_set( self, shift, set ):
         self.densities[ :, set ] += shift
-        return( self )
+        return self
 
     def scale_densities( self, scale ):
         self.densities *= scale
-        return( self )
+        return self
 
     def up( self ):
         assert self.spin_polarised == True
         new_dos = copy.deepcopy( self )
         new_dos.spin_polarised = False
         new_dos.densities = self.densities[ :, 0::2 ]
-        return( new_dos )
+        return new_dos
 
     def down( self ):
         assert self.spin_polarised == True
         new_dos = copy.deepcopy( self )
         new_dos.spin_polarised = False
         new_dos.densities = self.densities[ :, 1::2 ]
-        return( new_dos )
+        return new_dos
 
     def sum( self, columns = None ):
         if columns == None:

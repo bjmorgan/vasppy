@@ -11,16 +11,16 @@ class Configuration:
         self.atoms = atoms
 
     def dr( self, atom1, atom2 ):
-        return( self.cell.dr( atom1.r, atom2.r ) )
+        return self.cell.dr( atom1.r, atom2.r )
 
     def minimum_image_dr( self, atom1, atom2, cutoff = None ):
-        return( self.cell.minimum_image_dr( atom1.r, atom2.r, cutoff = cutoff ) )
+        return self.cell.minimum_image_dr( atom1.r, atom2.r, cutoff = cutoff )
 
     def interatomic_distances( self, minimum_image_convention = True ):
-        return( np.array( [ [ self.minimum_image_dr( atom_i, atom_j ) for atom_j in self.atoms ] for atom_i in self.atoms ] ) )
+        return np.array( [ [ self.minimum_image_dr( atom_i, atom_j ) for atom_j in self.atoms ] for atom_i in self.atoms ] )
 
     def interatomic_distances_for_atom( self, atom1, minimum_image_convention = True ):
-        return( np.array( [ self.minimum_image_dr( atom1, atom2 ) for atom2 in self.atoms ] ) )
+        return np.array( [ self.minimum_image_dr( atom1, atom2 ) for atom2 in self.atoms ] )
 
     def atoms_with_label( self, label ):
         return filter( lambda atom: atom.label == label, self.atoms )        
@@ -59,5 +59,5 @@ class Configuration:
                 except:
                     raise
             rdfs.append( this_rdf )
-        return( rdfs ) 
+        return rdfs
 

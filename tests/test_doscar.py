@@ -11,7 +11,7 @@ class TestDoscar( unittest.TestCase ):
             mock_read_header.return_value = 'header'
             d = doscar.Doscar( 'doscar filename' )
             self.assertEqual( d.filename, 'doscar filename' )
-            mock_read_header.assert_called()
+            self.assertEqual( mock_read_header.call_count, 1 )
 
 if __name__ == '__main__':
     unittest.main()

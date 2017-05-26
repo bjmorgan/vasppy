@@ -8,6 +8,15 @@ class Xdatcar:
     lines_offset = 9
 
     def __init__( self ):
+        """
+        Initialise a Xdatcar object.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.poscar = []
         self.poscar.append( Poscar() )
   

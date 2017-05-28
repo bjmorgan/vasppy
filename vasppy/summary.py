@@ -2,7 +2,9 @@
 # Used for summarising VASP calculations as YAML
 
 from pymatgen.io.vasp.outputs import Vasprun
+from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
+from vasppy.outcar import final_energy_from_outcar
 from contextlib import contextmanager
 import os
 import yaml
@@ -69,6 +71,7 @@ class Summary:
             self.meta = VASPMeta.from_file( 'vaspmeta.yaml' )
             self.vasprun = Vasprun( 'vasprun.xml', parse_potcar_file=False )
         self.print_methods = { 'title': self.print_title,
+                               'type': self.print_type,
                                'status': self.print_status,
                                'stoichiometry': self.print_stoichiometry,
                                'potcar': self.print_potcar,
@@ -137,7 +140,11 @@ class Summary:
         for p in to_print:
             self.print_methods[ p ]()
         print( '', flush=True )
-        
+       
+    def print_type( self ):
+        if self.meta.type:
+            print( "type: {}".format( self.meta.type ) )
+ 
     def print_title( self ):
         print( "title: {}".format( self.meta.title ) )
        
@@ -155,8 +162,24 @@ class Summary:
             print( "    - {}: {}".format( e, p ) )
         
     def print_energy( self ):
-        print( "energy: {}".format( self.vasprun.final_energy ) )    
- 
+        # if this gets more options, it might be a good idea to set the
+        # appropriate method using a dictionary?
+        # or we could subclass Summary --> NEB_Summary ?
+        if not self.meta.type:
+            print( "energy: {}".format( self.vasprun.final_energy ) )    
+        elif self.meta.type == 'neb':
+            self.print_neb_energy()
+        else:
+            raise ValueError( "VASPMeta type not supported: {}".format( self.meta.type ) )
+
+    def print_neb_energy( self ):
+        image_00_energy = final_energy_from_outcar( '00/OUTCAR' )
+        print( "reference energy: {} eV".format( image_00_energy ) )
+        neb = NEBAnalysis.from_dir( '.' )
+        print( "relative neb energies:" )
+        for i, e in enumerate( neb.energies ):
+            print( "    - {:10.6f} eV".format( e ) )
+
     def print_kpoints( self ):
         print( "k-points:" )
         print( "    scheme: {}".format( self.vasprun.kpoints.style ) )

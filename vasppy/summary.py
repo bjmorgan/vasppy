@@ -178,7 +178,7 @@ class Summary:
         neb = NEBAnalysis.from_dir( '.' )
         print( "neb image energies:" )
         for i, e in enumerate( neb.energies ):
-            print( "    - {:10.6f} eV".format( e ) )
+            print( "    - {:02d}: {:10.6f} eV".format( i, e ) )
 
     def print_kpoints( self ):
         print( "k-points:" )

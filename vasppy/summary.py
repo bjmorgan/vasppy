@@ -176,7 +176,7 @@ class Summary:
         image_00_energy = final_energy_from_outcar( '00/OUTCAR' )
         print( "reference energy: {} eV".format( image_00_energy ) )
         neb = NEBAnalysis.from_dir( '.' )
-        print( "relative neb energies:" )
+        print( "neb image energies:" )
         for i, e in enumerate( neb.energies ):
             print( "    - {:10.6f} eV".format( e ) )
 

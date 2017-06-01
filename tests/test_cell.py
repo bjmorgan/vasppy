@@ -42,14 +42,59 @@ class Test_Cell( unittest.TestCase ):
 
     def test_minimum_image( self ):
         r1 = np.array( [ 0.5, 0.1, 0.1 ] )
-        r2 = np.array( [ 0.1, 0.4, 0.1 ] )
-        np.testing.assert_array_almost_equal( self.cell.minimum_image( r1, r2 ), np.array( [ -0.4, 0.3, 0.0 ] ) )
+        r2 = np.array( [ 0.1, 0.4, 0.3 ] )
+        np.testing.assert_array_almost_equal( self.cell.minimum_image( r1, r2 ), 
+                                              np.array( [ -0.4, 0.3, 0.2 ] ) )
 
     def test_minimum_image_2( self ):
         r1 = np.array( [ 0.5, 0.1, 0.1 ] )
         r2 = np.array( [ 0.6, 0.8, 0.8 ] )
-        np.testing.assert_array_almost_equal( self.cell.minimum_image( r1, r2 ), np.array( [ 0.1, -0.3, -0.3 ] ) )
-	
+        np.testing.assert_array_almost_equal( self.cell.minimum_image( r1, r2 ), 
+                                              np.array( [ 0.1, -0.3, -0.3 ] ) )
+
+    def test_minimum_image_dr( self ):
+        r1 = np.array( [ 0.5, 0.1, 0.1 ] )
+        r2 = np.array( [ 0.8, 0.7, 0.3 ] )
+        self.cell.minimum_image = Mock( return_value=np.array( [ 0.3, -0.4, 0.2 ] ) )
+        self.assertAlmostEqual( self.cell.minimum_image_dr( r1, r2 ), 5.385164807 )
+
+    def test_lengths( self ):
+        np.testing.assert_array_equal( self.cell.lengths(), np.array( [ 10.0, 10.0, 10.0 ] ) )
+ 
+    def test_angles( self ):
+        self.assertEqual( self.cell.angles(), [ 90.0, 90.0, 90.0 ] )
+
+    def test_cartesian_to_fractional_coordinates( self ):
+        coordinates = np.array( [ [ 1.0, 2.0, 3.0 ],
+                                  [ 4.0, 6.0, 2.0 ] ] )
+        expected_fractional_coordinates = np.array( [ [ 0.1, 0.2, 0.3 ],
+                                                      [ 0.4, 0.6, 0.2 ] ] )
+        np.testing.assert_array_almost_equal( self.cell.cartesian_to_fractional_coordinates( coordinates ),
+                                              expected_fractional_coordinates )
+
+    def test_fractional_to_cartesian_coordinates( self ):
+        coordinates = np.array( [ [ 0.1, 0.2, 0.3 ],
+                                  [ 0.4, 0.6, 0.2 ] ] )
+        expected_cartesian_coordinates = np.array( [ [ 1.0, 2.0, 3.0 ],
+                                                     [ 4.0, 6.0, 2.0 ] ] )
+        np.testing.assert_array_almost_equal( self.cell.fractional_to_cartesian_coordinates( coordinates ),
+                                              expected_cartesian_coordinates )
+
+    def test_inside_cell( self ):
+        c = np.array( [ [ [ 0.1, 0.2, 0.3 ], [ 0.1, 0.2, 0.3 ] ],
+                        [ [ 0.3, 1.2, 1.3 ], [ 0.3, 0.2, 0.3 ] ] ] )
+        for r1, r2 in c:
+            np.testing.assert_array_almost_equal( self.cell.inside_cell( r1 ), r2 )
+
+    def test_volume( self ):
+        self.assertEqual( self.cell.volume(), 1000.0 )
+
+    def test_unit_vectors( self ):
+        np.testing.assert_array_equal( self.cell.unit_vectors(), 
+                                       np.array( [ [ 1.0, 0.0, 0.0 ],
+                                                   [ 0.0, 1.0, 0.0 ],
+                                                   [ 0.0, 0.0, 1.0 ] ] ) )
+                    
 class Test_Cell_Support_Functions( unittest.TestCase ):
 
     def test_angle( self ):

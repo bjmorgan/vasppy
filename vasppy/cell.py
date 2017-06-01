@@ -90,7 +90,7 @@ class Cell:
 
         Args:
             r1 (np.array): fractional coordinates of point r1.
-            r2 (np.array): fractional coordaintes of point r2.
+            r2 (np.array): fractional coordinates of point r2.
 
         Returns:
             (np.array): the fractional coordinate vector from r1 to the nearest image of r2.
@@ -100,13 +100,43 @@ class Cell:
         return( delta_r )
 
     def minimum_image_dr( self, r1, r2, cutoff=None ):
+        """
+        Calculate the shortest distance between two points in the cell, 
+        accounting for periodic boundary conditions.
+
+        Args:
+            r1 (np.array): fractional coordinates of point r1.
+            r2 (np.array): fractional coordinates of point r2.
+            cutoff (:obj: `float`, optional): if set, return zero if the minimum distance is greater than `cutoff`. Defaults to None.
+
+        Returns:
+            (float): The distance between r1 and r2.
+        """
         delta_r_vector = self.minimum_image( r1, r2 )
         return( self.dr( np.zeros( 3 ), delta_r_vector, cutoff ) )
 
     def lengths( self ):
+        """
+        The cell lengths.
+
+        Args:
+            None
+
+        Returns:
+            (np.array(a,b,c)): The cell lengths.
+        """
         return( np.array( [ math.sqrt( sum( row**2 ) ) for row in self.matrix ] ) )
 
     def angles( self ):
+        """
+        The cell angles (in degrees).
+
+        Args:
+            None
+
+        Returns:
+            (list(alpha,beta,gamma)): The cell angles.
+        """
         ( a, b, c ) = [ row for row in self.matrix ]
         return [ angle( b, c ), angle( a, c ), angle( a, b ) ]
 
@@ -114,20 +144,65 @@ class Cell:
         print( points )
 
     def cartesian_to_fractional_coordinates( self, coordinates ):
+        """
+        Convert a set of Cartesian coordinates to fractional coordinates in the cell.
+
+        Args:
+            coordinates (np.array(dim(N,3))): The set of Cartesian coordinates.
+
+        Returns:
+            (np.array(dim(N,3))): The corresponding set of fractional coordinates.
+        """
         return( coordinates.dot( self.inv_matrix ) )
 
     def fractional_to_cartesian_coordinates( self, coordinates ):
+        """
+        Convert a set of fractional coordinates in the cell to Cartesian coordinates.
+
+        Args:
+            coordinates (np.array(dim(N,3))): The set of fractional coordinates.
+
+        Returns:
+            (np.array(dim(N,3))): The corresponding set of Cartesian coordinates.
+        """
         return( coordinates.dot( self.matrix ) )
 
     def inside_cell( self, r ):
+        """
+        Given a fractional-coordinate, if this lies outside the cell return the equivalent point inside the cell.
+
+        Args:
+            r (np.array): Fractional coordinates of a point (this may be outside the cell boundaries).
+
+        Returns:
+            (np.array): Fractional coordinates of an equivalent point, inside the cell boundaries.
+        """
         centre = np.array( [ 0.5, 0.5, 0.5 ] )
         new_r = self.nearest_image( centre, r )
         return new_r
 
     def volume( self ):
+        """
+        The cell volume.
+
+        Args:
+            None
+
+        Returns:
+            (float): The cell volume.
+        """
         return np.dot( self.matrix[0], np.cross( self.matrix[1], self.matrix[2] ) ) 
 
     def unit_vectors( self ):
+        """
+        The unit vectors for the cell vectors.
+
+        Args:
+            None
+
+        Returns:
+            (np.array): The unit vectors for the cell vectors.
+        """
         return( ( self.matrix.transpose() / self.lengths() ).transpose() )
 
     def rotate( self, axis, theta ):

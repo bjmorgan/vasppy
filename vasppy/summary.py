@@ -6,6 +6,7 @@ from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
 from vasppy.outcar import final_energy_from_outcar
 from contextlib import contextmanager
+from xml.etree import ElementTree as ET 
 import os
 import yaml
 import hashlib
@@ -69,7 +70,7 @@ class Summary:
         self.directory = directory
         with cd( directory ):
             self.meta = VASPMeta.from_file( 'vaspmeta.yaml' )
-            self.vasprun = Vasprun( 'vasprun.xml', parse_potcar_file=False )
+            self.parse_vasprun()
         self.print_methods = { 'title': self.print_title,
                                'type': self.print_type,
                                'status': self.print_status,
@@ -85,7 +86,28 @@ class Summary:
                                'converged': self.print_converged,
                                'md5': self.print_vasprun_md5,
                                'directory': self.print_directory }
-            
+
+    def parse_vasprun( self ):
+        """
+        Read in `vasprun.xml` as a pymatgen Vasprun object.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        None:
+            If the vasprun.xml is not well formed this method will catch the ParseError
+            and set self.vasprun = None.
+        """            
+        try:
+            self.vasprun = Vasprun( 'vasprun.xml', parse_potcar_file=False )
+        except ET.ParseError:
+            self.vasprun = None
+        except:
+            raise
+
     @property
     def stoich( self ):
         return self.vasprun.final_structure.composition.get_el_amt_dict()
@@ -136,6 +158,8 @@ class Summary:
         return all( 'PBE' in s for s in self.vasprun.potcar_symbols )
 
     def output( self, to_print ):
+        if not self.vasprun:
+            to_print = [ 'title', 'type', 'status' ]
         print( "---" )
         for p in to_print:
             self.print_methods[ p ]()

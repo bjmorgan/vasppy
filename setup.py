@@ -25,7 +25,7 @@ config = {
     'version': VERSION,
     'keywords': ['vasp'], # keywords
     'packages': ['vasppy'], 
-    'license': 'MIT'
+    'license': 'MIT',
     'install_requires': [ 'numpy',
                           'pymatgen',
                           'PyYAML', 

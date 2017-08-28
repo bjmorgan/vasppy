@@ -24,10 +24,10 @@ def read_data( verbose=True ):
     df = df.reset_index( drop=True )
     df['scaling_factor'] = df.volume / df.scaling**3
     scaling_factor_round = 5
-    if len( set( df.scaling_factor.round( scaling_factor_round ) ) ) != 1:
-        raise ValueError( "POSCAR scaling factors and volumes are inconsistent" )
     if verbose:
         print( df )
+    if len( set( df.scaling_factor.round( scaling_factor_round ) ) ) != 1:
+        raise ValueError( "POSCAR scaling factors and volumes are inconsistent" )
     return df
 
 def murnaghan( vol, e0, b0, bp, v0 ):
@@ -55,14 +55,14 @@ def objective( pars, y, x ):
     err =  y - murnaghan( x, *pars )
     return err
 
-def fit( df ):
-    x0 = [ df.energy[0], df.volume[0], 2.0, 16.5] #initial guess of parameters
-    plsq = leastsq( objective, x0, args=( df.energy, df.volume ) )
+def fit( energies, volumes ):
+    x0 = [ energies[0], volumes[0], 2.0, 16.5] #initial guess of parameters
+    plsq = leastsq( objective, x0, args=( energies, volumes ) )
     return plsq
 
 if __name__ == '__main__':
     df = read_data()
-    e0, b0, bp, v0 = fit( df )[0]
+    e0, b0, bp, v0 = fit( df.energy, df.volume )[0]
     print( "E0: {:.4f}".format( e0 ) )
     print( "V0: {:.4f}".format( v0 ) )
     print( "opt. scaling: {:.5f}".format( ( v0 / df.scaling_factor.mean() )**(1/3) ) )

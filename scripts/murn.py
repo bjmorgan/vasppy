@@ -10,7 +10,7 @@ from pymatgen.io.vasp import Vasprun
 from vasppy import Poscar
 from vasppy.summary import find_vasp_calculations
 
-def read_data():
+def read_data( verbose=True ):
     dir_list = find_vasp_calculations()
     data = []
     for d in dir_list:
@@ -24,8 +24,10 @@ def read_data():
     df = df.reset_index( drop=True )
     df['scaling_factor'] = df.volume / df.scaling**3
     scaling_factor_round = 5
-    assert( len( set( df.scaling_factor.round( scaling_factor_round ) ) ) == 1 )
-    print( df )
+    if len( set( df.scaling_factor.round( scaling_factor_round ) ) ) != 1:
+        raise ValueError( "POSCAR scaling factors and volumes are inconsistent" )
+    if verbose:
+        print( df )
     return df
 
 def murnaghan( vol, e0, b0, bp, v0 ):

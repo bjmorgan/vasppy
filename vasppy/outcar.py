@@ -37,7 +37,7 @@ def final_energy_from_outcar( filename='OUTCAR' ):
     energy_re = re.compile( "energy\(sigma->0\) =\s+([-\d\.]+)" )
     energy = float( energy_re.findall( outcar )[-1] )
     return energy
-       
+
 def vasp_version_from_outcar( filename='OUTCAR' ):
     """
     Returns the first line from a VASP OUTCAR file, to get the VASP source version string.

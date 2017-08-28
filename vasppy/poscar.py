@@ -79,6 +79,12 @@ class Poscar:
             self.coordinates = self.fractional_coordinates()
             self.coordinate_type = 'Direct'
 
+    @classmethod
+    def from_file( cls, filename ):
+        poscar = cls()
+        poscar.read_from( filename )
+        return poscar
+
     def in_bohr( self ):
         new_poscar = copy.deepcopy( self )
         bohr_to_angstrom = 0.529177211

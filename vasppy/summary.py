@@ -4,7 +4,7 @@
 from pymatgen.io.vasp.outputs import Vasprun
 from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
-from vasppy.outcar import final_energy_from_outcar
+from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar
 from contextlib import contextmanager
 from xml.etree import ElementTree as ET 
 import os
@@ -84,6 +84,7 @@ class Summary:
                                'ediffg': self.print_ediffg,
                                'ibrion': self.print_ibrion,
                                'converged': self.print_converged,
+                               'version': self.print_version,
                                'md5': self.print_vasprun_md5,
                                'directory': self.print_directory }
 
@@ -204,6 +205,10 @@ class Summary:
         for i, e in enumerate( neb.energies ):
             print( "    - {:02d}: {:10.6f} eV".format( i, e ) )
 
+    def print_version( self ):
+        version_string = vasp_version_from_outcar( 'OUTCAR' ).split()[0]
+        print( "version: {}".format( version_string ) )
+
     def print_kpoints( self ):
         print( "k-points:" )
         print( "    scheme: {}".format( self.vasprun.kpoints.style ) )
@@ -223,7 +228,6 @@ class Summary:
             print( "encut: {}".format( self.vasprun.incar['ENCUT'] ) )
         elif 'ENMAX' in self.vasprun.incar:
             print( "encut: {}".format( self.vasprun.incar['ENMAX'] ) )
-
 
     def print_converged( self ):
         print( "converged: {}".format( self.vasprun.converged ) )

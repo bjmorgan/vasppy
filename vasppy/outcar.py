@@ -38,3 +38,16 @@ def final_energy_from_outcar( filename='OUTCAR' ):
     energy = float( energy_re.findall( outcar )[-1] )
     return energy
        
+def vasp_version_from_outcar( filename='OUTCAR' ):
+    """
+    Returns the first line from a VASP OUTCAR file, to get the VASP source version string.
+
+    Args:
+        filename (Str, optional): OUTCAR filename. Defaults to 'OUTCAR'.
+
+    Returns:
+        (Str): The first line read from the OUTCAR file.
+    """
+    with open( filename ) as f:
+        line = f.readline().strip()
+    return line

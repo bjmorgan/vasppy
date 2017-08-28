@@ -50,19 +50,20 @@ def murnaghan( vol, e0, b0, bp, v0 ):
     energy = e0 + b0 * vol / bp * (((v0 / vol)**bp) / (bp - 1) + 1) - v0 * b0 / (bp - 1.0)
     return energy
 
-def objective( pars, y, x ):
-    #we will minimize this function
+def objective( pars, x, y ):
     err =  y - murnaghan( x, *pars )
     return err
 
-def fit( energies, volumes ):
-    x0 = [ energies[0], volumes[0], 2.0, 16.5] #initial guess of parameters
-    plsq = leastsq( objective, x0, args=( energies, volumes ) )
+def fit( volumes, energies ):
+    e_min = energies.min()
+    v_min = volumes[ np.argwhere( energies == e_min )[0][0] ]
+    x0 = [ e_min, 2.0, 10.0, v_min ] #initial guess of parameters
+    plsq = leastsq( objective, x0, args=( volumes, energies ) )
     return plsq
 
 if __name__ == '__main__':
     df = read_data()
-    e0, b0, bp, v0 = fit( df.energy, df.volume )[0]
+    e0, b0, bp, v0 = fit( np.array( df.volume ), np.array( df.energy  ) )[0]
     print( "E0: {:.4f}".format( e0 ) )
     print( "V0: {:.4f}".format( v0 ) )
     print( "opt. scaling: {:.5f}".format( ( v0 / df.scaling_factor.mean() )**(1/3) ) )

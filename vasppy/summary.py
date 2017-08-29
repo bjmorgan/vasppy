@@ -206,7 +206,7 @@ class Summary:
             print( "    - {:02d}: {:10.6f} eV".format( i, e ) )
 
     def print_version( self ):
-        version_string = vasp_version_from_outcar( 'OUTCAR' ).split()[0]
+        version_string = vasp_version_from_outcar( '{}/OUTCAR'.format( self.directory ) ).split()[0]
         print( "version: {}".format( version_string ) )
 
     def print_kpoints( self ):

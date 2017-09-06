@@ -7,6 +7,7 @@ from vasppy.vaspmeta import VASPMeta
 from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar
 from contextlib import contextmanager
 from xml.etree import ElementTree as ET 
+import sys
 import os
 import yaml
 import hashlib
@@ -69,8 +70,14 @@ class Summary:
     def __init__( self, directory='.' ):
         self.directory = directory
         with cd( directory ):
-            self.meta = VASPMeta.from_file( 'vaspmeta.yaml' )
-            self.parse_vasprun()
+            try:
+                self.meta = VASPMeta.from_file( 'vaspmeta.yaml' )
+            except FileNotFoundError as e:
+                raise type(e)( str(e) + ' in {}'.format( directory )).with_traceback( sys.exc_info()[2] )
+            try:
+                self.parse_vasprun()
+            except as e:
+                raise type(e)( str(e) + ' in {}'.format( directory )).with_traceback( sys.exc_info()[2] )
         self.print_methods = { 'title': self.print_title,
                                'type': self.print_type,
                                'status': self.print_status,

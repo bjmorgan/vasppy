@@ -74,10 +74,7 @@ class Summary:
                 self.meta = VASPMeta.from_file( 'vaspmeta.yaml' )
             except FileNotFoundError as e:
                 raise type(e)( str(e) + ' in {}'.format( directory )).with_traceback( sys.exc_info()[2] )
-            try:
-                self.parse_vasprun()
-            except as e:
-                raise type(e)( str(e) + ' in {}'.format( directory )).with_traceback( sys.exc_info()[2] )
+            self.parse_vasprun()
         self.print_methods = { 'title': self.print_title,
                                'type': self.print_type,
                                'status': self.print_status,

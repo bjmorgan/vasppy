@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import sys
+from pathlib import Path
 
 """
 Script for collecting information about VASP calculations into YAML format, for further processing.
@@ -18,6 +19,7 @@ def get_args():
     parser.add_argument( '-l', '--list', help="List supported data flags.", action='store_true' )
     parser.add_argument( '-p', '--print', help="Specify data to parse.", nargs='*' )
     parser.add_argument( '-f', '--file', help="Specify a file to read data flags from." )
+    parser.add_argument( '-c', '--check', help="Checks whether VASP directories contain vaspmeta.yaml and vasprun.xml files", action='store_true' )
     args = parser.parse_args()
     return args
 
@@ -55,6 +57,15 @@ if __name__ == "__main__":
         path = sorted( find_vasp_calculations() )
     else:
         path = [ '.' ]
-    for p in path:
-        s = Summary( p )
-        s.output( to_print=to_print )
+    if args.check:
+        for p in path:
+           vaspmeta = Path( '{}/vaspmeta.yaml'.format( p ) )
+           if not vaspmeta.is_file(): 
+               print( '{} is missing vaspmeta.yaml'.format( p ) ) 
+           vasprun  = Path( '{}/vasprun.xml'.format( p ) )
+           if not vasprun.is_file():
+               print( '{} is missing vasprun.xml'.format( p ) ) 
+    else:
+        for p in path:
+            s = Summary( p )
+            s.output( to_print=to_print )

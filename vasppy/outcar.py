@@ -51,3 +51,19 @@ def vasp_version_from_outcar( filename='OUTCAR' ):
     with open( filename ) as f:
         line = f.readline().strip()
     return line
+
+def potcar_eatom_list_from_outcar( filename='OUTCAR' ):
+    """
+    Returns a list of EATOM values for the pseudopotentials used.
+
+    Args:
+        filename (Str, optional): OUTCAR filename. Defaults to 'OUTCAR'.
+
+    Returns:
+        (List(Float)): A list of EATOM values, in the order they appear in the OUTCAR.
+    """
+    with open( filename ) as f:
+        outcar = f.read()
+    eatom_re = re.compile( "energy of atom\s+\d+\s+EATOM=\s*([-\d\.]+)" )
+    eatom = [ float( e ) for e in eatom_re.findall( outcar ) ]
+    return eatom

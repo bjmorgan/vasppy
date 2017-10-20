@@ -4,7 +4,7 @@
 from pymatgen.io.vasp.outputs import Vasprun
 from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
-from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar
+from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar, potcar_eatom_list_from_outcar
 from contextlib import contextmanager
 from xml.etree import ElementTree as ET 
 import sys
@@ -80,6 +80,7 @@ class Summary:
                                'status': self.print_status,
                                'stoichiometry': self.print_stoichiometry,
                                'potcar': self.print_potcar,
+                               'eatom': self.print_eatom,
                                'energy': self.print_energy,
                                'k-points': self.print_kpoints,
                                'functional': self.print_functional,
@@ -213,6 +214,13 @@ class Summary:
         version_string = vasp_version_from_outcar( '{}/OUTCAR'.format( self.directory ) ).split()[0]
         print( "version: {}".format( version_string ) )
 
+    def print_eatom( self ):
+        # This is one way to try to uniquely identify the POTCARs used, because the
+        # potcar_symbol (e.g. `Ti_pv 07Sep2000`) is not sufficient.
+        print( "eatom:" )
+        for e, eatom in zip( self.stoich, potcar_eatom_list_from_outcar( '{}/OUTCAR'.format( self.directory ) ) ):
+            print( "    - {}: {} eV".format( e, eatom ) )
+        
     def print_kpoints( self ):
         print( "k-points:" )
         print( "    scheme: {}".format( self.vasprun.kpoints.style ) )

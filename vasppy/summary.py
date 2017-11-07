@@ -5,6 +5,7 @@ from pymatgen.io.vasp.outputs import Vasprun
 from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
 from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar, potcar_eatom_list_from_outcar
+from vasppy.data.potcar_md5sum_data import potcar_md5sum_data
 from contextlib import contextmanager
 from xml.etree import ElementTree as ET 
 import sys
@@ -14,18 +15,7 @@ import hashlib
 import glob
 import re
 
-def find_vasp_calculations():
-    """
-    Returns a list of all subdirectories that contain a vasprun.xml file
-
-    Args:
-        None
-
-    Returns:
-        (List): generator of all VASP calculation subdirectories.
-    """
-    dir_list = [ './' + re.sub( r'vasprun\.xml', '', path ) for path in glob.iglob( '**/vasprun.xml', recursive=True ) ]
-    return dir_list
+potcar_sets = [ 'PBE', 'PBE_52', 'PBE_54' ]
 
 def md5sum( string ):
     """
@@ -40,6 +30,31 @@ def md5sum( string ):
     h = hashlib.new( 'md5' )
     h.update( string.encode( 'utf-8' ) )
     return h.hexdigest()
+
+def potcar_spec( filename ):
+    p_spec = {}
+    with open( filename, 'r' ) as f:
+        potcars = re.split('(End of Dataset\n)', f.read() )
+    potcar_md5sums = [ md5sum( ''.join( pair ) ) for pair in zip( potcars[::2], potcars[1:-1:2] ) ]
+    for this_md5sum in potcar_md5sums:
+        for ps in potcar_sets:
+            for p, p_md5sum in potcar_md5sum_data[ ps ].items():
+                if this_md5sum == p_md5sum:
+                    p_spec[ p ] = ps
+    return p_spec
+  
+def find_vasp_calculations():
+    """
+    Returns a list of all subdirectories that contain a vasprun.xml file
+
+    Args:
+        None
+
+    Returns:
+        (List): generator of all VASP calculation subdirectories.
+    """
+    dir_list = [ './' + re.sub( r'vasprun\.xml', '', path ) for path in glob.iglob( '**/vasprun.xml', recursive=True ) ]
+    return dir_list
 
 def vasprun_md5( filename ):
     """

@@ -250,7 +250,7 @@ class Poscar:
         return new_poscar
 
     def to_pymatgen_structure( self ):
-        lattice = pmg_Lattice( self.cell.matrix )
+        lattice = pmg_Lattice( self.cell.matrix * self.scaling )
         structure = pmg_Structure( lattice, self.labels(), self.coordinates )
         return structure 
 

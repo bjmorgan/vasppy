@@ -28,6 +28,7 @@ supported_flags = { 'status': 'Status',
                     'potcar': 'POTCAR',
                     'plus_u': 'Dudarev +U parameters',
                     'energy': 'Energy',
+                    'lreal': 'LREAL',
                     'k-points': 'k-points',
                     'functional': 'functional',
                     'encut': 'encut',
@@ -37,7 +38,7 @@ supported_flags = { 'status': 'Status',
                     'md5': 'md5',
                     'directory': 'directory' }
 
-to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
+to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
 
 if __name__ == "__main__":
     args = get_args()

@@ -90,7 +90,9 @@ class Summary:
                                'converged': self.print_converged,
                                'version': self.print_version,
                                'md5': self.print_vasprun_md5,
-                               'directory': self.print_directory }
+                               'directory': self.print_directory,
+                               'lreal': self.print_lreal  }
+    
 
     def parse_vasprun( self ):
         """
@@ -179,6 +181,9 @@ class Summary:
        
     def print_status( self ):
         print( "status: {}".format( self.meta.status ) )
+
+    def print_lreal( self ):
+        print( "lreal: {}".format( self.vasprun.parameters['LREAL'] ) )
 
     def print_stoichiometry( self ):
         print( "stoichiometry:" )

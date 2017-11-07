@@ -41,7 +41,7 @@ supported_flags = { 'status': 'Status',
                     'md5': 'md5',
                     'directory': 'directory' }
 
-to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'eatom', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
+to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
 
 if __name__ == "__main__":
     args = get_args()

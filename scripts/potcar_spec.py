@@ -5,7 +5,7 @@ import argparse
 
 def parse_command_line_arguments():
     parser = argparse.ArgumentParser( description='Generate POTCAR specification based on hashing individual pseudopotential strings' )
-    parser.add_argument( 'potcar', help="filename of the VASP POTCAR to be processed" )
+    parser.add_argument( 'potcar', help="filename of the VASP POTCAR to be processed", nargs='?', default='POTCAR' )
     args = parser.parse_args()
     return args
 

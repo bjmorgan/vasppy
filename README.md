@@ -1,7 +1,7 @@
 # vasppy - a Python suite for manipulating VASP files
 
 [![DOI](https://zenodo.org/badge/17946870.svg)](https://zenodo.org/badge/latestdoi/17946870)
-[![PyPI version](https://badge.fury.io/py/lattice-mc.svg)](https://badge.fury.io/py/vasppy)
+[![PyPI version](https://badge.fury.io/py/vasppy.svg)](https://badge.fury.io/py/vasppy)
 [![Build Status](https://travis-ci.org/bjmorgan/vasppy.svg?branch=master)](https://travis-ci.org/bjmorgan/vasppy)
 [![Test Coverage](https://codeclimate.com/github/bjmorgan/vasppy/badges/coverage.svg)](https://codeclimate.com/github/bjmorgan/vasppy/coverage)
 

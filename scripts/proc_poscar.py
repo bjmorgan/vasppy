@@ -15,6 +15,7 @@ def parse_command_line_arguments():
     parser.add_argument( '-s', '--supercell', type=int, nargs=3, metavar=( 'h', 'k', 'l' ), help='construct supercell by replicating (h,k,l) times along [a b c]' )
     parser.add_argument( '-b', '--bohr', action='store_true', help='assumes the input file is in Angstrom, and converts everything to bohr')
     parser.add_argument( '-n', '--number-atoms', action='store_true', help='label coordinates with atom number' )
+    parser.add_argument( '--scale', action='store_true', help='scale the lattice parameters by the scaling factor' )
     args = parser.parse_args()
     return( args )
 
@@ -29,6 +30,9 @@ if __name__ == "__main__":
     poscar = Poscar()
     # read POSCAR file
     poscar.read_from( args.poscar )
+    if args.scale:
+        poscar.cell.matrix *= poscar.scaling
+        poscar.scaling = 1.0
     if args.supercell: # generate supercell
         if args.group:
             # check that if grouping is switched on, we are asking for a supercell that allows a "3D-chequerboard" pattern.

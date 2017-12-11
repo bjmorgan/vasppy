@@ -10,7 +10,7 @@ def parse_command_line_arguments():
     parser.add_argument( '-p', '--projection', choices=[ 'x', 'y', 'z' ], help="output averaged projection perpendicular to [x,y,z]" )
     parser.add_argument( '-o', '--orthorhombic', help='map grid points onto an orthorhombic (non-space filling) grid', action = 'store_true' )
     args = parser.parse_args()
-    return( args )
+    return args
 
 if __name__ == "__main__":
     args = parse_command_line_arguments()

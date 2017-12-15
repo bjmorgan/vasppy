@@ -15,9 +15,9 @@ def parse_command_line_arguments():
 if __name__ == "__main__":
     args = parse_command_line_arguments()
     # initialise
-    poscar = Poscar()
+    poscar = Poscar() # this doesn't really need vasppy. Could just use pymatgen to read the POSCAR
     # read POSCAR file
     poscar.read_from( args.poscar )
     structure = poscar.to_pymatgen_structure()
     symmetry_analyzer = SpacegroupAnalyzer( structure, symprec = args.symprec )
-    print( symmetry_analyzer.get_spacegroup_symbol() )
+    print( symmetry_analyzer.get_space_group_symbol() )

@@ -8,13 +8,33 @@ class Doscar:
 
     number_of_header_lines = 6
 
-    def __init__( self, filename, ispin=2, lmax=2, lorbit=11, spin_orbit_coupling=False, read_pdos=True ):
+    def __init__( self, filename, ispin=2, lmax=2, lorbit=11, spin_orbit_coupling=False, read_pdos=True, species=None ):
+        '''
+        Create a Doscar object from a VASP DOSCAR file.
+
+        Args:
+            filename (str): Filename of the VASP DOSCAR file to read.
+            ispin (optional:int): ISPIN flag. 
+                Set to 1 for non-spin-polarised or 2 for spin-polarised calculations.
+                Default = 2.
+            lmax (optional:int): Maximum l angular momentum. (d=2, f=3). Default = 2.
+            lorbit (optional:int): The VASP LORBIT flag. (Default=11).
+            spin_orbit_coupling (optional:bool): Spin-orbit coupling (Default=False).
+            read_pdos (optional:bool): Set to True to read the atom-projected density of states (Default=True).
+            species (optional:list(str)): List of atomic species strings, e.g. [ 'Fe', 'Fe', 'O', 'O', 'O' ].
+                Default=None.
+        '''
         self.filename = filename
         self.ispin = ispin
         self.lmax = lmax
+        if self.lmax == 3:
+            raise NotImplementedError( 'f-orbital projects DOSCARs are not yet supported' )
         self.spin_orbit_coupling = spin_orbit_coupling
+        if self.spin_orbit_coupling:
+            raise NotImplementedError( 'Spin-orbit coupling is not yet implemented' )
         self.lorbit = lorbit
         self.pdos = None
+        self.species = species
         self.read_header()
         self.read_total_dos()
         if read_pdos:

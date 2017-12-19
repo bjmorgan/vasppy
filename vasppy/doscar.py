@@ -1,5 +1,9 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib._color_data as mcd
+
+tableau_grey = '#bab0ac'
 
 class Doscar:
     '''
@@ -142,7 +146,8 @@ class Doscar:
 
     def plot_pdos(self, ax=None, to_plot=None, colors=None, 
                   plot_total_dos=True, xrange=None, ymax=None, 
-                  scaling=None, split=False, title=None, labels=True):
+                  scaling=None, split=False, title=None, title_loc='center',
+                  labels=True, title_fontsize=16):
         if not ax:
             fig, ax = plt.subplots(1, 1, figsize=(8.0,3.0))
         else:
@@ -186,7 +191,7 @@ class Doscar:
                 ax.plot(self.energy[e_range], down_dos * -1.0,  c=color)
         if plot_total_dos:
             ax.fill_between(self.energy[e_range], self.tdos.up.values[e_range], 
-                            self.tdos.down.values[e_range] * -1.0, facecolor=tableau['grey'], alpha=0.2)
+                            self.tdos.down.values[e_range] * -1.0, facecolor=tableau_grey, alpha=0.2)
             auto_ymax = max( [ auto_ymax, self.tdos.up.values[e_range].max(), self.tdos.down.values[e_range].max() ] )
     
         if xrange:
@@ -209,7 +214,6 @@ class Doscar:
             labelleft='off') # labels along the left edge are off
         
         if title:
-            ax.set_title( title )
-            ax.title.set_fontsize( figure_formatting.fontsize )
+            ax.set_title( title, loc=title_loc, fontdict={'fontsize': title_fontsize} )
     
         return fig

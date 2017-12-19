@@ -140,76 +140,76 @@ class Doscar:
     def pdos_sum( self, atoms=None, spin=None, l=None, m=None ):
         return np.sum( self.pdos_select( atoms=atoms, spin=spin, l=l, m=m ), axis=(0,2,3) )
 
-def plot_pdos(self, ax=None, to_plot=None, colors=None, 
-              plot_total_dos=True, xrange=None, ymax=None, 
-              scaling=None, split=False, title=None, labels=True):
-    if not ax:
-        fig, ax = plt.subplots(1, 1, figsize=(8.0,3.0))
-    else:
-        fig = None
-    if not colors:
-        colors = mcd.TABLEAU_COLORS        
-    color_iterator = (c for c in colors)
+    def plot_pdos(self, ax=None, to_plot=None, colors=None, 
+                  plot_total_dos=True, xrange=None, ymax=None, 
+                  scaling=None, split=False, title=None, labels=True):
+        if not ax:
+            fig, ax = plt.subplots(1, 1, figsize=(8.0,3.0))
+        else:
+            fig = None
+        if not colors:
+            colors = mcd.TABLEAU_COLORS        
+        color_iterator = (c for c in colors)
+        
+        if not scaling:
+            scaling = []
+            
+        if xrange:
+            e_range = (self.energy >= xrange[0]) & (self.energy <= xrange[1])
+        else:
+            e_range = np.ma.make_mask( self.energy )
+            
+        auto_ymax = 0.0
+            
+        if not to_plot:
+            to_plot = {}
+            for s in set( self.species ):
+                to_plot[s] = ['s', 'p', 'd']
+                if self.lmax == 3:
+                    to_plot[s].append('f')
+                    
+        for species in to_plot.keys():
+            index = [i for i, s in enumerate(self.species) if s is species]
+            for state in to_plot[species]:
+                assert state in ['s', 'p', 'd', 'f']
+                color = next( color_iterator )
+                label = '{} {}'.format(species, state)
+                up_dos = self.pdos_sum(atoms=index, l=state, spin='up')[e_range]
+                down_dos = self.pdos_sum(atoms=index, l=state, spin='down')[e_range]
+                if species in scaling:
+                    if state in scaling[species]:
+                        up_dos *= scaling[species][state]
+                        down_dos *= scaling[species][state]
+                        label = r'{} {} $\times${}'.format( species, state, scaling[species][state] )
+                auto_ymax = max( [ auto_ymax, up_dos.max(), down_dos.max() ] )
+                ax.plot(self.energy[e_range], up_dos, label=label, c=color)
+                ax.plot(self.energy[e_range], down_dos * -1.0,  c=color)
+        if plot_total_dos:
+            ax.fill_between(self.energy[e_range], self.tdos.up.values[e_range], 
+                            self.tdos.down.values[e_range] * -1.0, facecolor=tableau['grey'], alpha=0.2)
+            auto_ymax = max( [ auto_ymax, self.tdos.up.values[e_range].max(), self.tdos.down.values[e_range].max() ] )
     
-    if not scaling:
-        scaling = []
-        
-    if xrange:
-        e_range = (self.energy >= xrange[0]) & (self.energy <= xrange[1])
-    else:
-        e_range = np.ma.make_mask( self.energy )
-        
-    auto_ymax = 0.0
-        
-    if not to_plot:
-        to_plot = {}
-        for s in set( self.species ):
-            to_plot[s] = ['s', 'p', 'd']
-            if self.lmax == 3:
-                to_plot[s].append('f')
-                
-    for species in to_plot.keys():
-        index = [i for i, s in enumerate(self.species) if s is species]
-        for state in to_plot[species]:
-            assert state in ['s', 'p', 'd', 'f']
-            color = next( color_iterator )
-            label = '{} {}'.format(species, state)
-            up_dos = self.pdos_sum(atoms=index, l=state, spin='up')[e_range]
-            down_dos = self.pdos_sum(atoms=index, l=state, spin='down')[e_range]
-            if species in scaling:
-                if state in scaling[species]:
-                    up_dos *= scaling[species][state]
-                    down_dos *= scaling[species][state]
-                    label = r'{} {} $\times${}'.format( species, state, scaling[species][state] )
-            auto_ymax = max( [ auto_ymax, up_dos.max(), down_dos.max() ] )
-            ax.plot(self.energy[e_range], up_dos, label=label, c=color)
-            ax.plot(self.energy[e_range], down_dos * -1.0,  c=color)
-    if plot_total_dos:
-        ax.fill_between(self.energy[e_range], self.tdos.up.values[e_range], 
-                        self.tdos.down.values[e_range] * -1.0, facecolor=tableau['grey'], alpha=0.2)
-        auto_ymax = max( [ auto_ymax, self.tdos.up.values[e_range].max(), self.tdos.down.values[e_range].max() ] )
-
-    if xrange:
-        ax.set_xlim( xrange[0], xrange[1] )
-        
-    if not ymax:
-        ymax = 1.1 * auto_ymax
-    ax.set_ylim(-ymax*1.1,ymax*1.1)
-    ax.legend(bbox_to_anchor=(1.01, 1.04), loc='upper left')
-    if labels:
-        ax.set_xlabel( 'Energy [eV]')
-    ax.axhline(y=0, c='lightgrey')
-    ax.axes.grid( False, axis='y' )
-
-    ax.tick_params(
-        axis='y',          # changes apply to the y-axis
-        which='both',      # both major and minor ticks are affected
-        left='off',      # ticks along the left edge are off
-        right='off',         # ticks along the right edge are off
-        labelleft='off') # labels along the left edge are off
+        if xrange:
+            ax.set_xlim( xrange[0], xrange[1] )
+            
+        if not ymax:
+            ymax = 1.1 * auto_ymax
+        ax.set_ylim(-ymax*1.1,ymax*1.1)
+        ax.legend(bbox_to_anchor=(1.01, 1.04), loc='upper left')
+        if labels:
+            ax.set_xlabel( 'Energy [eV]')
+        ax.axhline(y=0, c='lightgrey')
+        ax.axes.grid( False, axis='y' )
     
-    if title:
-        ax.set_title( title )
-        ax.title.set_fontsize( figure_formatting.fontsize )
-
-    return fig
+        ax.tick_params(
+            axis='y',          # changes apply to the y-axis
+            which='both',      # both major and minor ticks are affected
+            left='off',      # ticks along the left edge are off
+            right='off',         # ticks along the right edge are off
+            labelleft='off') # labels along the left edge are off
+        
+        if title:
+            ax.set_title( title )
+            ax.title.set_fontsize( figure_formatting.fontsize )
+    
+        return fig

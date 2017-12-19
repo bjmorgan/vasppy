@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+import yaml
 
 """
 Script for collecting information about VASP calculations into YAML format, for further processing.
@@ -39,7 +40,9 @@ supported_flags = { 'status': 'Status',
                     'ibrion': 'ibrion',
                     'converged': 'converged',
                     'md5': 'md5',
-                    'directory': 'directory' }
+                    'directory': 'directory',
+                    'vbm': 'Vasprun valence band maximum',
+                    'cbm': 'Vasprun conduction band minimum' }
 
 to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
 
@@ -49,6 +52,10 @@ if __name__ == "__main__":
         for k, v, in supported_flags.items():
             print( "{}: {}".format( k.ljust(15), v ) )
         sys.exit()
+    if args.file:
+        with open( args.file, 'r' ) as stream:
+            settings = yaml.load( stream ) 
+        to_print = settings['to_print']
     if args.print:
         not_supported = [ p for p in args.print if p not in supported_flags ]
         if not_supported:

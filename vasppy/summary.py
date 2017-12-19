@@ -107,8 +107,9 @@ class Summary:
                                'version': self.print_version,
                                'md5': self.print_vasprun_md5,
                                'directory': self.print_directory,
-                               'lreal': self.print_lreal  }
-    
+                               'lreal': self.print_lreal,
+                               'vbm': self.print_vbm,
+                               'cbm': self.print_cbm }
 
     def parse_vasprun( self ):
         """
@@ -281,3 +282,10 @@ class Summary:
                 for e, u, j, l in zip( self.stoich, ldauu, ldauj, ldaul ):
                     if u != 0:
                         print( "    - {}: {} {} {}".format( e, lqn[l], u, j ) )
+
+    def print_cbm( self ):
+        print( 'cbm: {}'.format( self.vasprun.eigenvalue_band_properties[1] ) )
+
+    def print_vbm( self ):
+        print( 'vbm: {}'.format( self.vasprun.eigenvalue_band_properties[2] ) )
+        

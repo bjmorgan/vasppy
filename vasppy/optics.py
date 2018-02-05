@@ -8,8 +8,17 @@ from scipy.constants import physical_constants, speed_of_light
 
 eV_to_recip_cm = 1.0/(physical_constants['Planck constant in eV s'][0]*speed_of_light*1e2)
 
-def matrix_eigvals( m ):
-    eigvals, eigvecs = np.linalg.eig(m)
+def matrix_eigvals(matrix):
+    """
+    Calculate the eigenvalues of a matrix.
+
+    Args:
+        matrix (np.array): The matrix to diagonalise.
+
+    Returns:
+        (np.array): Array of the matrix eigenvalues.
+    """
+    eigvals, eigvecs = np.linalg.eig(matrix)
     return eigvals
        
 def to_matrix( xx, yy, zz, xy, yz, xz ):

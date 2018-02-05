@@ -26,8 +26,8 @@ def to_matrix( xx, yy, zz, xy, yz, xz ):
     return matrix
 
 def plot_dielectric_functions( dielectric, ax=None ):
-    real_dielectric = np.array( [ matrix_eigvals( to_matrix( *e ) ) for e in dielectric[1] ] )
-    imag_dielectric = np.array( [ matrix_eigvals( to_matrix( *e ) ) for e in dielectric[2] ] )
+    real_dielectric = parse_dielectric_data( dielectric[1] )
+    imag_dielectric = parse_dielectric_data( dielectric[2] )
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=(6.0,3.0))
     else:
@@ -38,10 +38,13 @@ def plot_dielectric_functions( dielectric, ax=None ):
     ax.set_ylim([0,5])
     return fig
 
+def parse_dielectric_data( data ):
+    return np.array( [ matrix.eigvals( to_matrix( *e ) ) for e in data ] )
+
 def absorption_coefficient( dielectric ):
     energies_in_eV = np.array( dielectric[0] )
-    real_dielectric = np.array( [ matrix_eigvals( to_matrix( *e ) ) for e in dielectric[1] ] )
-    imag_dielectric = np.array( [ matrix_eigvals( to_matrix( *e ) ) for e in dielectric[2] ] )
+    real_dielectric = parse_dielectric_data( dielectric[1] )
+    imag_dielectric = parse_dielectric_data( dielectric[2] )
     epsilon_1 = np.mean( real_dielectric, axis=1 )
     epsilon_2 = np.mean( imag_dielectric, axis=1 )
     return ( 2.0 * np.sqrt(2.0)*pi*eV_to_recip_cm*energies_in_eV

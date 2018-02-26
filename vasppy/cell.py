@@ -9,7 +9,7 @@ def angle( x, y ):
         x (np.array): one vector.
         y (np.array): the other vector.
 
-    Returns
+    Returns:
         (float):      the angle between x and y in degrees.
     """
     dot = np.dot( x, y )
@@ -20,10 +20,17 @@ def angle( x, y ):
 
 def rotation_matrix(axis, theta):
     """
-    Return the rotation matrix associated with counterclockwise rotation about
+    Return the 3D rotation matrix associated with counterclockwise rotation about
     the given axis by theta radians.
+    
+    Args:
+        axis (np.array): length 3 numpy array defining the axis of rotation.
+        theta (float):   rotation angle in radians.
+
+    Returns:
+        (np.array):      the corredponding rotation matrix.
     """
-    axis = np.asarray (axis )
+    axis = np.asarray( axis )
     theta = np.asarray( theta )
     axis = axis / math.sqrt( np.dot( axis, axis ) )
     a = math.cos( theta / 2 )

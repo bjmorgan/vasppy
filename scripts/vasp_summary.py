@@ -13,6 +13,7 @@ Expects a series of directories (listed in `result_dirs`) that each contain:
 
 import argparse
 from vasppy.summary import Summary, find_vasp_calculations
+from vasppy.vaspmeta import VASPMeta
 
 def get_args():
     parser = argparse.ArgumentParser( description='Summarise a VASP calculation.' )
@@ -45,6 +46,7 @@ supported_flags = { 'status': 'Status',
                     'cbm': 'Vasprun conduction band minimum' }
 
 to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
+titles = None
 
 if __name__ == "__main__":
     args = get_args()
@@ -55,7 +57,10 @@ if __name__ == "__main__":
     if args.file:
         with open( args.file, 'r' ) as stream:
             settings = yaml.load( stream ) 
-        to_print = settings['to_print']
+        if 'to_print' in settings:
+            to_print = settings['to_print']
+        if 'titles' in settings:
+            titles = settings['titles']
     if args.print:
         not_supported = [ p for p in args.print if p not in supported_flags ]
         if not_supported:
@@ -75,6 +80,14 @@ if __name__ == "__main__":
            if not vasprun.is_file():
                print( '{} is missing vasprun.xml'.format( p ) ) 
     else:
+        if titles:
+            # Only parse directories with matching vasp_meta titles
+            matching_path = []
+            for p in path:
+                vm = VASPMeta.from_file( '{}/vaspmeta.yaml'.format(p) )
+                if vm.title in titles:
+                    matching_path.append( p )
+            path = matching_path
         for p in path:
             s = Summary( p )
             s.output( to_print=to_print )

@@ -27,6 +27,7 @@ config = {
     'packages': ['vasppy'], 
     'license': 'MIT',
     'install_requires': [ 'numpy',
+                          'pandas',
                           'pymatgen',
                           'PyYAML', 
                           'coverage==4.3.4',

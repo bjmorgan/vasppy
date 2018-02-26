@@ -44,10 +44,9 @@ class Configuration:
                 if atom_i is atom_j:
                     continue
                 dr = self.minimum_image_dr( atom_i, atom_j )
-                if dr > max_r:
-                    continue
-                this_rdf.add_dr( dr )
-        return this_rdf
+                if dr <= max_r:
+                    this_rdf.add_dr( dr )
+        return this_rdf 
 
     def per_atom_rdf( self, spec_i, spec_j, max_r, number_of_bins ):
         rdfs = []

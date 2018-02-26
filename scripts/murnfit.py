@@ -7,9 +7,11 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import leastsq
 from pymatgen.io.vasp import Vasprun
+from pymatgen.io.vasp.outputs import UnconvergedVASPWarning
 from vasppy import Poscar
 from vasppy.summary import find_vasp_calculations
 import argparse
+import warnings
 
 import matplotlib
 matplotlib.use('agg')
@@ -21,22 +23,36 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def read_vasprun( filename ):
+    return Vasprun( filename, parse_potcar_file=False, parse_dos=False, parse_eigen=False )
+
 def read_data( verbose=True ):
     dir_list = find_vasp_calculations()
     data = []
     for d in dir_list:
+        converged = True
         try:
-            vasprun = Vasprun( d + 'vasprun.xml', parse_potcar_file=False )
+            with warnings.catch_warnings(record=True) as w:
+                vasprun = read_vasprun( d + 'vasprun.xml' )
+                for warning in w:
+                    if isinstance( warning.message, UnconvergedVASPWarning ):
+                        converged = False
+                    else:
+                        print( warning.message )
         except:
-            continue
+            continue 
         poscar = Poscar.from_file( d + 'POSCAR' )
-        data.append( np.array( [ poscar.scaling, vasprun.final_structure.volume, vasprun.final_energy ] ) )
-    df = pd.DataFrame( data, columns=[ 'scaling', 'volume', 'energy' ] ).sort_values( by='scaling' )
+        data.append( [ poscar.scaling, 
+                       vasprun.final_structure.volume, 
+                       vasprun.final_energy,
+                       converged ] )
+    column_titles = [ 'scaling', 'volume', 'energy', 'converged' ]
+    df = pd.DataFrame( data, columns=column_titles ).sort_values( by='scaling' )
     df = df.reset_index( drop=True )
     df['scaling_factor'] = df.volume / df.scaling**3
     scaling_factor_round = 5
     if verbose:
-        print( df )
+        print( df.to_string(index=False) )
     if len( set( df.scaling_factor.round( scaling_factor_round ) ) ) != 1:
         raise ValueError( "POSCAR scaling factors and volumes are inconsistent" )
     return df
@@ -72,13 +88,19 @@ def fit( volumes, energies ):
     plsq = leastsq( objective, x0, args=( volumes, energies ) )
     return plsq
 
-def make_plot( volumes, energies, fit_params ):
-    v_min = volumes.min()*0.99
-    v_max = volumes.max()*1.01
+def make_plot( df, fit_params ):
+    v_min = df.volume.min()*0.99
+    v_max = df.volume.max()*1.01
     v_fitting = np.linspace( v_min, v_max, num=50 )
     e_fitting = murnaghan( v_fitting, *fit_params )
     plt.figure( figsize=(8.0,6.0) )
-    plt.plot( volumes, energies, 'o' )
+    # plot converged data points
+    loc = df.converged
+    plt.plot( df[loc].volume, df[loc].energy, 'o' )
+    # plot unconverged data points
+    loc = [ not b for b in df.converged ]
+    plt.plot( df[loc].volume, df[loc].energy, 'o', c='grey' )
+    # plot fitted equation of state curve
     plt.plot( v_fitting, e_fitting, '--' )
     plt.xlabel( 'volume [A^3]' )
     plt.ylabel( 'energy [eV]' )
@@ -90,7 +112,7 @@ if __name__ == '__main__':
     df = read_data()
     e0, b0, bp, v0 = fit( np.array( df.volume ), np.array( df.energy  ) )[0]
     if args.plot:
-        make_plot( df.volume, df.energy, ( e0, b0, bp, v0 ) )
+        make_plot( df, ( e0, b0, bp, v0 ) )
     print( "E0: {:.4f}".format( e0 ) )
     print( "V0: {:.4f}".format( v0 ) )
     print( "opt. scaling: {:.5f}".format( ( v0 / df.scaling_factor.mean() )**(1/3) ) )

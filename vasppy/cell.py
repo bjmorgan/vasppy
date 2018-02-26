@@ -147,9 +147,6 @@ class Cell:
         ( a, b, c ) = [ row for row in self.matrix ]
         return [ angle( b, c ), angle( a, c ), angle( a, b ) ]
 
-    def centre( self, points ):
-        print( points )
-
     def cartesian_to_fractional_coordinates( self, coordinates ):
         """
         Convert a set of Cartesian coordinates to fractional coordinates in the cell.

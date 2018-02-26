@@ -8,3 +8,4 @@ tests/.coverage
 .python-version
 build/
 ./vasppy.egg-info/
+vasppy.egg-info/

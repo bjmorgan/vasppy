@@ -9,6 +9,17 @@ from scipy.optimize import leastsq
 from pymatgen.io.vasp import Vasprun
 from vasppy import Poscar
 from vasppy.summary import find_vasp_calculations
+import argparse
+
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Perform a Murnaghan equation of state fit across VASP subdirectories')
+    parser.add_argument( '-p', '--plot', action='store_true', help='generate murn.pdf plot of fit' )
+    args = parser.parse_args()
+    return args
 
 def read_data( verbose=True ):
     dir_list = find_vasp_calculations()
@@ -61,9 +72,25 @@ def fit( volumes, energies ):
     plsq = leastsq( objective, x0, args=( volumes, energies ) )
     return plsq
 
+def make_plot( volumes, energies, fit_params ):
+    v_min = volumes.min()*0.99
+    v_max = volumes.max()*1.01
+    v_fitting = np.linspace( v_min, v_max, num=50 )
+    e_fitting = murnaghan( v_fitting, *fit_params )
+    plt.figure( figsize=(8.0,6.0) )
+    plt.plot( volumes, energies, 'o' )
+    plt.plot( v_fitting, e_fitting, '--' )
+    plt.xlabel( 'volume [A^3]' )
+    plt.ylabel( 'energy [eV]' )
+    plt.tight_layout()
+    plt.savefig( 'murn.pdf' )
+
 if __name__ == '__main__':
+    args = parse_args()
     df = read_data()
     e0, b0, bp, v0 = fit( np.array( df.volume ), np.array( df.energy  ) )[0]
+    if args.plot:
+        make_plot( df.volume, df.energy, ( e0, b0, bp, v0 ) )
     print( "E0: {:.4f}".format( e0 ) )
     print( "V0: {:.4f}".format( v0 ) )
     print( "opt. scaling: {:.5f}".format( ( v0 / df.scaling_factor.mean() )**(1/3) ) )

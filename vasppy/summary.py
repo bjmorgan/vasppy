@@ -41,6 +41,8 @@ def potcar_spec( filename ):
             for p, p_md5sum in potcar_md5sum_data[ ps ].items():
                 if this_md5sum == p_md5sum:
                     p_spec[ p ] = ps
+    if len( p_spec ) != len( potcar_md5sums ):
+        raise ValueError( 'One or more POTCARs did not have matching md5 hashes' )
     return p_spec
   
 def find_vasp_calculations():

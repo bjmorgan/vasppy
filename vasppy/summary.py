@@ -83,6 +83,9 @@ def cd( path ):
         os.chdir( old_dir )
 
 class Summary:
+    """
+    TODO Document Summary class
+    """
 
     def __init__( self, directory='.' ):
         self.directory = directory

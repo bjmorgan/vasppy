@@ -1,9 +1,10 @@
 import unittest
 import numpy as np
 import io
+import inspect
 from unittest.mock import Mock, patch, call
 
-from vasppy.summary import md5sum, potcar_spec, find_vasp_calculations
+from vasppy.summary import Summary, md5sum, potcar_spec, find_vasp_calculations
 
 mock_potcar_string = """foo
 End of Dataset
@@ -22,7 +23,20 @@ mock_potcar_data = { 'PBE':    { 'A': '12',
 
 class SummaryTestCase( unittest.TestCase ):
 
-    pass
+    @patch('vasppy.summary.VASPMeta')
+    @patch('vasppy.summary.Summary.parse_vasprun')
+    def test_summary_is_initialised( self, mock_parse_vasprun, MockVASPMeta ):
+        MockVASPMeta.from_file = Mock( return_value='foo' )
+        summary = Summary()
+        mock_parse_vasprun.assert_called_once()
+        expected_print_methods = [ 'title', 'type', 'status', 'stoichiometry',
+                                   'potcar', 'eatom', 'energy', 'k-points',
+                                   'functional', 'encut', 'plus_u', 'ediffg',
+                                   'ibrion', 'converged', 'version', 'md5',
+                                   'directory', 'lreal', 'vbm', 'cbm' ]
+        for key in expected_print_methods:
+            self.assertTrue(key in summary.print_methods)
+            self.assertTrue( inspect.ismethod( summary.print_methods[ key ] ) )
 
 class SummaryHelperFunctionsTestCase( unittest.TestCase ):
 

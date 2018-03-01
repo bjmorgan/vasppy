@@ -144,13 +144,20 @@ class Summary:
     @property
     def functional( self ):
         """
-        Identifies the calculation functional as PBE or PBEsol based on the `GGA` INCAR tag.
-
-        Args:
-            str (Str): The GGA INCAR tag
-
+        String description of the calculation functional.
+       
+        Recognises:
+            - PBE
+            - PBEsol
+            - PBE-based hybrids:
+                - PBE0 (alpha=0.25, no screening)
+                - HSE06 (alpha=0.25, mu=0.2)
+                - generic hybrids (alpha=?, no screening)
+                - generic screened hybrids (alpha=?, mu=?)
+        
         Returns:
             (Str): PBE | PBEsol
+
         """
         if self.potcars_are_pbe(): # PBE base funtional
             if 'LHFCALC' in self.vasprun.parameters:
@@ -175,10 +182,12 @@ class Summary:
                 else: # Standard hybrid
                     f = "hybrid. alpha={}".format( alpha )
             else: # not hybrid. Plain PBE or some variant.
-                if self.vasprun.parameters['GGA'] == 'PS':
-                    f = 'PBEsol'
-                else:
-                    f = 'PBE'
+                pbe_list = { 'PS': 'PBEsol',
+                             'PE': 'PBE',
+                             '91': 'PW91',
+                             'RP': 'rPBE',
+                             'AM': 'AM05' }
+                f = pbe_list[ self.vasprun.parameters['GGA'] ]
         else:
             f = 'not recognised'    
         return f

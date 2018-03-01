@@ -5,6 +5,7 @@ import inspect
 from unittest.mock import Mock, patch, call
 
 from vasppy.summary import Summary, md5sum, potcar_spec, find_vasp_calculations
+from pymatgen.io.vasp.outputs import Vasprun
 
 mock_potcar_string = """foo
 End of Dataset
@@ -21,7 +22,7 @@ mock_potcar_data = { 'PBE':    { 'A': '12',
                      'PBE_54': { 'E': '56',
                                  'F': '78' } }
 
-class SummaryTestCase( unittest.TestCase ):
+class SummaryInitTestCase( unittest.TestCase ):
 
     @patch('vasppy.summary.VASPMeta')
     @patch('vasppy.summary.Summary.parse_vasprun')
@@ -37,6 +38,97 @@ class SummaryTestCase( unittest.TestCase ):
         for key in expected_print_methods:
             self.assertTrue(key in summary.print_methods)
             self.assertTrue( inspect.ismethod( summary.print_methods[ key ] ) )
+
+    @patch('vasppy.summary.VASPMeta')
+    @patch('vasppy.summary.Summary.parse_vasprun')
+    def test_summary_init_raises_filenotfounderror_if_file_is_not_found( self, mock_parse_vasprun, MockVASPMeta ):
+        MockVASPMeta.from_file = Mock( side_effect=FileNotFoundError )
+        with self.assertRaises( FileNotFoundError ):
+            summary = Summary()
+
+class SummaryTestCase( unittest.TestCase ):
+
+    @patch('vasppy.summary.VASPMeta')
+    @patch('vasppy.summary.Summary.parse_vasprun')
+    def setUp( self, mock_parse_vaspun, MockVASPMeta ):
+        MockVASPMeta.from_file = Mock( return_value='foo' )
+        self.summary = Summary() 
+
+    def test_functional_not_PBE( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=False )
+        self.assertEqual( summary.functional, 'not recognised' )
+       
+    def test_functional_is_PBE( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'PE' }
+        self.assertEqual( summary.functional, 'PBE' )
+ 
+    def test_functional_is_PBEsol( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'PS' }
+        self.assertEqual( summary.functional, 'PBEsol' )
+ 
+    def test_functional_is_PW91( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': '91' }
+        self.assertEqual( summary.functional, 'PW91' )
+
+    def test_functional_is_rPBE( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'RP' }
+        self.assertEqual( summary.functional, 'rPBE' )
+
+    def test_functional_is_AM05( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'AM' }
+        self.assertEqual( summary.functional, 'AM05' )
+
+    def test_functional_is_PBE0( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'AM', 'LHFCALC': 'True', 'AEXX': '0.25' }
+        self.assertEqual( summary.functional, 'PBE0' )
+   
+    def test_functional_is_HSE06( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'AM', 'LHFCALC': 'True', 'AEXX': '0.25', 'HFSCREEN': '0.2' }
+        self.assertEqual( summary.functional, 'HSE06' )
+  
+    def test_functional_is_a_PBE_hybrid( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'AM', 'LHFCALC': 'True', 'AEXX': '0.19' }
+        self.assertEqual( summary.functional, 'hybrid. alpha=0.19' )
+
+    def test_functional_is_a_screened_PBE_hybrid( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'AM', 'LHFCALC': 'True', 'AEXX': '0.19', 'HFSCREEN': '0.34' }
+        self.assertEqual( summary.functional, 'screened hybrid. alpha=0.19, mu=0.34' )
+ 
+    def test_functional_raises_KeyError_if_PBE_tag_is_invalid( self ):
+        summary = self.summary
+        summary.potcars_are_pbe = Mock( return_value=True )
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.parameters = { 'GGA': 'foo' }
+        with self.assertRaises( KeyError ):
+            summary.functional
 
 class SummaryHelperFunctionsTestCase( unittest.TestCase ):
 

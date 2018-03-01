@@ -156,7 +156,7 @@ class Summary:
                 - generic screened hybrids (alpha=?, mu=?)
         
         Returns:
-            (Str): PBE | PBEsol
+            (Str): String describing the calculation functional.
 
         """
         if self.potcars_are_pbe(): # PBE base funtional

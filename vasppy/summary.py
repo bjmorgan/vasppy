@@ -168,19 +168,17 @@ class Summary:
                 mu = float( self.vasprun.parameters['HFSCREEN'] )
             else:
                 mu = 0
-            if alpha == 0.25:
-                if mu == 0: # PBE0
-                    f = 'PBE0'
-                else: # Some form of HSE
-                    if mu == 0.2: # HSE06
+            if alpha > 0:
+                if mu > 0: # screened hybrid
+                    if ( mu == 0.2 ) and ( alpha == 0.25 ):
                         f = 'HSE06'
                     else:
                         f = "screened hybrid. alpha={}, mu={}".format( alpha, mu )
-            elif alpha > 0: # hybrid with alpha != 0.25
-                if mu > 0: # Screened hybrid
-                    f = "screened hybrid. alpha={}, mu={}".format( alpha, mu )
-                else: # Standard hybrid
-                    f = "hybrid. alpha={}".format( alpha )
+                else: # unscreened hybrid
+                    if alpha == 0.25:
+                        f = 'PBE0'
+                    else: 
+                        f = "hybrid. alpha={}".format( alpha )
             else: # not hybrid. Plain PBE or some variant.
                 pbe_list = { 'PS': 'PBEsol',
                              'PE': 'PBE',

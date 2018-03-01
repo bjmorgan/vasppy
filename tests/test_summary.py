@@ -28,7 +28,7 @@ class SummaryTestCase( unittest.TestCase ):
     def test_summary_is_initialised( self, mock_parse_vasprun, MockVASPMeta ):
         MockVASPMeta.from_file = Mock( return_value='foo' )
         summary = Summary()
-        mock_parse_vasprun.assert_called_once()
+        self.assertEqual( mock_parse_vasprun.call_count, 1 )
         expected_print_methods = [ 'title', 'type', 'status', 'stoichiometry',
                                    'potcar', 'eatom', 'energy', 'k-points',
                                    'functional', 'encut', 'plus_u', 'ediffg',

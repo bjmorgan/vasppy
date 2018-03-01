@@ -3,7 +3,7 @@ import numpy as np
 import io
 from unittest.mock import Mock, patch, call
 
-from vasppy.summary import md5sum, potcar_spec
+from vasppy.summary import md5sum, potcar_spec, find_vasp_calculations
 
 mock_potcar_string = """foo
 End of Dataset
@@ -50,6 +50,12 @@ class SummaryHelperFunctionsTestCase( unittest.TestCase ):
                 with patch.dict('vasppy.data.potcar_md5sum_data.potcar_md5sum_data', mock_potcar_data, clear=True ):
                     with self.assertRaises( ValueError ):
                         potcar_spec( mock_potcar_filename )
+
+    def test_find_vasp_calculations( self ):
+        mock_glob_output = [ 'dir_A/vasprun.xml', 'dir_B/dir_C/vasprun.xml' ]
+        with patch('glob.iglob', return_value=mock_glob_output) as mock_glob:
+            v = find_vasp_calculations()
+        self.assertEqual( v, [ './dir_A/', './dir_B/dir_C/' ] )
  
 if __name__ == '__main__':
     unittest.main()

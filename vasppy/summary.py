@@ -53,7 +53,7 @@ def find_vasp_calculations():
         None
 
     Returns:
-        (List): generator of all VASP calculation subdirectories.
+        (List): list of all VASP calculation subdirectories.
     """
     dir_list = [ './' + re.sub( r'vasprun\.xml', '', path ) for path in glob.iglob( '**/vasprun.xml', recursive=True ) ]
     return dir_list

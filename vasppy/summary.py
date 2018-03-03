@@ -32,6 +32,16 @@ def md5sum( string ):
     return h.hexdigest()
 
 def potcar_spec( filename ):
+    """
+    Returns a dictionary specifying the pseudopotentials contained in a POTCAR file.
+
+    Args:
+        filename (Str): The name of the POTCAR file to process.
+
+    Returns:
+        (Dict): A dictionary of pseudopotential filename: dataset pairs, e.g.
+                { 'Fe_pv': 'PBE_54', 'O', 'PBE_54' }
+    """
     p_spec = {}
     with open( filename, 'r' ) as f:
         potcars = re.split('(End of Dataset\n)', f.read() )

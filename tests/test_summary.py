@@ -3,6 +3,7 @@ import numpy as np
 import io
 import inspect
 from unittest.mock import Mock, patch, call
+from io import StringIO
 
 from vasppy.summary import Summary, md5sum, potcar_spec, find_vasp_calculations
 from pymatgen.io.vasp.outputs import Vasprun
@@ -129,6 +130,30 @@ class SummaryTestCase( unittest.TestCase ):
         summary.vasprun.parameters = { 'GGA': 'foo' }
         with self.assertRaises( KeyError ):
             summary.functional
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_print_cbm( self, mock_stdout ):
+        summary = self.summary
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.eigenvalue_band_properties = [ 'null', 'CBM', 'VBM' ]
+        summary.print_cbm()
+        self.assertEqual( mock_stdout.getvalue(), 'cbm: CBM\n' )
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_print_vbm( self, mock_stdout ):
+        summary = self.summary
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.eigenvalue_band_properties = [ 'null', 'CBM', 'VBM' ]
+        summary.print_vbm()
+        self.assertEqual( mock_stdout.getvalue(), 'vbm: VBM\n' )
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_print_converged( self, mock_stdout ):
+        summary = self.summary
+        summary.vasprun = Mock( spec=Vasprun )
+        summary.vasprun.converged = 'conv'
+        summary.print_converged()
+        self.assertEqual( mock_stdout.getvalue(), 'converged: conv\n' )
 
 class SummaryHelperFunctionsTestCase( unittest.TestCase ):
 

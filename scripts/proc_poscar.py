@@ -16,6 +16,7 @@ def parse_command_line_arguments():
     parser.add_argument( '-b', '--bohr', action='store_true', help='assumes the input file is in Angstrom, and converts everything to bohr')
     parser.add_argument( '-n', '--number-atoms', action='store_true', help='label coordinates with atom number' )
     parser.add_argument( '--scale', action='store_true', help='scale the lattice parameters by the scaling factor' )
+    parser.add_argument( '--selective', choices=[ 'T', 'F' ], help='generate Selective Dynamics POSCAR with all values set to T / F' )
     args = parser.parse_args()
     return( args )
 
@@ -45,5 +46,6 @@ if __name__ == "__main__":
     # output to stdout
     output_opts = { 'label'    : args.label,
                     'numbered' : args.number_atoms,
-                    'coordinates_only' : args.coordinates_only }
+                    'coordinates_only' : args.coordinates_only,
+                    'selective': args.selective }
     poscar.output( coordinate_type = coordinate_type, opts = output_opts )

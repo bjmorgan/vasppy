@@ -119,22 +119,24 @@ class Poscar:
         for i in range( self.coordinates.shape[0] ):
             prefix_string = ''
             suffix_string = ''
-            if opts['selective']:
+            if 'selective' in opts:
                 if opts['selective'] == 'T':
                     suffix_string += ' T T T'
                 elif opts['selective'] == 'F':
                     suffix_string += ' F F F'
-                else:
+                elif opts['selective']:
                     raise ValueError
-            if opts['numbered']:
-                suffix_string += ' {}'.format(i+1)
-            if opts['label']:
-                if opts['label'] == 1:
-                    prefix_string += self.labels()[i].ljust(6) 
-                elif opts['label'] == 4:
-                    suffix_string += ' {}'.format(self.labels()[i])
-                else:
-                    raise ValueError( opts['label'] )
+            if 'numbered' in opts:
+                if opts['numbered']:
+                    suffix_string += ' {}'.format(i+1)
+            if 'label' in opts:
+                if opts['label']:
+                    if opts['label'] == 1:
+                        prefix_string += self.labels()[i].ljust(6) 
+                    elif opts['label'] == 4:
+                        suffix_string += ' {}'.format(self.labels()[i])
+                    elif opts['label']:
+                        raise ValueError( opts['label'] )
             prefix.append( prefix_string )
             suffix.append( suffix_string )
         for pref, coord, suff in zip( prefix, self.select_coordinates( coordinate_type ), suffix ):

@@ -111,8 +111,6 @@ class Poscar:
     def select_coordinates( self, coordinate_type='Direct' ):
         coord_opts = { 'Direct'    : self.fractional_coordinates(), 
                        'Cartesian' : self.cartesian_coordinates() }
-        if coordinate_type not in coord_opts:
-            raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
         return coord_opts[ coordinate_type ]
 
     def output_coordinates_only( self, coordinate_type='Direct', opts=None ):

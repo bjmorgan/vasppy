@@ -1,0 +1,446 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vasppy.procar &mdash; vasppy 0.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="vasppy 0.4 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> vasppy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">vasppy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>vasppy.procar</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for vasppy.procar</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="n">angstrom_to_bohr</span> <span class="o">=</span> <span class="mf">0.52918</span>
+<span class="n">ev_to_hartree</span> <span class="o">=</span> <span class="mf">0.036749309</span>
+
+<div class="viewcode-block" id="get_numbers_from_string"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.get_numbers_from_string">[docs]</a><span class="k">def</span> <span class="nf">get_numbers_from_string</span><span class="p">(</span> <span class="n">string</span> <span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;-?\d+[.\d]*&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span> <span class="n">s</span> <span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span> <span class="n">string</span> <span class="p">)</span> <span class="p">]</span> </div>
+
+<div class="viewcode-block" id="k_point_parser"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.k_point_parser">[docs]</a><span class="k">def</span> <span class="nf">k_point_parser</span><span class="p">(</span> <span class="n">string</span> <span class="p">):</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="s1">&#39;k-point\s+\d+\s*:\s+((?:[- ][01].\d</span><span class="si">{8}</span><span class="s1">)</span><span class="si">{3}</span><span class="s1">)&#39;</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">11</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">22</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">22</span><span class="p">:</span><span class="mi">33</span><span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">regex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span> <span class="n">string</span> <span class="p">)</span> <span class="p">]</span> </div>
+
+<div class="viewcode-block" id="projections_parser"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.projections_parser">[docs]</a><span class="k">def</span> <span class="nf">projections_parser</span><span class="p">(</span> <span class="n">string</span> <span class="p">):</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="s1">&#39;([-.\d\se]+tot.+)</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span> <span class="n">string</span> <span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span> <span class="s1">&#39;tot&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span> <span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span> <span class="p">]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span> <span class="p">],</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="area_of_a_triangle_in_cartesian_space"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.area_of_a_triangle_in_cartesian_space">[docs]</a><span class="k">def</span> <span class="nf">area_of_a_triangle_in_cartesian_space</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the area of a triangle defined by three points in Cartesian space.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        a (np.array): Cartesian coordinates of point A.</span>
+<span class="sd">        b (np.array): Cartesian coordinates of point B.</span>
+<span class="sd">        c (np.array): Cartesian coordinates of point C.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (float): the area of the triangle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span> <span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="o">-</span><span class="n">a</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="points_are_in_a_straight_line"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.points_are_in_a_straight_line">[docs]</a><span class="k">def</span> <span class="nf">points_are_in_a_straight_line</span><span class="p">(</span> <span class="n">points</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-7</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check whether a set of points fall on a straight line.</span>
+<span class="sd">    Calculates the areas of triangles formed by triplets of the points.</span>
+<span class="sd">    Returns False is any of these areas are larger than the tolerance.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        points (list(np.array)): list of Cartesian coordinates for each point.</span>
+<span class="sd">        tolerance (optional:float): the maximum triangle size for these points to be considered colinear. Default is 1e-7.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (bool): True if all points fall on a straight line (within the allowed tolerance).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">points</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="k">if</span> <span class="n">area_of_a_triangle_in_cartesian_space</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="two_point_effective_mass"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.two_point_effective_mass">[docs]</a><span class="k">def</span> <span class="nf">two_point_effective_mass</span><span class="p">(</span> <span class="n">cartesian_k_points</span><span class="p">,</span> <span class="n">eigenvalues</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the effective mass given eigenvalues at two k-points.</span>
+<span class="sd">    Reimplemented from Aron Walsh&#39;s original effective mass Fortran code.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        cartesian_k_points (np.array): 2D numpy array containing the k-points in (reciprocal) Cartesian coordinates. </span>
+<span class="sd">        eigenvalues (np.array):        numpy array containing the eigenvalues at each k-point.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (float): The effective mass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="n">cartesian_k_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">2</span> <span class="p">)</span>
+    <span class="n">dk</span> <span class="o">=</span> <span class="n">cartesian_k_points</span><span class="p">[</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">-</span> <span class="n">cartesian_k_points</span><span class="p">[</span> <span class="mi">0</span> <span class="p">]</span>
+    <span class="n">mod_dk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">dk</span><span class="p">,</span> <span class="n">dk</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">delta_e</span> <span class="o">=</span> <span class="p">(</span> <span class="n">eigenvalues</span><span class="p">[</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">-</span> <span class="n">eigenvalues</span><span class="p">[</span> <span class="mi">0</span> <span class="p">]</span> <span class="p">)</span> <span class="o">*</span> <span class="n">ev_to_hartree</span> <span class="o">*</span> <span class="mf">2.0</span>
+    <span class="n">effective_mass</span> <span class="o">=</span> <span class="n">mod_dk</span> <span class="o">*</span> <span class="n">mod_dk</span> <span class="o">/</span> <span class="n">delta_e</span>
+    <span class="k">return</span> <span class="n">effective_mass</span></div>
+
+<div class="viewcode-block" id="least_squares_effective_mass"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.least_squares_effective_mass">[docs]</a><span class="k">def</span> <span class="nf">least_squares_effective_mass</span><span class="p">(</span> <span class="n">cartesian_k_points</span><span class="p">,</span> <span class="n">eigenvalues</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the effective mass using a least squares quadratic fit.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cartesian_k_points (np.array): Cartesian reciprocal coordinates for the k-points</span>
+<span class="sd">        eigenvalues (np.array):        Energy eigenvalues at each k-point to be used in the fit.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (float): The fitted effective mass</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        If the k-points do not sit on a straight line a ValueError will be raised.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">points_are_in_a_straight_line</span><span class="p">(</span> <span class="n">cartesian_k_points</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span> <span class="s1">&#39;k-points are not collinear&#39;</span> <span class="p">)</span>
+    <span class="n">dk</span> <span class="o">=</span> <span class="n">cartesian_k_points</span> <span class="o">-</span> <span class="n">cartesian_k_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">mod_dk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span> <span class="n">dk</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">)</span>
+    <span class="n">delta_e</span> <span class="o">=</span> <span class="n">eigenvalues</span> <span class="o">-</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">effective_mass</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span> <span class="n">mod_dk</span><span class="p">,</span> <span class="n">eigenvalues</span><span class="p">,</span> <span class="mi">2</span> <span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ev_to_hartree</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">effective_mass</span></div>
+
+<div class="viewcode-block" id="Procar"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar">[docs]</a><span class="k">class</span> <span class="nc">Procar</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">spin</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spin_channels</span> <span class="o">=</span> <span class="n">spin</span> <span class="c1"># should be determined from PROCAR</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_ions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bands</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_projections</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_point_blocks</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculation</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;non_spin_polarised&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;non_collinear&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;spin_polarised&#39;</span><span class="p">:</span> <span class="kc">False</span> <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">non_spin_polarised</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Procar.parse_projections"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.parse_projections">[docs]</a>    <span class="k">def</span> <span class="nf">parse_projections</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projection_data</span> <span class="o">=</span> <span class="n">projections_parser</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_in</span> <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_data</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spin_channels</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># non-magnetic, non-spin-polarised</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">k_point_blocks</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calculation</span><span class="p">[</span> <span class="s1">&#39;non_spin_polarised&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_data</span> <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spin_channels</span> <span class="o">=</span> <span class="mi">4</span> <span class="c1"># non-collinear (spin-orbit coupling)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">k_point_blocks</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calculation</span><span class="p">[</span> <span class="s1">&#39;non_collinear&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_data</span> <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spin_channels</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># spin-polarised</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">k_point_blocks</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calculation</span><span class="p">[</span> <span class="s1">&#39;spin_polarised&#39;</span> <span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_projections</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_ions</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Procar.parse_k_points"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.parse_k_points">[docs]</a>    <span class="k">def</span> <span class="nf">parse_k_points</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="n">k_points</span> <span class="o">=</span> <span class="n">k_point_parser</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_in</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">k_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">k_points</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Procar.parse_bands"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.parse_bands">[docs]</a>    <span class="k">def</span> <span class="nf">parse_bands</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="n">bands</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span> <span class="sa">r</span><span class="s2">&quot;band\s*(\d+)\s*#\s*energy\s*([-.\d\s]+)&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_in</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bands</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">bands</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Procar.sanity_check"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.sanity_check">[docs]</a>    <span class="k">def</span> <span class="nf">sanity_check</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="n">expected_k_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span>
+        <span class="n">read_k_points</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_points</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_point_blocks</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">expected_k_points</span> <span class="o">==</span> <span class="n">read_k_points</span> <span class="p">),</span> <span class="s2">&quot;k-point number mismatch: </span><span class="si">{}</span><span class="s2"> in header; </span><span class="si">{}</span><span class="s2"> in file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">expected_k_points</span><span class="p">,</span> <span class="n">read_k_points</span> <span class="p">)</span>
+        <span class="n">expected_bands</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span>
+        <span class="n">read_bands</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">bands</span> <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_point_blocks</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">expected_bands</span> <span class="o">==</span> <span class="n">read_bands</span> <span class="p">),</span> <span class="s2">&quot;band mismatch: </span><span class="si">{}</span><span class="s2"> in header; </span><span class="si">{}</span><span class="s2"> in file&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">expected_bands</span><span class="p">,</span> <span class="n">read_bands</span> <span class="p">)</span></div>
+ 
+<div class="viewcode-block" id="Procar.read_from_file"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.read_from_file">[docs]</a>    <span class="k">def</span> <span class="nf">read_from_file</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">bands_in_range</span> <span class="o">=</span> <span class="kc">None</span> <span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span> <span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span> <span class="p">)</span> <span class="k">as</span> <span class="n">file_in</span><span class="p">:</span>
+            <span class="n">file_in</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_ions</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span> <span class="n">f</span> <span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">get_numbers_from_string</span><span class="p">(</span> <span class="n">file_in</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span> <span class="p">)</span> <span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read_in</span> <span class="o">=</span> <span class="n">file_in</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_k_points</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_bands</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_projections</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sanity_check</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_in</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculation</span><span class="p">[</span> <span class="s1">&#39;spin_polarised&#39;</span> <span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_ions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_projections</span> <span class="p">)[:,:,:,:,</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_ions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_projections</span> <span class="p">)[:,:,:,:,</span><span class="mi">1</span><span class="p">:]</span></div>
+
+<div class="viewcode-block" id="Procar.total_band_structure"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.total_band_structure">[docs]</a>    <span class="k">def</span> <span class="nf">total_band_structure</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">spin</span> <span class="p">):</span>
+        <span class="c1"># note: currently gives k-points linear spacing</span>
+        <span class="c1"># if we know the k-vectors for each k-point can instead use their geometric separations to give the correct k-point density</span>
+        <span class="c1"># note: correct k-spacing is already implemented in weighted_band_structure</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">bands</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span><span class="p">,</span> <span class="mi">2</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="n">to_return</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span> <span class="n">band_energies</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">to_return</span> </div>
+
+<div class="viewcode-block" id="Procar.print_weighted_band_structure"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.print_weighted_band_structure">[docs]</a>    <span class="k">def</span> <span class="nf">print_weighted_band_structure</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">spins</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">orbitals</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scaling</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">e_fermi</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">reciprocal_lattice</span> <span class="o">=</span> <span class="kc">None</span> <span class="p">):</span>
+        <span class="k">if</span> <span class="n">spins</span><span class="p">:</span>
+            <span class="n">spins</span> <span class="o">=</span> <span class="p">[</span> <span class="n">s</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spins</span> <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">spins</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_channels</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ions</span><span class="p">:</span>
+            <span class="n">ions</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_ions</span> <span class="p">]</span> 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">orbitals</span><span class="p">:</span>
+            <span class="n">orbitals</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span> <span class="p">]</span> <span class="c1"># !! NOT TESTED YET FOR f STATES !!</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculation</span><span class="p">[</span> <span class="s1">&#39;spin_polarised&#39;</span> <span class="p">]:</span>
+            <span class="n">band_energies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bands</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_channels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="p">)[</span> <span class="n">spins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">]</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">band_energies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bands</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">orbital_projection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">orbitals</span> <span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">)</span>
+        <span class="n">ion_projection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">orbital_projection</span><span class="p">[</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">ions</span> <span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">3</span> <span class="p">)</span> 
+        <span class="n">spin_projection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">ion_projection</span><span class="p">[</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">spins</span> <span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">)</span>
+        <span class="n">x_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_axis</span><span class="p">(</span> <span class="n">reciprocal_lattice</span> <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;# band: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span> <span class="n">e</span><span class="p">,</span> <span class="n">p</span> <span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span> <span class="nb">zip</span><span class="p">(</span> <span class="n">band_energies</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">spin_projection</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">)</span> <span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span> <span class="n">x_axis</span><span class="p">[</span> <span class="n">k</span> <span class="p">],</span> <span class="n">e</span> <span class="o">-</span> <span class="n">e_fermi</span><span class="p">,</span> <span class="n">p</span> <span class="o">*</span> <span class="n">scaling</span> <span class="p">)</span> <span class="c1"># k is the k_point index: currently gives linear k-point spacing</span>
+            <span class="nb">print</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Procar.effective_mass_calc"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.effective_mass_calc">[docs]</a>    <span class="k">def</span> <span class="nf">effective_mass_calc</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">k_point_indices</span><span class="p">,</span> <span class="n">band_index</span><span class="p">,</span> <span class="n">reciprocal_lattice</span><span class="p">,</span> <span class="n">spin</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">printing</span> <span class="o">=</span> <span class="kc">False</span> <span class="p">):</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">spin</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_point_blocks</span> <span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span> <span class="n">k_point_indices</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">)</span> <span class="c1"># we need at least 2 k-points</span>
+        <span class="n">band_energies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bands</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_point_blocks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_k_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_bands</span> <span class="p">)</span>
+        <span class="n">k_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_points</span><span class="p">[</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_point_indices</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">band_energies</span><span class="p">[</span> <span class="n">spin</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">][</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">][</span> <span class="n">band_index</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_point_indices</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">printing</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;# h k l e&#39;</span> <span class="p">)</span>
+            <span class="p">[</span> <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="p">[</span> <span class="nb">str</span><span class="p">(</span> <span class="n">f</span> <span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">row</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span> <span class="n">k_points</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">eigenvalues</span> <span class="p">]</span> <span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="p">),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">)</span> <span class="p">]</span>
+        <span class="n">reciprocal_lattice</span> <span class="o">=</span> <span class="n">reciprocal_lattice</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">angstrom_to_bohr</span>
+        <span class="n">cartesian_k_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">k</span><span class="p">,</span> <span class="n">reciprocal_lattice</span> <span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_points</span> <span class="p">]</span> <span class="p">)</span> <span class="c1"># convert k-points to cartesian</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span> <span class="n">k_point_indices</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">effective_mass_function</span> <span class="o">=</span> <span class="n">two_point_effective_mass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">effective_mass_function</span> <span class="o">=</span> <span class="n">least_squares_effective_mass</span>
+        <span class="k">return</span> <span class="n">effective_mass_function</span><span class="p">(</span> <span class="n">cartesian_k_points</span><span class="p">,</span> <span class="n">eigenvalues</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Procar.x_axis"><a class="viewcode-back" href="../../vasppy.html#vasppy.procar.Procar.x_axis">[docs]</a>    <span class="k">def</span> <span class="nf">x_axis</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">reciprocal_lattice</span> <span class="p">):</span>
+        <span class="k">if</span> <span class="n">reciprocal_lattice</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cartesian_k_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_points</span><span class="p">,</span> <span class="n">reciprocal_lattice</span> <span class="p">)</span>
+            <span class="n">x_axis</span> <span class="o">=</span> <span class="p">[</span> <span class="mf">0.0</span> <span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span> <span class="n">cartesian_k_points</span> <span class="p">)</span> <span class="p">):</span>
+                <span class="n">dk</span> <span class="o">=</span> <span class="n">cartesian_k_points</span><span class="p">[</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">-</span> <span class="n">cartesian_k_points</span><span class="p">[</span> <span class="n">i</span> <span class="p">]</span>
+                <span class="n">mod_dk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">dk</span><span class="p">,</span> <span class="n">dk</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="n">x_axis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">mod_dk</span> <span class="o">+</span> <span class="n">x_axis</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+            <span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">x_axis</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_points</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">x_axis</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Benjamin J. Morgan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

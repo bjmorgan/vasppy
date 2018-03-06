@@ -1,0 +1,434 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vasppy.cell &mdash; vasppy 0.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="vasppy 0.4 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> vasppy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">vasppy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>vasppy.cell</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for vasppy.cell</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="angle"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.angle">[docs]</a><span class="k">def</span> <span class="nf">angle</span><span class="p">(</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the angle between two vectors, in degrees.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x (np.array): one vector.</span>
+<span class="sd">        y (np.array): the other vector.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (float):      the angle between x and y in degrees.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="p">)</span>
+    <span class="n">x_mod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span> <span class="n">x</span> <span class="p">)</span>
+    <span class="n">y_mod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span> <span class="n">y</span> <span class="p">)</span>
+    <span class="n">cos_angle</span> <span class="o">=</span> <span class="n">dot</span> <span class="o">/</span> <span class="p">(</span> <span class="n">x_mod</span> <span class="o">*</span> <span class="n">y_mod</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span> <span class="n">cos_angle</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="rotation_matrix"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.rotation_matrix">[docs]</a><span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the 3D rotation matrix associated with counterclockwise rotation about</span>
+<span class="sd">    the given axis by theta radians.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        axis (np.array): length 3 numpy array defining the axis of rotation.</span>
+<span class="sd">        theta (float):   rotation angle in radians.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (np.array):      the corredponding rotation matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span> <span class="n">axis</span> <span class="p">)</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span> <span class="n">theta</span> <span class="p">)</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">axis</span><span class="p">,</span> <span class="n">axis</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span> <span class="n">theta</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">)</span>
+    <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="n">axis</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span> <span class="n">theta</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">)</span>
+    <span class="n">aa</span><span class="p">,</span> <span class="n">bb</span><span class="p">,</span> <span class="n">cc</span><span class="p">,</span> <span class="n">dd</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="o">*</span><span class="n">d</span>
+    <span class="n">bc</span><span class="p">,</span> <span class="n">ad</span><span class="p">,</span> <span class="n">ac</span><span class="p">,</span> <span class="n">ab</span><span class="p">,</span> <span class="n">bd</span><span class="p">,</span> <span class="n">cd</span> <span class="o">=</span> <span class="n">b</span><span class="o">*</span><span class="n">c</span><span class="p">,</span> <span class="n">a</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">,</span> <span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">c</span><span class="o">*</span><span class="n">d</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="p">[</span> <span class="n">aa</span><span class="o">+</span><span class="n">bb</span><span class="o">-</span><span class="n">cc</span><span class="o">-</span><span class="n">dd</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">bc</span><span class="o">+</span><span class="n">ad</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">bd</span><span class="o">-</span><span class="n">ac</span><span class="p">)</span> <span class="p">],</span>
+                       <span class="p">[</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">bc</span><span class="o">-</span><span class="n">ad</span><span class="p">),</span> <span class="n">aa</span><span class="o">+</span><span class="n">cc</span><span class="o">-</span><span class="n">bb</span><span class="o">-</span><span class="n">dd</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">cd</span><span class="o">+</span><span class="n">ab</span><span class="p">)</span> <span class="p">],</span>
+                       <span class="p">[</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">bd</span><span class="o">+</span><span class="n">ac</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">cd</span><span class="o">-</span><span class="n">ab</span><span class="p">),</span> <span class="n">aa</span><span class="o">+</span><span class="n">dd</span><span class="o">-</span><span class="n">bb</span><span class="o">-</span><span class="n">cc</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell">[docs]</a><span class="k">class</span> <span class="nc">Cell</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise a Cell object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            matrix (np.array): 3x3 numpy array containing the cell matrix.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span> <span class="n">matrix</span> <span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+        <span class="k">assert</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span> <span class="c1"># 3 x 3 numpy Array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inv_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span> <span class="n">matrix</span> <span class="p">)</span>
+
+<div class="viewcode-block" id="Cell.dr"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.dr">[docs]</a>    <span class="k">def</span> <span class="nf">dr</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the distance between two fractional coordinates in the cell.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            r1 (np.array): fractional coordinates for position 1.</span>
+<span class="sd">            r2 (np.array): fractional coordinates for position 2.</span>
+<span class="sd">            cutoff (optional:Bool): If set, returns None for distances greater than the cutoff. Default None (unset).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (float): the distance between r1 and r2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">delta_r_cartesian</span> <span class="o">=</span> <span class="p">(</span> <span class="n">r1</span> <span class="o">-</span> <span class="n">r2</span> <span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="p">)</span>
+        <span class="n">delta_r_squared</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">delta_r_cartesian</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">cutoff</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cutoff_squared</span> <span class="o">=</span> <span class="n">cutoff</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="k">if</span> <span class="n">delta_r_squared</span> <span class="o">&gt;</span> <span class="n">cutoff_squared</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span><span class="p">(</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">delta_r_squared</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell.nearest_image"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.nearest_image">[docs]</a>    <span class="k">def</span> <span class="nf">nearest_image</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">point</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the fractional_coordinates of the nearest periodic image to a point of origin.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            origin (np.array): fractional coordinates of the point of origin.</span>
+<span class="sd">            point  (np.array): fractional coordinates of the other point.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.array): the fractional coordinates of the nearest image of `point` to `origin`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span><span class="p">(</span> <span class="n">origin</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_image</span><span class="p">(</span> <span class="n">origin</span><span class="p">,</span> <span class="n">point</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell.minimum_image"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.minimum_image">[docs]</a>    <span class="k">def</span> <span class="nf">minimum_image</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the minimum image vector from point r1 to point r2.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            r1 (np.array): fractional coordinates of point r1.</span>
+<span class="sd">            r2 (np.array): fractional coordinates of point r2.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.array): the fractional coordinate vector from r1 to the nearest image of r2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">delta_r</span> <span class="o">=</span> <span class="n">r2</span> <span class="o">-</span> <span class="n">r1</span>
+        <span class="n">delta_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">x</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">x</span> <span class="p">)</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span> <span class="k">else</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">delta_r</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span> <span class="n">delta_r</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell.minimum_image_dr"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.minimum_image_dr">[docs]</a>    <span class="k">def</span> <span class="nf">minimum_image_dr</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the shortest distance between two points in the cell, </span>
+<span class="sd">        accounting for periodic boundary conditions.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            r1 (np.array): fractional coordinates of point r1.</span>
+<span class="sd">            r2 (np.array): fractional coordinates of point r2.</span>
+<span class="sd">            cutoff (:obj: `float`, optional): if set, return zero if the minimum distance is greater than `cutoff`. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (float): The distance between r1 and r2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">delta_r_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_image</span><span class="p">(</span> <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span> <span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">dr</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="mi">3</span> <span class="p">),</span> <span class="n">delta_r_vector</span><span class="p">,</span> <span class="n">cutoff</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell.lengths"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.lengths">[docs]</a>    <span class="k">def</span> <span class="nf">lengths</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The cell lengths.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.array(a,b,c)): The cell lengths.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">row</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span> <span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell.angles"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.angles">[docs]</a>    <span class="k">def</span> <span class="nf">angles</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The cell angles (in degrees).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (list(alpha,beta,gamma)): The cell angles.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="p">)</span> <span class="o">=</span> <span class="p">[</span> <span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">angle</span><span class="p">(</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="p">),</span> <span class="n">angle</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="n">c</span> <span class="p">),</span> <span class="n">angle</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="p">)</span> <span class="p">]</span></div>
+
+<div class="viewcode-block" id="Cell.cartesian_to_fractional_coordinates"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.cartesian_to_fractional_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">cartesian_to_fractional_coordinates</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert a set of Cartesian coordinates to fractional coordinates in the cell.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            coordinates (np.array(dim(N,3))): The set of Cartesian coordinates.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.array(dim(N,3))): The corresponding set of fractional coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span><span class="p">(</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv_matrix</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell.fractional_to_cartesian_coordinates"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.fractional_to_cartesian_coordinates">[docs]</a>    <span class="k">def</span> <span class="nf">fractional_to_cartesian_coordinates</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert a set of fractional coordinates in the cell to Cartesian coordinates.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            coordinates (np.array(dim(N,3))): The set of fractional coordinates.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.array(dim(N,3))): The corresponding set of Cartesian coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span><span class="p">(</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="p">)</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell.inside_cell"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.inside_cell">[docs]</a>    <span class="k">def</span> <span class="nf">inside_cell</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">r</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a fractional-coordinate, if this lies outside the cell return the equivalent point inside the cell.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            r (np.array): Fractional coordinates of a point (this may be outside the cell boundaries).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.array): Fractional coordinates of an equivalent point, inside the cell boundaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="n">new_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nearest_image</span><span class="p">(</span> <span class="n">centre</span><span class="p">,</span> <span class="n">r</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_r</span></div>
+
+<div class="viewcode-block" id="Cell.volume"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.volume">[docs]</a>    <span class="k">def</span> <span class="nf">volume</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The cell volume.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (float): The cell volume.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span> </div>
+
+<div class="viewcode-block" id="Cell.unit_vectors"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.unit_vectors">[docs]</a>    <span class="k">def</span> <span class="nf">unit_vectors</span><span class="p">(</span> <span class="bp">self</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The unit vectors for the cell vectors.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (np.array): The unit vectors for the cell vectors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span><span class="p">(</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">lengths</span><span class="p">()</span> <span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Cell.rotate"><a class="viewcode-back" href="../../vasppy.html#vasppy.cell.Cell.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">theta</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span><span class="n">theta</span><span class="p">),</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="p">]</span> <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Benjamin J. Morgan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

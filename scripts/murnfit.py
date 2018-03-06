@@ -8,7 +8,7 @@ import pandas as pd
 from scipy.optimize import leastsq
 from pymatgen.io.vasp import Vasprun
 from pymatgen.io.vasp.outputs import UnconvergedVASPWarning
-from vasppy import Poscar
+from vasppy.poscar import Poscar
 from vasppy.summary import find_vasp_calculations
 import argparse
 import warnings

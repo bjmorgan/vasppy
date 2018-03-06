@@ -1,2 +1,2 @@
 Sphinx>=1.6.3
-include ../requirements.txt
+include requirements.txt

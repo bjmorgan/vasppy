@@ -7,13 +7,10 @@ Welcome to vasppy's documentation!
 ==================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :caption: API documentation
+   :maxdepth: 3
 
-
-
-Indices and tables
-==================
+   modules
 
 * :ref:`genindex`
 * :ref:`modindex`

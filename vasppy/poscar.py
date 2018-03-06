@@ -58,12 +58,8 @@ class Poscar:
         return new_poscar 
  
     def read_from( self, filename ):
-        try:
-            with open( filename ) as f:
-                lines = f.readlines()
-        except FileNotFoundError:
-            print( "\"" + filename + "\" not found", file=sys.stderr ) 
-            sys.exit( -2 )
+        with open( filename ) as f:
+            lines = f.readlines()
         self.title = lines.pop(0).strip()
         self.scaling = float( lines.pop(0).strip() ) 
         self.cell.matrix = np.array( [ [ float( e ) for e in lines.pop(0).split() ] for i in range( 3 ) ] )

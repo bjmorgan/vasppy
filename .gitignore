@@ -1,11 +1,10 @@
 __pycache__
 MANIFEST
-dist
+/dist
 *.pyc
 *.swp
 .coverage
-tests/.coverage
+/tests/.coverage
 .python-version
 /build
-/vasppy.egg-info/
-vasppy.egg-info/
+/vasppy.egg-info

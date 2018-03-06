@@ -6,6 +6,6 @@ dist
 .coverage
 tests/.coverage
 .python-version
-build/
-./vasppy.egg-info/
+/build
+/vasppy.egg-info/
 vasppy.egg-info/

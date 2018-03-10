@@ -209,9 +209,9 @@ class Doscar:
         ax.tick_params(
             axis='y',          # changes apply to the y-axis
             which='both',      # both major and minor ticks are affected
-            left='off',      # ticks along the left edge are off
-            right='off',         # ticks along the right edge are off
-            labelleft='off') # labels along the left edge are off
+            left=False,      # ticks along the left edge are off
+            right=False,         # ticks along the right edge are off
+            labelleft=False) # labels along the left edge are off
         
         if title:
             ax.set_title( title, loc=title_loc, fontdict={'fontsize': title_fontsize} )

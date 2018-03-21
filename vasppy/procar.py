@@ -151,7 +151,8 @@ class Procar:
         expected_bands = self.number_of_bands
         read_bands = len( self.bands ) / self.number_of_k_points / self.k_point_blocks
         assert( expected_bands == read_bands ), "band mismatch: {} in header; {} in file".format( expected_bands, read_bands )
-        assert( self.number_of_bands == len(self.occupancy) / self.number_of_k_points ) 
+        read_occupancy = len(self.occupancy) / self.number_of_k_points / self.k_point_blocks
+        assert( expected_bands == read_occupancy ), "error parsing occupancy data: {} bands in file, {} occupancy data points".format( expected_bands, read_occupancy ) 
 
     def read_from_file( self, filename, bands_in_range = None ):
         with open( filename, 'r' ) as file_in:

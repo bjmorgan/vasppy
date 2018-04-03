@@ -32,6 +32,16 @@ def md5sum( string ):
     return h.hexdigest()
 
 def potcar_spec( filename ):
+    """
+    Returns a dictionary specifying the pseudopotentials contained in a POTCAR file.
+
+    Args:
+        filename (Str): The name of the POTCAR file to process.
+
+    Returns:
+        (Dict): A dictionary of pseudopotential filename: dataset pairs, e.g.
+                { 'Fe_pv': 'PBE_54', 'O', 'PBE_54' }
+    """
     p_spec = {}
     with open( filename, 'r' ) as f:
         potcars = re.split('(End of Dataset\n)', f.read() )
@@ -41,6 +51,8 @@ def potcar_spec( filename ):
             for p, p_md5sum in potcar_md5sum_data[ ps ].items():
                 if this_md5sum == p_md5sum:
                     p_spec[ p ] = ps
+    if len( p_spec ) != len( potcar_md5sums ):
+        raise ValueError( 'One or more POTCARs did not have matching md5 hashes' )
     return p_spec
   
 def find_vasp_calculations():
@@ -51,7 +63,7 @@ def find_vasp_calculations():
         None
 
     Returns:
-        (List): generator of all VASP calculation subdirectories.
+        (List): list of all VASP calculation subdirectories.
     """
     dir_list = [ './' + re.sub( r'vasprun\.xml', '', path ) for path in glob.iglob( '**/vasprun.xml', recursive=True ) ]
     return dir_list
@@ -81,6 +93,9 @@ def cd( path ):
         os.chdir( old_dir )
 
 class Summary:
+    """
+    TODO Document Summary class
+    """
 
     def __init__( self, directory='.' ):
         self.directory = directory
@@ -139,13 +154,20 @@ class Summary:
     @property
     def functional( self ):
         """
-        Identifies the calculation functional as PBE or PBEsol based on the `GGA` INCAR tag.
-
-        Args:
-            str (Str): The GGA INCAR tag
-
+        String description of the calculation functional.
+       
+        Recognises:
+            - PBE
+            - PBEsol
+            - PBE-based hybrids:
+                - PBE0 (alpha=0.25, no screening)
+                - HSE06 (alpha=0.25, mu=0.2)
+                - generic hybrids (alpha=?, no screening)
+                - generic screened hybrids (alpha=?, mu=?)
+        
         Returns:
-            (Str): PBE | PBEsol
+            (Str): String describing the calculation functional.
+
         """
         if self.potcars_are_pbe(): # PBE base funtional
             if 'LHFCALC' in self.vasprun.parameters:
@@ -156,24 +178,24 @@ class Summary:
                 mu = float( self.vasprun.parameters['HFSCREEN'] )
             else:
                 mu = 0
-            if alpha == 0.25:
-                if mu == 0: # PBE0
-                    f = 'PBE0'
-                else: # Some form of HSE
-                    if mu == 0.2: # HSE06
+            if alpha > 0:
+                if mu > 0: # screened hybrid
+                    if ( mu == 0.2 ) and ( alpha == 0.25 ):
                         f = 'HSE06'
                     else:
                         f = "screened hybrid. alpha={}, mu={}".format( alpha, mu )
-            elif alpha > 0: # hybrid with alpha != 0.25
-                if mu > 0: # Screened hybrid
-                    f = "screened hybrid. alpha={}, mu={}".format( alpha, mu )
-                else: # Standard hybrid
-                    f = "hybrid. alpha={}".format( alpha )
+                else: # unscreened hybrid
+                    if alpha == 0.25:
+                        f = 'PBE0'
+                    else: 
+                        f = "hybrid. alpha={}".format( alpha )
             else: # not hybrid. Plain PBE or some variant.
-                if self.vasprun.parameters['GGA'] == 'PS':
-                    f = 'PBEsol'
-                else:
-                    f = 'PBE'
+                pbe_list = { 'PS': 'PBEsol',
+                             'PE': 'PBE',
+                             '91': 'PW91',
+                             'RP': 'rPBE',
+                             'AM': 'AM05' }
+                f = pbe_list[ self.vasprun.parameters['GGA'] ]
         else:
             f = 'not recognised'    
         return f

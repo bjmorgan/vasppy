@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vasppy.optics &mdash; vasppy 0.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="vasppy 0.4 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> vasppy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">vasppy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>vasppy.optics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for vasppy.optics</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">functions for working with optical properties from vasprun.xml</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.constants</span> <span class="k">import</span> <span class="n">physical_constants</span><span class="p">,</span> <span class="n">speed_of_light</span>
+
+<span class="n">eV_to_recip_cm</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">physical_constants</span><span class="p">[</span><span class="s1">&#39;Planck constant in eV s&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">speed_of_light</span><span class="o">*</span><span class="mf">1e2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="matrix_eigvals"><a class="viewcode-back" href="../../vasppy.html#vasppy.optics.matrix_eigvals">[docs]</a><span class="k">def</span> <span class="nf">matrix_eigvals</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the eigenvalues of a matrix.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        matrix (np.array): The matrix to diagonalise.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (np.array): Array of the matrix eigenvalues.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eigvals</span></div>
+       
+<div class="viewcode-block" id="to_matrix"><a class="viewcode-back" href="../../vasppy.html#vasppy.optics.to_matrix">[docs]</a><span class="k">def</span> <span class="nf">to_matrix</span><span class="p">(</span> <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">yz</span><span class="p">,</span> <span class="n">xz</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a list of matrix components to a symmetric 3x3 matrix.</span>
+<span class="sd">    Inputs should be in the order xx, yy, zz, xy, yz, xz.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xx (float): xx component of the matrix.</span>
+<span class="sd">        yy (float): yy component of the matrix.</span>
+<span class="sd">        zz (float): zz component of the matrix.</span>
+<span class="sd">        xy (float): xy component of the matrix.</span>
+<span class="sd">        yz (float): yz component of the matrix.</span>
+<span class="sd">        xz (float): xz component of the matrix.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (np.array): The matrix, as a 3x3 numpy array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[[</span><span class="n">xx</span><span class="p">,</span> <span class="n">xy</span><span class="p">,</span> <span class="n">xz</span><span class="p">],</span> <span class="p">[</span><span class="n">xy</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">yz</span><span class="p">],</span> <span class="p">[</span><span class="n">xz</span><span class="p">,</span> <span class="n">yz</span><span class="p">,</span> <span class="n">zz</span><span class="p">]]</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">matrix</span></div>
+
+<div class="viewcode-block" id="plot_dielectric_functions"><a class="viewcode-back" href="../../vasppy.html#vasppy.optics.plot_dielectric_functions">[docs]</a><span class="k">def</span> <span class="nf">plot_dielectric_functions</span><span class="p">(</span> <span class="n">dielectric</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span> <span class="p">):</span>
+    <span class="n">real_dielectric</span> <span class="o">=</span> <span class="n">parse_dielectric_data</span><span class="p">(</span> <span class="n">dielectric</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+    <span class="n">imag_dielectric</span> <span class="o">=</span> <span class="n">parse_dielectric_data</span><span class="p">(</span> <span class="n">dielectric</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">6.0</span><span class="p">,</span><span class="mf">3.0</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span> <span class="n">dielectric</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span> <span class="n">real_dielectric</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span> <span class="p">),</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span> <span class="p">)</span> <span class="c1"># better to pass in v.dielectric</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span> <span class="n">dielectric</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span> <span class="n">imag_dielectric</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span> <span class="p">),</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span> <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+<div class="viewcode-block" id="parse_dielectric_data"><a class="viewcode-back" href="../../vasppy.html#vasppy.optics.parse_dielectric_data">[docs]</a><span class="k">def</span> <span class="nf">parse_dielectric_data</span><span class="p">(</span> <span class="n">data</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a set of 2D vasprun formatted dielectric data to</span>
+<span class="sd">    the eigenvalues of each corresponding 3x3 symmetric numpy matrices.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data (list): length N list of dielectric data. Each entry should be</span>
+<span class="sd">                     a list of ``[xx, yy, zz, xy, xz, yz ]`` dielectric</span>
+<span class="sd">                     tensor elements.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (np.array):  a Nx3 numpy array. Each row contains the eigenvalues</span>
+<span class="sd">                     for the corresponding row in `data`.</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">matrix_eigvals</span><span class="p">(</span> <span class="n">to_matrix</span><span class="p">(</span> <span class="o">*</span><span class="n">e</span> <span class="p">)</span> <span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">data</span> <span class="p">]</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="absorption_coefficient"><a class="viewcode-back" href="../../vasppy.html#vasppy.optics.absorption_coefficient">[docs]</a><span class="k">def</span> <span class="nf">absorption_coefficient</span><span class="p">(</span> <span class="n">dielectric</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the optical absorption coefficient from an input set of</span>
+<span class="sd">    pymatgen vasprun dielectric constant data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dielectric (list): A list containing the dielectric response function</span>
+<span class="sd">                           in the pymatgen vasprun format.</span>
+
+<span class="sd">                           | element 0: list of energies</span>
+<span class="sd">                           | element 1: real dielectric tensors, in ``[xx, yy, zz, xy, xz, yz]`` format.</span>
+<span class="sd">                           | element 2: imaginary dielectric tensors, in ``[xx, yy, zz, xy, xz, yz]`` format.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        (np.array): absorption coefficient using eV as frequency units.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        The absorption coefficient is calculated as</span>
+
+<span class="sd">        .. math:: \\alpha = \\frac{2\sqrt{2} \pi}{\lambda} \sqrt{-\epsilon_1+\sqrt{\epsilon_1^2+\epsilon_2^2}}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">energies_in_eV</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">dielectric</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span>
+    <span class="n">real_dielectric</span> <span class="o">=</span> <span class="n">parse_dielectric_data</span><span class="p">(</span> <span class="n">dielectric</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+    <span class="n">imag_dielectric</span> <span class="o">=</span> <span class="n">parse_dielectric_data</span><span class="p">(</span> <span class="n">dielectric</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span>
+    <span class="n">epsilon_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span> <span class="n">real_dielectric</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span> <span class="p">)</span>
+    <span class="n">epsilon_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span> <span class="n">imag_dielectric</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">eV_to_recip_cm</span><span class="o">*</span><span class="n">energies_in_eV</span>
+                 <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="o">-</span><span class="n">epsilon_1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">epsilon_1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">epsilon_2</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span> <span class="p">)</span> <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Benjamin J. Morgan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

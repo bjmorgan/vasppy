@@ -58,12 +58,8 @@ class Poscar:
         return new_poscar 
  
     def read_from( self, filename ):
-        try:
-            with open( filename ) as f:
-                lines = f.readlines()
-        except FileNotFoundError:
-            print( "\"" + filename + "\" not found", file=sys.stderr ) 
-            sys.exit( -2 )
+        with open( filename ) as f:
+            lines = f.readlines()
         self.title = lines.pop(0).strip()
         self.scaling = float( lines.pop(0).strip() ) 
         self.cell.matrix = np.array( [ [ float( e ) for e in lines.pop(0).split() ] for i in range( 3 ) ] )
@@ -108,43 +104,40 @@ class Poscar:
     def cartesian_coordinates( self ):
         return ( self.coordinates if self.coords_are_cartesian() else self.coordinates.dot( self.cell.matrix ) )
 
-    def coordinates_to_stdout( self, coordinate_type='Direct' ):
+    def select_coordinates( self, coordinate_type='Direct' ):
         coord_opts = { 'Direct'    : self.fractional_coordinates(), 
                        'Cartesian' : self.cartesian_coordinates() }
-        try:
-            [ print( ''.join( ['  {: .10f}'.format( element ) for element in row ] ) ) for row in coord_opts[ coordinate_type ] ]
-        except KeyError: 
-            raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
-
-    def labelled_coordinates_to_stdout( self, coordinate_type='Direct', label_pos='1' ):
-        coord_opts = { 'Direct'    : self.fractional_coordinates(), 
-                       'Cartesian' : self.cartesian_coordinates() } 
-        if label_pos == 1:
-            for ( row, label ) in zip( coord_opts[ coordinate_type ], self.labels() ):
-                print( label.ljust(6) + ''.join( [ '  {: .10f}'.format( element ) for element in row ] ) )
-        if label_pos == 4:
-            for ( row, label ) in zip( coord_opts[ coordinate_type ], self.labels() ):
-                print( ''.join( [ '  {: .10f}'.format( element ) for element in row ] ) + '  {:.4s}'.format( label ) )
-
-    def numbered_coordinates_to_stdout( self, coordinate_type='Direct' ):
-        coord_opts = { 'Direct'    : self.fractional_coordinates(), 
-                       'Cartesian' : self.cartesian_coordinates() } 
-        try:
-            for i, row in enumerate( coord_opts[ coordinate_type ] ):
-                print( ''.join( ['  {: .10f}'.format( element ) for element in row ] ) + '  ' + str(i+1) )
-        except KeyError: 
-            raise Exception( 'Passed coordinate_type: ' + coordinate_type + '\nAccepted values: [ Direct | Cartesian ] ' )
+        return coord_opts[ coordinate_type ]
 
     def output_coordinates_only( self, coordinate_type='Direct', opts=None ):
-        if opts is None:
-            opts = {}
-        if opts.get( 'numbered' ):
-            self.numbered_coordinates_to_stdout( coordinate_type )
-        elif opts.get( 'label' ):
-            self.labelled_coordinates_to_stdout( coordinate_type, opts[ 'label' ] )
-        else:
-            self.coordinates_to_stdout( coordinate_type )
-
+        prefix = []
+        suffix = []
+        for i in range( self.coordinates.shape[0] ):
+            prefix_string = ''
+            suffix_string = ''
+            if 'selective' in opts:
+                if opts['selective'] == 'T':
+                    suffix_string += ' T T T'
+                elif opts['selective'] == 'F':
+                    suffix_string += ' F F F'
+                elif opts['selective']:
+                    raise ValueError
+            if 'numbered' in opts:
+                if opts['numbered']:
+                    suffix_string += ' {}'.format(i+1)
+            if 'label' in opts:
+                if opts['label']:
+                    if opts['label'] == 1:
+                        prefix_string += self.labels()[i].ljust(6) 
+                    elif opts['label'] == 4:
+                        suffix_string += ' {}'.format(self.labels()[i])
+                    elif opts['label']:
+                        raise ValueError( opts['label'] )
+            prefix.append( prefix_string )
+            suffix.append( suffix_string )
+        for pref, coord, suff in zip( prefix, self.select_coordinates( coordinate_type ), suffix ):
+            print( pref + ''.join( ['  {: .10f}'.format( element ) for element in coord ] ) + suff )
+  
     def output( self, coordinate_type='Direct', opts=None ):
         if opts is None:
             opts = {}
@@ -154,6 +147,8 @@ class Poscar:
             [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.cell.matrix ]
             print( ' '.join( self.atoms ) )
             print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
+            if opts['selective']:
+                print( 'Selective Dynamics' )
             print( coordinate_type )
         self.output_coordinates_only( coordinate_type=coordinate_type, opts=opts )
 

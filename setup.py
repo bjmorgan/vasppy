@@ -24,7 +24,7 @@ config = {
     'download_url': "https://github.com/bjmorgan/vasppy/archive/%s.tar.gz" % (VERSION),
     'version': VERSION,
     'keywords': ['vasp'], # keywords
-    'packages': ['vasppy'], 
+    'packages': ['vasppy','vasppy.data'], 
     'license': 'MIT',
     'install_requires': [ 'numpy',
                           'pandas',

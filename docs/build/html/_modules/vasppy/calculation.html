@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vasppy.calculation &mdash; vasppy 0.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="vasppy 0.4 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> vasppy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">vasppy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>vasppy.calculation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for vasppy.calculation</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+
+<div class="viewcode-block" id="Calculation"><a class="viewcode-back" href="../../vasppy.html#vasppy.calculation.Calculation">[docs]</a><span class="k">class</span> <span class="nc">Calculation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    class describing a single VASP calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="n">stoichiometry</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise a Calculation object</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            title (Str): The title string for this calculation.</span>
+<span class="sd">            energy (Float): Final energy in eV.</span>
+<span class="sd">            stoichiometry (Dict{Str:Int}): A dict desribing the calculation stoichiometry,</span>
+<span class="sd">                e.g. { &#39;Ti&#39;: 1, &#39;O&#39;: 2 }</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy</span> <span class="o">=</span> <span class="n">energy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stoichiometry</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span> <span class="n">stoichiometry</span> <span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">scaling</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;Multiply&quot; this Calculation by a scaling factor.</span>
+<span class="sd">        Returns a new Calculation with the same title, but scaled energy and stoichiometry.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scaling (float): The scaling factor.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (vasppy.Calculation): The scaled Calculation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_calculation</span> <span class="o">=</span> <span class="n">Calculation</span><span class="p">(</span> <span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">energy</span><span class="o">*</span><span class="n">scaling</span><span class="p">,</span> <span class="n">stoichiometry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_stoichiometry</span><span class="p">(</span> <span class="n">scaling</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_calculation</span>
+        
+    <span class="k">def</span> <span class="nf">__truediv__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">scaling</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implements division by a scaling factor.</span>
+<span class="sd">        Returns a new Calculation with the same title, but scaled energy and stoichiometry.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scaling (float): The scaling factor.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (vasppy.Calculation): The scaled Calculation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="p">(</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">scaling</span> <span class="p">)</span>
+        
+<div class="viewcode-block" id="Calculation.scale_stoichiometry"><a class="viewcode-back" href="../../vasppy.html#vasppy.calculation.Calculation.scale_stoichiometry">[docs]</a>    <span class="k">def</span> <span class="nf">scale_stoichiometry</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">scaling</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scale the Calculation stoichiometry</span>
+<span class="sd">        Returns the stoichiometry, scaled by the argument scaling.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scaling (float): The scaling factor.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (Counter(Str:Int)): The scaled stoichiometry as a Counter of label: stoichiometry pairs</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        <span class="k">return</span> <span class="p">{</span> <span class="n">k</span><span class="p">:</span><span class="n">v</span><span class="o">*</span><span class="n">scaling</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stoichiometry</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="p">}</span></div></div>
+    
+<div class="viewcode-block" id="delta_E"><a class="viewcode-back" href="../../vasppy.html#vasppy.calculation.delta_E">[docs]</a><span class="k">def</span> <span class="nf">delta_E</span><span class="p">(</span> <span class="n">reactants</span><span class="p">,</span> <span class="n">products</span><span class="p">,</span> <span class="n">check_balance</span><span class="o">=</span><span class="kc">True</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the change in energy for reactants --&gt; products.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        reactants (list(vasppy.Calculation): A list of vasppy.Calculation objects. The initial state.</span>
+<span class="sd">        products  (list(vasppy.Calculation): A list of vasppy.Calculation objects. The final state.</span>
+<span class="sd">        check_balance (bool:optional): Check that the reaction stoichiometry is balanced. Default: True.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (float) The change in energy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">check_balance</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">delta_stoichiometry</span><span class="p">(</span> <span class="n">reactants</span><span class="p">,</span> <span class="n">products</span> <span class="p">)</span> <span class="o">!=</span> <span class="p">{}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span> <span class="s2">&quot;reaction is not balanced: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">delta_stoichiometry</span><span class="p">(</span> <span class="n">reactants</span><span class="p">,</span> <span class="n">products</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span> <span class="p">[</span> <span class="n">r</span><span class="o">.</span><span class="n">energy</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">products</span> <span class="p">]</span> <span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span> <span class="p">[</span> <span class="n">r</span><span class="o">.</span><span class="n">energy</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reactants</span> <span class="p">]</span> <span class="p">)</span></div>
+
+<div class="viewcode-block" id="delta_stoichiometry"><a class="viewcode-back" href="../../vasppy.html#vasppy.calculation.delta_stoichiometry">[docs]</a><span class="k">def</span> <span class="nf">delta_stoichiometry</span><span class="p">(</span> <span class="n">reactants</span><span class="p">,</span> <span class="n">products</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the change in stoichiometry for reactants --&gt; products.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        reactants (list(vasppy.Calculation): A list of vasppy.Calculation objects. The initial state.</span>
+<span class="sd">        products  (list(vasppy.Calculation): A list of vasppy.Calculation objects. The final state.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (Counter): The change in stoichiometry.</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">totals</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reactants</span><span class="p">:</span>
+        <span class="n">totals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span> <span class="p">(</span> <span class="n">r</span> <span class="o">*</span> <span class="o">-</span><span class="mf">1.0</span> <span class="p">)</span><span class="o">.</span><span class="n">stoichiometry</span> <span class="p">)</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">:</span>
+        <span class="n">totals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span> <span class="n">p</span><span class="o">.</span><span class="n">stoichiometry</span> <span class="p">)</span>
+    <span class="n">to_return</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">totals</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">totals</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">to_return</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">totals</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">to_return</span></div>
+
+<div class="viewcode-block" id="energy_string_to_float"><a class="viewcode-back" href="../../vasppy.html#vasppy.calculation.energy_string_to_float">[docs]</a><span class="k">def</span> <span class="nf">energy_string_to_float</span><span class="p">(</span> <span class="n">string</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a string of a calculation energy, e.g. &#39;-1.2345 eV&#39; to a float.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        string (str): The string to convert.</span>
+<span class="sd">  </span>
+<span class="sd">    Return</span>
+<span class="sd">        (float) </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">energy_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="s2">&quot;(-?\d+\.\d+)&quot;</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span> <span class="n">energy_re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span> <span class="n">string</span> <span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="import_calculations_from_file"><a class="viewcode-back" href="../../vasppy.html#vasppy.calculation.import_calculations_from_file">[docs]</a><span class="k">def</span> <span class="nf">import_calculations_from_file</span><span class="p">(</span> <span class="n">filename</span> <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct a list of Calculation objects by reading a YAML file.</span>
+<span class="sd">    Each YAML document should include &#39;title&#39;, &#39;stoichiometry&#39;, and &#39;energy&#39; fields. e.g.::</span>
+
+<span class="sd">        title: my calculation</span>
+<span class="sd">        stoichiometry:</span>
+<span class="sd">            - A: 1</span>
+<span class="sd">            - B: 2</span>
+<span class="sd">        energy: -0.1234 eV</span>
+
+<span class="sd">    Separate calculations should be distinct YAML documents, separated by `---`</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        filename (str): Name of the YAML file to read.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (dict(vasppy.Calculation)): A dictionary of Calculation objects. For each Calculation object, the &#39;title&#39; field from the YAML input is used as the dictionary key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">calcs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span> <span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span> <span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+        <span class="n">docs</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load_all</span><span class="p">(</span> <span class="n">stream</span> <span class="p">)</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">docs</span><span class="p">:</span>
+            <span class="n">stoichiometry</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;stoichiometry&#39;</span><span class="p">]:</span>
+                <span class="n">stoichiometry</span><span class="o">.</span><span class="n">update</span><span class="p">(</span> <span class="n">s</span> <span class="p">)</span>
+            <span class="n">calcs</span><span class="p">[</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span> <span class="p">]</span> <span class="o">=</span> <span class="n">Calculation</span><span class="p">(</span> <span class="n">title</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span> 
+                                               <span class="n">stoichiometry</span><span class="o">=</span><span class="n">stoichiometry</span><span class="p">,</span> 
+                                               <span class="n">energy</span><span class="o">=</span><span class="n">energy_string_to_float</span><span class="p">(</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;energy&#39;</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">calcs</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Benjamin J. Morgan.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

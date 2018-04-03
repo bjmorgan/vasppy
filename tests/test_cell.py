@@ -2,6 +2,7 @@ import unittest
 from vasppy.cell import angle, rotation_matrix, Cell
 from unittest.mock import patch, Mock
 import numpy as np
+import math
 
 class Test_Cell( unittest.TestCase ):
 
@@ -102,6 +103,22 @@ class Test_Cell_Support_Functions( unittest.TestCase ):
                       [ np.array( [ 2.0, 2.0, 0.0 ] ), np.array( [ 0.5, 0.0, 0.0 ] ), 45.0 ] ]
         for data in test_data:
             self.assertAlmostEqual( angle( data[0], data[1] ), data[2] )
+
+    def test_rotation_matrix( self ):
+        test_matrix = np.array( [ [ 1.0, 0.0, 0.0 ],
+                                  [ 0.0, math.sqrt(3)/2, -0.5 ],
+                                  [ 0.0, 0.5, math.sqrt(3)/2 ] ] )
+        angle = math.pi/6
+        axis = np.array( [ 1.0, 0.0, 0.0 ] )
+        np.testing.assert_almost_equal( rotation_matrix( axis, angle ), test_matrix )
+
+    def test_rotation_matrix_2( self ):
+        test_matrix = np.array( [ [ 0.0, 0.0, 1.0 ],
+                                  [ 1.0, 0.0, 0.0 ],
+                                  [ 0.0, 1.0, 0.0 ] ] )
+        angle = math.pi*2/3
+        axis = np.array( [ 1.0, 1.0, 1.0 ] )
+        np.testing.assert_almost_equal( rotation_matrix( axis, angle ), test_matrix )
 
 if __name__ == '__main__':
     unittest.main() 

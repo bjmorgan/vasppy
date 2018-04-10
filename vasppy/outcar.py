@@ -67,3 +67,19 @@ def potcar_eatom_list_from_outcar( filename='OUTCAR' ):
     eatom_re = re.compile( "energy of atom\s+\d+\s+EATOM=\s*([-\d\.]+)" )
     eatom = [ float( e ) for e in eatom_re.findall( outcar ) ]
     return eatom
+
+
+def fermi_energy_from_outcar( filename='OUTCAR' ):
+    """Finds and returns the fermi energy.
+    Args:
+    -filename: the name of the outcar file to be read
+
+    Returns:
+        (Float): The fermi energy as found in the OUTCAR 
+    """
+    outcar = open(filename, "r").read()
+    # returns a match object
+    fermi_energy = re.search(r"E-fermi\s*:\s*([-.\d]*)", outcar)
+    # take the first group - group(0) contains entire match
+    fermi_energy = float(fermi_energy.group(1))
+    return fermi_energy

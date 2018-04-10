@@ -119,12 +119,14 @@ def energy_string_to_float( string ):
 def import_calculations_from_file( filename ):
     """
     Construct a list of Calculation objects by reading a YAML file.
-    Each YAML document should include 'title', 'stoichiometry', and 'energy' fields. e.g.
+    Each YAML document should include 'title', 'stoichiometry', and 'energy' fields. e.g.::
+
         title: my calculation
         stoichiometry:
             - A: 1
             - B: 2
         energy: -0.1234 eV
+
     Separate calculations should be distinct YAML documents, separated by `---`
     
     Args:

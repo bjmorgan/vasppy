@@ -5,6 +5,23 @@ import matplotlib._color_data as mcd
 
 tableau_grey = '#bab0ac'
 
+def pdos_column_names( lmax, ispin ):
+    if lmax == 2:
+        names = [ 's', 'p_y', 'p_z', 'p_x', 'd_xy', 'd_yz', 'd_z2-r2', 'd_xz', 'd_x2-y2' ]
+    elif lmax == 3:
+        names = [ 's', 'p_y', 'p_z', 'p_x', 'd_xy', 'd_yz', 'd_z2-r2', 'd_xz', 'd_x2-y2',
+                  'f_y(3x2-y2)', 'f_xyz', 'f_yz2', 'f_z3', 'f_xz2', 'f_z(x2-y2)', 'f_x(x2-3y2)' ]
+    else:
+        raise ValueError( 'lmax value not supported' )
+    if ispin == 2:
+        all_names = []
+        for n in names:
+            all_names.extend( [ '{}_up'.format(n), '{}_down'.format(n) ] )
+    else:
+        all_names = names
+    all_names.insert( 0, 'energy' )
+    return all_names
+
 class Doscar:
     '''
     Contains all the data in a VASP DOSCAR file, and methods for manipulating this.
@@ -31,8 +48,6 @@ class Doscar:
         self.filename = filename
         self.ispin = ispin
         self.lmax = lmax
-        if self.lmax == 3:
-            raise NotImplementedError( 'f-orbital projects DOSCARs are not yet supported' )
         self.spin_orbit_coupling = spin_orbit_coupling
         if self.spin_orbit_coupling:
             raise NotImplementedError( 'Spin-orbit coupling is not yet implemented' )
@@ -50,8 +65,7 @@ class Doscar:
     @property
     def number_of_channels( self ):
         if self.lorbit == 11:
-            if self.lmax == 2:
-                return 9
+            return { 2: 9, 3: 16 }[ self.lmax ]
         raise notImplementedError
 
     def read_header( self ):
@@ -85,10 +99,7 @@ class Doscar:
                           skiprows=start_to_read,
                           nrows=self.number_of_data_points,
                           delim_whitespace=True,
-                          names=[ 'energy', 's_up', 's_down', 
-                                  'p_y_up', 'p_y_down', 'p_z_up', 'p_z_down', 'p_x_up', 'p_x_down',
-                                  'd_xy_up', 'd_xy_down', 'd_yz_up', 'd_yz_down', 'd_z2-r2_up', 'd_z2-r2_down',
-                                  'd_xz_up', 'd_xz_down', 'd_x2-y2_up', 'd_x2-y2_down' ],
+                          names=pdos_column_names( lmax=self.lmax, ispin=self.ispin ),
                           index_col=False )
         return df.drop('energy', axis=1)
     
@@ -108,7 +119,8 @@ class Doscar:
         """
         valid_m_values = { 's': [],
                            'p': [ 'x', 'y', 'z' ],
-                           'd': [ 'xy', 'yz', 'z2-r2', 'xz', 'x2-y2' ] }
+                           'd': [ 'xy', 'yz', 'z2-r2', 'xz', 'x2-y2' ],
+                           'f': [ 'y(3x2-y2)', 'xyz', 'yz2', 'z3', 'xz2', 'z(x2-y2)', 'x(x2-3y2)' ] }
         if not atoms:
             atom_idx = list(range( self.number_of_atoms ))
         else:
@@ -139,6 +151,13 @@ class Doscar:
                 channel_idx = [ 4, 5, 6, 7, 8 ]
             else:
                 channel_idx = [ i for i, v in enumerate( valid_m_values['d'] ) if v in m ]
+        elif l == 'f':
+            if not m:
+                channel_idx = [ 9, 10, 11, 12, 13, 14, 15 ]
+            else:
+                channel_idx = [ i for i, v in enumerate( valid_m_values['f'] ) if v in m ]
+        else:
+            raise ValueError
         return to_return[ :, :, channel_idx, : ]
     
     def pdos_sum( self, atoms=None, spin=None, l=None, m=None ):

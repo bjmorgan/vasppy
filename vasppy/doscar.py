@@ -61,6 +61,8 @@ class Doscar:
                 self.read_projected_dos()
             except:
                 raise
+        # if species is set, should check that this is consistent with the number of entries in the
+        # projected_dos dataset
         
     @property
     def number_of_channels( self ):

@@ -50,7 +50,7 @@ def read_data( verbose=True ):
     df = pd.DataFrame( data, columns=column_titles ).sort_values( by='scaling' )
     df = df.reset_index( drop=True )
     df['scaling_factor'] = df.volume / df.scaling**3
-    scaling_factor_round = 5
+    scaling_factor_round = 4
     if verbose:
         print( df.to_string(index=False) )
     if len( set( df.scaling_factor.round( scaling_factor_round ) ) ) != 1:

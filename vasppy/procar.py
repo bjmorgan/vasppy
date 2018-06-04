@@ -105,6 +105,7 @@ class Procar:
         self.number_of_bands = None
         self.data = None
         self.bands = None
+        self.occupancy = None
         self.number_of_projections = None
         self.k_point_blocks = None
         self.calculation = { 'non_spin_polarised': False, 'non_collinear': False, 'spin_polarised': False }

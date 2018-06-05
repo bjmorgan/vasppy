@@ -14,6 +14,21 @@ class ProcarTestCase( unittest.TestCase ):
     def setUp( self ):
         self.procar = procar.Procar()
 
+    def test_procar_is_initialised( self ):
+        pcar = procar.Procar()
+        self.assertEqual( pcar.spin_channels, 1 )
+        self.assertEqual( pcar.number_of_k_points, None )
+        self.assertEqual( pcar.number_of_ions, None )
+        self.assertEqual( pcar.number_of_bands, None )
+        self.assertEqual( pcar.data, None )
+        self.assertEqual( pcar.bands, None )
+        self.assertEqual( pcar.occupancy, None )
+        self.assertEqual( pcar.number_of_projections, None )
+        self.assertEqual( pcar.k_point_blocks, None )
+        self.assertEqual( pcar.calculation, { 'non_spin_polarised': False, 
+                                              'non_collinear': False, 
+                                              'spin_polarised': False } )
+        
     def test_procar_is_read_from_file( self ):
         """Checking that `PROCAR_test` is read"""
         pcar = procar.Procar()

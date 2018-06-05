@@ -109,7 +109,7 @@ class Procar:
         self.number_of_projections = None
         self.k_point_blocks = None
         self.calculation = { 'non_spin_polarised': False, 'non_collinear': False, 'spin_polarised': False }
-        self.non_spin_polarised = None
+        #self.non_spin_polarised = None
 
     def parse_projections( self ):
         self.projection_data = projections_parser( self.read_in )

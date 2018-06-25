@@ -27,23 +27,7 @@ def get_args():
 
 # This should really be set in the vasppy.Summary code, so that it can be tested to be consistent with the supported print methods.
 # In fact, ideally the key, print method, and description would all be collected in a single object, which suggests writing this as a simple class.
-supported_flags = { 'status': 'Status',
-                    'stoichiometry': 'Stoichiometry',
-                    'potcar': 'POTCAR',
-                    'eatom': 'POTCAR EATOM values',
-                    'plus_u': 'Dudarev +U parameters',
-                    'energy': 'Energy',
-                    'lreal': 'LREAL',
-                    'k-points': 'k-points',
-                    'functional': 'functional',
-                    'encut': 'encut',
-                    'ediffg': 'ediffg',
-                    'ibrion': 'ibrion',
-                    'converged': 'converged',
-                    'md5': 'md5',
-                    'directory': 'directory',
-                    'vbm': 'Vasprun valence band maximum',
-                    'cbm': 'Vasprun conduction band minimum' }
+supported_flags = Summary.supported_flags
 
 to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
 titles = None

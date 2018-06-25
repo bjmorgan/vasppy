@@ -55,13 +55,20 @@ class VASPMetaTestCase( unittest.TestCase ):
         vaspmeta = VASPMeta( title, description, status )
         self.assertEqual( vaspmeta.notes, None )
 
-    def test_init_vaspmeta_with_file_md5( self ):
+    def test_init_vaspmeta_with_md5( self ):
         title = 'title'
         description = 'description'
         status = 'finished'
-        file_md5 = { 'DOSCAR': 'f8dbd690351684379071fbad91ecbfe0' }
-        vaspmeta = VASPMeta( title, description, status, file_md5=file_md5 )
-        self.assertEqual( vaspmeta.file_md5, file_md5 )
+        md5 = [ 'DOSCAR', 'CHGCAR' ]
+        vaspmeta = VASPMeta( title, description, status, md5=md5 )
+        self.assertEqual( vaspmeta.md5, md5 )
+
+    def test_init_vaspmeta_with_no_md5( self ):
+        title = 'title'
+        description = 'description'
+        status = 'finished'
+        vaspmeta = VASPMeta( title, description, status )
+        self.assertEqual( vaspmeta.md5, None )
 
     def test_from_file( self ):
         example_file = """\

@@ -6,30 +6,16 @@ from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
 from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar, potcar_eatom_list_from_outcar
 from vasppy.data.potcar_md5sum_data import potcar_md5sum_data
+from vasppy.utils import file_md5, md5sum
 from contextlib import contextmanager
 from xml.etree import ElementTree as ET 
 import sys
 import os
 import yaml
-import hashlib
 import glob
 import re
 
 potcar_sets = [ 'PBE', 'PBE_52', 'PBE_54' ]
-
-def md5sum( string ):
-    """
-    Generate the md5 checksum for a string
-
-    Args:
-        string (Str): The string to be checksummed.
-
-    Returns:
-        (Str): The hex checksum.
-    """
-    h = hashlib.new( 'md5' )
-    h.update( string.encode( 'utf-8' ) )
-    return h.hexdigest()
 
 def potcar_spec( filename ):
     """
@@ -68,21 +54,6 @@ def find_vasp_calculations():
     dir_list = [ './' + re.sub( r'vasprun\.xml', '', path ) for path in glob.iglob( '**/vasprun.xml', recursive=True ) ]
     return dir_list
 
-def vasprun_md5( filename ):
-    """
-    Generate the md5 checksum for a file
-
-    Args:
-        filename (Str): The file to be checksummed.
-
-    Returns:
-        (Str): The hex checksum
-    """
-    with open( filename, 'r' ) as f:
-        vasprun = f.read()
-    return( md5sum( vasprun ) )
-
-   
 @contextmanager
 def cd( path ):
     old_dir = os.getcwd()
@@ -96,6 +67,29 @@ class Summary:
     """
     TODO Document Summary class
     """
+
+    core_flags = { 'title': 'Title',
+                   'type': 'Type' }
+                    
+    supported_flags = { 'status': 'Status',
+                        'stoichiometry': 'Stoichiometry',
+                        'potcar': 'POTCAR',
+                        'eatom': 'POTCAR EATOM values',
+                        'plus_u': 'Dudarev +U parameters',
+                        'energy': 'Energy',
+                        'lreal': 'LREAL',
+                        'k-points': 'k-points',
+                        'functional': 'functional',
+                        'encut': 'encut',
+                        'ediffg': 'ediffg',
+                        'ibrion': 'ibrion',
+                        'converged': 'converged',
+                        'md5': 'md5',
+                        'directory': 'directory',
+                        'vbm': 'Vasprun valence band maximum',
+                        'cbm': 'Vasprun conduction band minimum',
+                        'file_md5': 'md5 for files',
+                        'version': 'VASP executable version' }
 
     def __init__( self, directory='.' ):
         self.directory = directory
@@ -124,7 +118,13 @@ class Summary:
                                'directory': self.print_directory,
                                'lreal': self.print_lreal,
                                'vbm': self.print_vbm,
-                               'cbm': self.print_cbm }
+                               'cbm': self.print_cbm,
+                               'file_md5': self.print_file_md5 }
+        if not set( self.print_methods.keys() ) == set( { **self.supported_flags, **self.core_flags }.keys() ):
+            print( set( self.print_methods.keys() ) )
+            print( '--------------' )
+            print( set( { **self.supported_flags, **self.core_flags }.keys() ) )
+            raise( ValueError )
 
     def parse_vasprun( self ):
         """
@@ -288,8 +288,16 @@ class Summary:
         print( "converged: {}".format( self.vasprun.converged ) )
 
     def print_vasprun_md5( self ):
-        print( "vasprun md5: {}".format( vasprun_md5( "{}/vasprun.xml".format( self.directory ) ) ) )
+        print( "vasprun md5: {}".format( file_md5( "{}/vasprun.xml".format( self.directory ) ) ) )
 
+    def print_file_md5( self ):
+        if not self.meta.md5:
+            print( "file md5: ~" )
+        else:
+            print( "file md5:" )
+            for f in self.meta.md5:
+                print( "    - {}: {}".format( f, file_md5( "{}/{}".format( self.directory, f ) ) ) )
+ 
     def print_directory( self ):
         print( "directory: {}".format( self.directory ) )
 

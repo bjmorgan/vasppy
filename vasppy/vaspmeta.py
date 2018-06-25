@@ -1,11 +1,12 @@
 import yaml
+from vasppy.utils import file_md5
 
 class VASPMeta:
     """
     VASPMeta class for storing additional VASP calculation metadata
     """
 
-    def __init__( self, title, description, status, notes=None, type=None, file_md5=None ):
+    def __init__( self, title, description, status, notes=None, type=None, md5=None ):
         """
         Initialise a VASPMeta object.
 
@@ -15,9 +16,11 @@ class VASPMeta:
             status (Str): Current status of the calculation. 
                 Expected strings are (to-run, incomplete, finished, dropped)
             notes (:obj:Str, optional): Any additional notes. Defaults to None.
-            type  (:obj:Str, optional): Can be used to describe the calculation type. Defaults to None.
-            file_md5 (:obj:Dict, optional): An optional dictionary containing md5 hashes of output files,
-                e.g. {'DOSCAR': 'f8dbd690351684379071fbad91ecbfe0'}
+            type  (:obj:Str, optional): Can be used to describe the calculation type. 
+                Defaults to None.
+            md5 (:obj:list(str), optional): An optional list of filenames to calculate md5 hashes
+                files to calculate hashes for when summarising the calculation output.
+                Defaults to None.
 
         Returns:
             None
@@ -36,7 +39,7 @@ class VASPMeta:
             self.type = type 
         else:
             self.type = None
-        self.file_md5 = file_md5
+        self.md5 = md5
 
     @classmethod
     def from_file( cls, filename ):
@@ -52,12 +55,18 @@ class VASPMeta:
         with open( filename, 'r' ) as stream:
             data = yaml.load( stream )
             notes = data.get( 'notes' )
-            type = data.get( 'type' )
+            v_type = data.get( 'type' )
+            file_md5 = data.get( 'file_md5' )
+            xargs = {}
+            if file_md5:
+                if type( file_md5 ) is str:
+                    file_md5 = [ file_md5 ]
+                xargs['md5'] = file_md5 
             vaspmeta = VASPMeta( data['title'], 
                                  data['description'], 
                                  data['status'], 
                                  notes=notes, 
-                                 type=type )
+                                 type=v_type,
+                                 **xargs )
         return vaspmeta
-                
-        
+

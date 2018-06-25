@@ -5,7 +5,7 @@ class VASPMeta:
     VASPMeta class for storing additional VASP calculation metadata
     """
 
-    def __init__( self, title, description, status, notes=None, type=None ):
+    def __init__( self, title, description, status, notes=None, type=None, file_md5=None ):
         """
         Initialise a VASPMeta object.
 
@@ -16,6 +16,8 @@ class VASPMeta:
                 Expected strings are (to-run, incomplete, finished, dropped)
             notes (:obj:Str, optional): Any additional notes. Defaults to None.
             type  (:obj:Str, optional): Can be used to describe the calculation type. Defaults to None.
+            file_md5 (:obj:Dict, optional): An optional dictionary containing md5 hashes of output files,
+                e.g. {'DOSCAR': 'f8dbd690351684379071fbad91ecbfe0'}
 
         Returns:
             None
@@ -34,6 +36,7 @@ class VASPMeta:
             self.type = type 
         else:
             self.type = None
+        self.file_md5 = file_md5
 
     @classmethod
     def from_file( cls, filename ):

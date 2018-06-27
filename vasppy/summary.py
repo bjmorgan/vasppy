@@ -88,7 +88,7 @@ class Summary:
                         'vbm': 'Vasprun valence band maximum',
                         'cbm': 'Vasprun conduction band minimum',
                         'track': 'tracking for files',
-                        'version': 'VASP executable version' }
+                        'version': 'VASP executable version',
                         'nelect': 'NELECT' }
 
     def __init__( self, directory='.' ):

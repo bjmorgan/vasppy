@@ -6,7 +6,7 @@ class VASPMeta:
     VASPMeta class for storing additional VASP calculation metadata
     """
 
-    def __init__( self, title, description, status, notes=None, type=None, md5=None ):
+    def __init__( self, title, description, status, notes=None, type=None, track=None ):
         """
         Initialise a VASPMeta object.
 
@@ -18,7 +18,9 @@ class VASPMeta:
             notes (:obj:Str, optional): Any additional notes. Defaults to None.
             type  (:obj:Str, optional): Can be used to describe the calculation type. 
                 Defaults to None.
-            md5 (:obj:list(str), optional): An optional list of filenames to calculate md5 hashes
+            track (:obj:dict(str: str), optional): An optional dict of pairs of filenames
+                for files to track. For each key: value pair, the key is the current filename
+                in the directory. The value is the new filename that list of filenames to calculate md5 hashes
                 files to calculate hashes for when summarising the calculation output.
                 Defaults to None.
 
@@ -39,7 +41,7 @@ class VASPMeta:
             self.type = type 
         else:
             self.type = None
-        self.md5 = md5
+        self.track = track
 
     @classmethod
     def from_file( cls, filename ):
@@ -56,12 +58,12 @@ class VASPMeta:
             data = yaml.load( stream )
             notes = data.get( 'notes' )
             v_type = data.get( 'type' )
-            file_md5 = data.get( 'file_md5' )
+            track = data.get( 'track' )
             xargs = {}
-            if file_md5:
-                if type( file_md5 ) is str:
-                    file_md5 = [ file_md5 ]
-                xargs['md5'] = file_md5 
+            if track:
+                if type( track ) is str:
+                    track = [ track ]
+                xargs['track'] = track 
             vaspmeta = VASPMeta( data['title'], 
                                  data['description'], 
                                  data['status'], 

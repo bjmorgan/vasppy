@@ -89,7 +89,8 @@ class Summary:
                         'vbm': 'Vasprun valence band maximum',
                         'cbm': 'Vasprun conduction band minimum',
                         'file_md5': 'md5 for files',
-                        'version': 'VASP executable version' }
+                        'version': 'VASP executable version',
+                        'nelect': 'NELECT' }
 
     def __init__( self, directory='.' ):
         self.directory = directory
@@ -119,7 +120,8 @@ class Summary:
                                'lreal': self.print_lreal,
                                'vbm': self.print_vbm,
                                'cbm': self.print_cbm,
-                               'file_md5': self.print_file_md5 }
+                               'file_md5': self.print_file_md5,
+                               'nelect': self.print_nelect }
         if not set( self.print_methods.keys() ) == set( { **self.supported_flags, **self.core_flags }.keys() ):
             print( set( self.print_methods.keys() ) )
             print( '--------------' )
@@ -318,4 +320,7 @@ class Summary:
 
     def print_vbm( self ):
         print( 'vbm: {}'.format( self.vasprun.eigenvalue_band_properties[2] ) )
+
+    def print_nelect( self ):
+        print( 'nelect: {}'.format( self.vasprun.parameters['NELECT'] ) )
         

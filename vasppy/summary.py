@@ -89,6 +89,7 @@ class Summary:
                         'cbm': 'Vasprun conduction band minimum',
                         'track': 'tracking for files',
                         'version': 'VASP executable version' }
+                        'nelect': 'NELECT' }
 
     def __init__( self, directory='.' ):
         self.directory = directory
@@ -118,7 +119,8 @@ class Summary:
                                'lreal': self.print_lreal,
                                'vbm': self.print_vbm,
                                'cbm': self.print_cbm,
-                               'track': self.print_file_tracking }
+                               'track': self.print_file_tracking, 
+                               'nelect': self.print_nelect }
         if not set( self.print_methods.keys() ) == set( self.supported_flags ):
             print( set( self.print_methods.keys() ) )
             print( '--------------' )
@@ -319,4 +321,7 @@ class Summary:
 
     def print_vbm( self ):
         print( 'vbm: {}'.format( self.vasprun.eigenvalue_band_properties[2] ) )
+
+    def print_nelect( self ):
+        print( 'nelect: {}'.format( self.vasprun.parameters['NELECT'] ) )
         

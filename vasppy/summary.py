@@ -68,10 +68,9 @@ class Summary:
     TODO Document Summary class
     """
 
-    core_flags = { 'title': 'Title',
-                   'type': 'Type' }
-                    
-    supported_flags = { 'status': 'Status',
+    supported_flags = { 'title': 'Title',
+                        'type': 'Type',
+                        'status': 'Status',
                         'stoichiometry': 'Stoichiometry',
                         'potcar': 'POTCAR',
                         'eatom': 'POTCAR EATOM values',
@@ -88,7 +87,7 @@ class Summary:
                         'directory': 'directory',
                         'vbm': 'Vasprun valence band maximum',
                         'cbm': 'Vasprun conduction band minimum',
-                        'file_md5': 'md5 for files',
+                        'track': 'tracking for files',
                         'version': 'VASP executable version' }
 
     def __init__( self, directory='.' ):
@@ -119,11 +118,11 @@ class Summary:
                                'lreal': self.print_lreal,
                                'vbm': self.print_vbm,
                                'cbm': self.print_cbm,
-                               'file_md5': self.print_file_md5 }
-        if not set( self.print_methods.keys() ) == set( { **self.supported_flags, **self.core_flags }.keys() ):
+                               'track': self.print_file_tracking }
+        if not set( self.print_methods.keys() ) == set( self.supported_flags ):
             print( set( self.print_methods.keys() ) )
             print( '--------------' )
-            print( set( { **self.supported_flags, **self.core_flags }.keys() ) )
+            print( set( self.supported_flags.keys() ) )
             raise( ValueError )
 
     def parse_vasprun( self ):
@@ -290,13 +289,15 @@ class Summary:
     def print_vasprun_md5( self ):
         print( "vasprun md5: {}".format( file_md5( "{}/vasprun.xml".format( self.directory ) ) ) )
 
-    def print_file_md5( self ):
-        if not self.meta.md5:
-            print( "file md5: ~" )
-        else:
-            print( "file md5:" )
-            for f in self.meta.md5:
-                print( "    - {}: {}".format( f, file_md5( "{}/{}".format( self.directory, f ) ) ) )
+    def print_file_tracking( self ):
+        if self.meta.track:
+            print( "file tracking:" )
+            for f, new_filename in self.meta.track.items():
+                print( "    {}:".format( f ) )
+                if not new_filename:
+                    new_filename = f
+                print( "        filename: {}".format( new_filename ) )
+                print( "        md5: {}".format( file_md5( "{}/{}".format( self.directory, f ) ) ) )
  
     def print_directory( self ):
         print( "directory: {}".format( self.directory ) )

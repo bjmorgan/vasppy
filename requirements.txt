@@ -1,4 +1,5 @@
 numpy
+monty
 pandas
 pymatgen
 PyYAML 

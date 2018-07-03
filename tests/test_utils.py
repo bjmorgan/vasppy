@@ -15,7 +15,7 @@ class UtilsTestCase( unittest.TestCase ):
         example_file = "abc\nabc\n"
         with patch( 'vasppy.utils.md5sum' ) as mock_md5sum:
             mock_md5sum.return_value = 'foo'
-            with patch( 'builtins.open', mock_open( read_data=example_file ), create=True ) as m:
+            with patch( 'vasppy.utils.zopen', mock_open( read_data=example_file ), create=True ) as m:
                 self.assertEqual( file_md5( m ), 'foo' )
                 mock_md5sum.assert_called_with( example_file )
 

@@ -5,7 +5,7 @@ from pymatgen.io.vasp.outputs import Vasprun
 from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
 from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar, potcar_eatom_list_from_outcar
-from vasppy.data.potcar_md5sum_data import potcar_md5sum_data
+from vasppy.data.potcar_data import potcar_md5sum_data, potcar_nelect
 from vasppy.utils import file_md5, md5sum
 from contextlib import contextmanager
 from xml.etree import ElementTree as ET 

@@ -43,7 +43,8 @@ def potcar_spec( filename ):
   
 def find_vasp_calculations():
     """
-    Returns a list of all subdirectories that contain a vasprun.xml file
+    Returns a list of all subdirectories that contain either a vasprun.xml file
+    or a compressed vasprun.xml.gz file.
 
     Args:
         None
@@ -52,7 +53,8 @@ def find_vasp_calculations():
         (List): list of all VASP calculation subdirectories.
     """
     dir_list = [ './' + re.sub( r'vasprun\.xml', '', path ) for path in glob.iglob( '**/vasprun.xml', recursive=True ) ]
-    return dir_list
+    gz_dir_list = [ './' + re.sub( r'vasprun\.xml\.gz', '', path ) for path in glob.iglob( '**/vasprun.xml.gz', recursive=True ) ]
+    return dir_list + gz_dir_list
 
 @contextmanager
 def cd( path ):
@@ -142,11 +144,18 @@ class Summary:
             and set self.vasprun = None.
         """            
         try:
-            self.vasprun = Vasprun( 'vasprun.xml', parse_potcar_file=False )
+            self.vasprun_filename = 'vasprun.xml'
+            self.vasprun = Vasprun( self.vasprun_filename, parse_potcar_file=False )
         except ET.ParseError:
             self.vasprun = None
         except:
-            raise
+            try:
+                self.vasprun_filename = 'vasprun.xml.gz'
+                self.vasprun = Vasprun( self.vasprun_filename, parse_potcar_file=False )
+            except ET.ParseError:
+                self.vasprun = None
+            except:
+                raise
 
     @property
     def stoich( self ):
@@ -289,7 +298,7 @@ class Summary:
         print( "converged: {}".format( self.vasprun.converged ) )
 
     def print_vasprun_md5( self ):
-        print( "vasprun md5: {}".format( file_md5( "{}/vasprun.xml".format( self.directory ) ) ) )
+        print( "vasprun md5: {}".format( file_md5( "{}/{}".format( self.directory, self.vasprun_filename ) ) ) )
 
     def print_file_tracking( self ):
         if self.meta.track:
@@ -299,7 +308,13 @@ class Summary:
                 if not new_filename:
                     new_filename = f
                 print( "        filename: {}".format( new_filename ) )
-                print( "        md5: {}".format( file_md5( "{}/{}".format( self.directory, f ) ) ) )
+                try:
+                    md5 = file_md5( "{}/{}".format( self.directory, f ) )
+                except FileNotFoundError:
+                    md5 = file_md5( "{}/{}.gz".format( self.directory, f ) )
+                except:
+                    raise
+                print( "        md5: {}".format( md5 ) )
  
     def print_directory( self ):
         print( "directory: {}".format( self.directory ) )

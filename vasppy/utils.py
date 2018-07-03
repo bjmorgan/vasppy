@@ -1,4 +1,5 @@
 import hashlib
+from monty.io import zopen
 
 def md5sum( string ):
     """
@@ -23,7 +24,15 @@ def file_md5( filename ):
 
     Returns:
         (Str): The hex checksum
+
+    Notes:
+        If the file is gzipped, the md5 checksum returned is
+        for the uncompressed ASCII file.
     """
-    with open( filename, 'r' ) as f:
+    with zopen( filename, 'r' ) as f:
         file_string = f.read()
+    try: # attempt to decode byte object
+        file_string = file_string.decode()
+    except AttributeError:
+        pass
     return( md5sum( file_string ) )

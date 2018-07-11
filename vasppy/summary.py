@@ -71,6 +71,8 @@ class Summary:
     """
 
     supported_flags = { 'title': 'Title',
+                        'description': 'Description',
+                        'notes': 'Notes',
                         'type': 'Type',
                         'status': 'Status',
                         'stoichiometry': 'Stoichiometry',
@@ -102,6 +104,8 @@ class Summary:
                 raise type(e)( str(e) + ' in {}'.format( directory )).with_traceback( sys.exc_info()[2] )
             self.parse_vasprun()
         self.print_methods = { 'title': self.print_title,
+                               'description': self.print_description,
+                               'notes': self.print_notes,
                                'type': self.print_type,
                                'status': self.print_status,
                                'stoichiometry': self.print_stoichiometry,
@@ -227,7 +231,13 @@ class Summary:
  
     def print_title( self ):
         print( "title: {}".format( self.meta.title ) )
-       
+      
+    def print_description( self ):
+        print( "description: {}".format( self.meta.description.strip() ) )
+ 
+    def print_notes( self ):
+        print( "notes: {}".format( self.meta.notes.strip() ) )
+ 
     def print_status( self ):
         print( "status: {}".format( self.meta.status ) )
 

@@ -14,6 +14,7 @@ import os
 import yaml
 import glob
 import re
+from pathlib import Path
 
 potcar_sets = [ 'PBE', 'PBE_52', 'PBE_54' ]
 
@@ -318,12 +319,12 @@ class Summary:
                 if not new_filename:
                     new_filename = f
                 print( "        filename: {}".format( new_filename ) )
-                try:
-                    md5 = file_md5( "{}/{}".format( self.directory, f ) )
-                except FileNotFoundError:
-                    md5 = file_md5( "{}/{}.gz".format( self.directory, f ) )
-                except:
-                    raise
+                filename = next( ( '{}{}'.format(f, extension) for extension in [ '', '.gz' ] 
+                    if Path( '{}/{}{}'.format( self.directory, f, extension ) ).is_file() ), None )
+                if filename: 
+                    md5 = file_md5( "{}/{}".format( self.directory, filename ) )
+                else:
+                    md5 = 'null'
                 print( "        md5: {}".format( md5 ) )
  
     def print_directory( self ):

@@ -12,6 +12,7 @@ from vasppy.poscar import Poscar
 from vasppy.summary import find_vasp_calculations
 import argparse
 import warnings
+from vasppy.utils import match_filename
 
 import matplotlib
 matplotlib.use('agg')
@@ -20,6 +21,7 @@ import matplotlib.pyplot as plt
 def parse_args():
     parser = argparse.ArgumentParser(description='Perform a Murnaghan equation of state fit across VASP subdirectories')
     parser.add_argument( '-p', '--plot', action='store_true', help='generate murn.pdf plot of fit' )
+    parser.add_argument( '-v', '--verbose', action='store_true', help='verbose output' )
     args = parser.parse_args()
     return args
 
@@ -28,12 +30,14 @@ def read_vasprun( filename ):
 
 def read_data( verbose=True ):
     dir_list = find_vasp_calculations()
+    if not dir_list:
+        raise ValueError( 'Did not find any subdirectories containing vasprun.xml or vasprun.xml.gz files' )
     data = []
     for d in dir_list:
         converged = True
         try:
             with warnings.catch_warnings(record=True) as w:
-                vasprun = read_vasprun( d + 'vasprun.xml' )
+                vasprun = read_vasprun( match_filename( d + 'vasprun.xml' ) )
                 for warning in w:
                     if isinstance( warning.message, UnconvergedVASPWarning ):
                         converged = False
@@ -102,14 +106,14 @@ def make_plot( df, fit_params ):
     plt.plot( df[loc].volume, df[loc].energy, 'o', c='grey' )
     # plot fitted equation of state curve
     plt.plot( v_fitting, e_fitting, '--' )
-    plt.xlabel( 'volume [A^3]' )
-    plt.ylabel( 'energy [eV]' )
+    plt.xlabel( r'volume [$\mathrm{\AA}^3$]' )
+    plt.ylabel( r'energy [eV]' )
     plt.tight_layout()
     plt.savefig( 'murn.pdf' )
 
 if __name__ == '__main__':
     args = parse_args()
-    df = read_data()
+    df = read_data( verbose=args.verbose )
     e0, b0, bp, v0 = fit( np.array( df.volume ), np.array( df.energy  ) )[0]
     if args.plot:
         make_plot( df, ( e0, b0, bp, v0 ) )

@@ -1,5 +1,6 @@
 import hashlib
 from monty.io import zopen
+from pathlib import Path
 
 def md5sum( string ):
     """
@@ -36,3 +37,20 @@ def file_md5( filename ):
     except AttributeError:
         pass
     return( md5sum( file_string ) )
+
+def match_filename( filename ):
+    """
+    Checks whether a file exists, either as named, or as a a gzippped file (filename.gz)
+
+    Args:
+        (Str): The root filename.
+
+    Returns:
+        (Str|None): if the file exists (either as the root filename, or gzipped), the return
+            value will be the actual filename. If no matching filename is found the return
+            value is set to None
+    """
+    f = next( ( '{}{}'.format( filename, extension ) for extension in [ '', '.gz' ]
+        if Path( '{}{}'.format( filename, extension ) ).is_file() ), None ) 
+    return f
+    

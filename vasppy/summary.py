@@ -6,7 +6,7 @@ from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
 from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar, potcar_eatom_list_from_outcar
 from vasppy.data.potcar_data import potcar_md5sum_data, potcar_nelect
-from vasppy.utils import file_md5, md5sum
+from vasppy.utils import file_md5, md5sum, match_filename
 from contextlib import contextmanager
 from xml.etree import ElementTree as ET 
 import sys
@@ -14,7 +14,6 @@ import os
 import yaml
 import glob
 import re
-from pathlib import Path
 
 potcar_sets = [ 'PBE', 'PBE_52', 'PBE_54' ]
 
@@ -148,19 +147,15 @@ class Summary:
             If the vasprun.xml is not well formed this method will catch the ParseError
             and set self.vasprun = None.
         """            
+        self.vasprun_filename = match_filename( 'vasprun.xml' )
+        if not self.vasprun_filename:
+            raise FileNotFoundError( 'Could not find vasprun.xml or vasprun.xml.gz file' )
         try:
-            self.vasprun_filename = 'vasprun.xml'
             self.vasprun = Vasprun( self.vasprun_filename, parse_potcar_file=False )
         except ET.ParseError:
             self.vasprun = None
         except:
-            try:
-                self.vasprun_filename = 'vasprun.xml.gz'
-                self.vasprun = Vasprun( self.vasprun_filename, parse_potcar_file=False )
-            except ET.ParseError:
-                self.vasprun = None
-            except:
-                raise
+            raise
 
     @property
     def stoich( self ):
@@ -319,10 +314,9 @@ class Summary:
                 if not new_filename:
                     new_filename = f
                 print( "        filename: {}".format( new_filename ) )
-                filename = next( ( '{}{}'.format(f, extension) for extension in [ '', '.gz' ] 
-                    if Path( '{}/{}{}'.format( self.directory, f, extension ) ).is_file() ), None )
+                filename = match_filename( self.directory + f )
                 if filename: 
-                    md5 = file_md5( "{}/{}".format( self.directory, filename ) )
+                    md5 = file_md5( filename )
                 else:
                     md5 = 'null'
                 print( "        md5: {}".format( md5 ) )

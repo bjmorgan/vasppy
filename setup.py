@@ -1,9 +1,4 @@
-import os
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 readme = 'README.md'
 try:
@@ -24,7 +19,8 @@ config = {
     'download_url': "https://github.com/bjmorgan/vasppy/archive/%s.tar.gz" % (VERSION),
     'version': VERSION,
     'keywords': ['vasp'], # keywords
-    'packages': ['vasppy','vasppy.data'], 
+    #'packages': ['vasppy','vasppy.data'], 
+    'packages': find_packages(),
     'license': 'MIT',
     'install_requires': [ 'numpy',
                           'pandas',

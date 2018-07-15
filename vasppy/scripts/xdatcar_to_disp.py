@@ -11,7 +11,7 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return( args )
 
-if __name__ == "__main__":
+def main():
     args = parse_command_line_arguments()
     xdatcar = Xdatcar()
     xdatcar.read_from( args.xdatcar )
@@ -21,3 +21,6 @@ if __name__ == "__main__":
         for i, c in enumerate( poscar1.coordinates ):
             print( ' '.join( [ str(e) for e in ( poscar1.cell.minimum_image( poscar1.coordinates[i], poscar2.coordinates[i] ).dot( poscar1.cell.matrix ) ) ] ) )
         poscar1 = copy.deepcopy( p )
+
+if __name__ == "__main__":
+    main()

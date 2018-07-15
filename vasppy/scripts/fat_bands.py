@@ -24,7 +24,7 @@ def orbitals_with_l( l ):
                   'all' : None }
     return to_return[ l ]
  
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument( '-i', '--ions', help='ion indices for band projection (default: sum over all ions)', nargs='+', type=int )
     parser.add_argument( '-s', '--spins', help='spin indices for band projection (default [ 1 ])', nargs='+', type=int, default=[ 1 ] )
@@ -52,3 +52,6 @@ if __name__ == '__main__':
                                         scaling = args.scaling, 
                                         e_fermi = args.efermi, 
                                         reciprocal_lattice = reciprocal_lattice )
+
+if __name__ == '__main__':
+    main()

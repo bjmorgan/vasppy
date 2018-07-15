@@ -41,7 +41,7 @@ def read_pimaim_restart( filename ):
     # TODO! need to check this with a non-orthorhombic cell
     return( coordinates, velocities, dipoles, full_cell_matrix )
 
-if __name__ == '__main__':
+def main():
     filename = 'testout.rst'
     restart_file = True
 
@@ -54,5 +54,7 @@ if __name__ == '__main__':
     poscar.atom_numbers = args.atom_numbers
     poscar.coordinate_type = 'Cartesian'
     poscar.coordinates = coordinates
-
     poscar.output()
+
+if __name__ == '__main__':
+    main()

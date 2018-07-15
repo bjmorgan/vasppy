@@ -13,7 +13,7 @@ def minimum_length( nmin ):
             setattr( args, self.dest, values )
     return MinimumLength
             
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser( description='Calculate an effective mass from a VASP PROCAR using a fitted quadratic' )
     parser.add_argument( '-k', '--k-points', help='index of k-points for calculating effective mass', nargs='+', type=int, required=True, action=minimum_length( 2 ) )
     parser.add_argument( '-b', '--band-index', help='index of band for calculating effective mass', type=int, required=True )
@@ -34,3 +34,5 @@ if __name__ == '__main__':
                                                printing = args.verbose )
     print( effective_mass )
 
+if __name__ == '__main__':
+    main()

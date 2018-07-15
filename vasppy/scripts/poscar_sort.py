@@ -13,7 +13,7 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return( args )
 
-if __name__ == "__main__":
+def main():
     args = parse_command_line_arguments()
     # initialise
     poscar = Poscar()
@@ -36,3 +36,5 @@ if __name__ == "__main__":
     sorted_poscar.coordinates = np.array( coordinate_list )
     sorted_poscar.output( coordinate_type = poscar.coordinate_type )
 
+if __name__ == "__main__":
+    main()

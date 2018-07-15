@@ -20,7 +20,7 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return( args )
 
-if __name__ == "__main__":
+def main():
     args = parse_command_line_arguments()
     coordinate_types = { 'd' : 'Direct',
                          'direct' : 'Direct',
@@ -49,3 +49,6 @@ if __name__ == "__main__":
                     'coordinates_only' : args.coordinates_only,
                     'selective': args.selective }
     poscar.output( coordinate_type = coordinate_type, opts = output_opts )
+
+if __name__ == "__main__":
+    main()

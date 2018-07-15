@@ -11,10 +11,13 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return( args )
 
-if __name__ == "__main__":
+def main():
     args = parse_command_line_arguments()
     # initialise
     poscar = Poscar()
     # read POSCAR file
     poscar.read_from( args.poscar )
     poscar.output_as_cif( args.symprec )
+
+if __name__ == "__main__":
+    main()

@@ -6,17 +6,21 @@ import glob
 import numpy as np
 import pandas as pd
 from scipy.optimize import leastsq
-from pymatgen.io.vasp import Vasprun
-from pymatgen.io.vasp.outputs import UnconvergedVASPWarning
-from vasppy.poscar import Poscar
-from vasppy.summary import find_vasp_calculations
 import argparse
 import warnings
-from vasppy.utils import match_filename
+
+warnings.filterwarnings("ignore", category=UserWarning,
+                            module="pymatgen")
+from pymatgen.io.vasp import Vasprun
+from pymatgen.io.vasp.outputs import UnconvergedVASPWarning
 
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+
+from vasppy.poscar import Poscar
+from vasppy.summary import find_vasp_calculations
+from vasppy.utils import match_filename
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Perform a Murnaghan equation of state fit across VASP subdirectories')
@@ -111,7 +115,7 @@ def make_plot( df, fit_params ):
     plt.tight_layout()
     plt.savefig( 'murn.pdf' )
 
-if __name__ == '__main__':
+def main():
     args = parse_args()
     df = read_data( verbose=args.verbose )
     e0, b0, bp, v0 = fit( np.array( df.volume ), np.array( df.energy  ) )[0]
@@ -120,3 +124,6 @@ if __name__ == '__main__':
     print( "E0: {:.4f}".format( e0 ) )
     print( "V0: {:.4f}".format( v0 ) )
     print( "opt. scaling: {:.5f}".format( ( v0 / df.scaling_factor.mean() )**(1/3) ) )
+
+if __name__ == '__main__':
+    main()

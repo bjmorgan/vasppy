@@ -17,9 +17,12 @@ def parse_command_line_arguments():
         exit()
     return args 
 
-if __name__ == '__main__':
+def main():
     args = parse_command_line_arguments()
     if args.filename is None:
         args.filename = 'testout.rst'
     poscar = vasppy.pimaim.poscar_from_pimaim_restart( args.filename, args.atom_numbers, args.labels )
     poscar.output_as_xtl()
+
+if __name__ == '__main__':
+    main()

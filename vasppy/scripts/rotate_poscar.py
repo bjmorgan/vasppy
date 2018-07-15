@@ -12,7 +12,7 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return( args )
 
-if __name__ == "__main__":
+def main():
     args = parse_command_line_arguments()
     poscar = Poscar()
     poscar.read_from( args.poscar )
@@ -20,3 +20,5 @@ if __name__ == "__main__":
     poscar.cell.rotate( args.axis, theta )
     poscar.output()
 
+if __name__ == "__main__":
+    main()

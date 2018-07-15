@@ -32,7 +32,7 @@ supported_flags = Summary.supported_flags
 to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
 titles = None
 
-if __name__ == "__main__":
+def main():
     args = get_args()
     if args.list:
         for k, v, in supported_flags.items():
@@ -75,3 +75,6 @@ if __name__ == "__main__":
         for p in path:
             s = Summary( p )
             s.output( to_print=to_print )
+
+if __name__ == "__main__":
+    main()

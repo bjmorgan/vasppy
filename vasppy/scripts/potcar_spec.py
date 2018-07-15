@@ -9,7 +9,10 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return args
 
-if __name__ == '__main__':
+def main():
     args = parse_command_line_arguments()
     for p, ps in potcar_spec( args.potcar ).items():
         print( p, ps )
+
+if __name__ == '__main__':
+    main()

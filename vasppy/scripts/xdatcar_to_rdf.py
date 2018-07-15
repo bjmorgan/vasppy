@@ -16,7 +16,7 @@ def parse_command_line_arguments():
     args = parser.parse_args()
     return( args )
 
-if __name__ == "__main__":
+def main():
     args = parse_command_line_arguments()
     max_r = args.max_r
     number_of_bins = args.n_bins
@@ -28,4 +28,8 @@ if __name__ == "__main__":
     volume_scaling_factor = 4.0 * math.pi / ( 3.0 * xdatcar.poscar[0].cell.volume())
     for poscar in xdatcar.poscar:
         rdf += poscar.to_configuration().partial_rdf( species_1, species_2, max_r = max_r, number_of_bins = number_of_bins )
-    [ print( dr, g_of_r / volume_scaling_factor ) for dr, g_of_r in rdf.normalised_data() ]
+    print( rdf.normalised_data() )
+    #[ print( dr, g_of_r / volume_scaling_factor ) for dr, g_of_r in rdf.normalised_data() ]
+
+if __name__ == "__main__":
+    main()

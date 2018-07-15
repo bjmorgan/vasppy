@@ -6,11 +6,9 @@ from pymatgen.analysis.transition_state import NEBAnalysis
 from vasppy.vaspmeta import VASPMeta
 from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar, potcar_eatom_list_from_outcar
 from vasppy.data.potcar_data import potcar_md5sum_data, potcar_nelect
-from vasppy.utils import file_md5, md5sum, match_filename
-from contextlib import contextmanager
+from vasppy.utils import file_md5, md5sum, match_filename, cd
 from xml.etree import ElementTree as ET 
 import sys
-import os
 import yaml
 import glob
 import re
@@ -55,15 +53,6 @@ def find_vasp_calculations():
     dir_list = [ './' + re.sub( r'vasprun\.xml', '', path ) for path in glob.iglob( '**/vasprun.xml', recursive=True ) ]
     gz_dir_list = [ './' + re.sub( r'vasprun\.xml\.gz', '', path ) for path in glob.iglob( '**/vasprun.xml.gz', recursive=True ) ]
     return dir_list + gz_dir_list
-
-@contextmanager
-def cd( path ):
-    old_dir = os.getcwd()
-    os.chdir( path )
-    try:
-        yield
-    finally:
-        os.chdir( old_dir )
 
 class Summary:
     """

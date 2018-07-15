@@ -1,6 +1,17 @@
 import hashlib
 from monty.io import zopen
 from pathlib import Path
+import os
+from contextlib import contextmanager
+
+@contextmanager
+def cd( path ):
+    old_dir = os.getcwd()
+    os.chdir( path )
+    try:
+        yield
+    finally:
+        os.chdir( old_dir )
 
 def md5sum( string ):
     """

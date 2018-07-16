@@ -27,12 +27,11 @@ def get_args():
 
 # This should really be set in the vasppy.Summary code, so that it can be tested to be consistent with the supported print methods.
 # In fact, ideally the key, print method, and description would all be collected in a single object, which suggests writing this as a simple class.
-supported_flags = Summary.supported_flags
-
-to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
-titles = None
 
 def main():
+    supported_flags = Summary.supported_flags
+    to_print=[ 'title', 'status', 'stoichiometry', 'potcar', 'plus_u', 'energy', 'lreal', 'k-points', 'functional', 'encut', 'ediffg', 'ibrion', 'converged', 'version', 'md5', 'directory' ]
+    titles = None
     args = get_args()
     if args.list:
         for k, v, in supported_flags.items():

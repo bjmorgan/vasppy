@@ -89,7 +89,7 @@ def objective( pars, x, y ):
     err =  y - murnaghan( x, *pars )
     return err
 
-def fit( volumes, energies ):
+def lstsq_fit( volumes, energies ):
     e_min = energies.min()
     v_min = volumes[ np.argwhere( energies == e_min )[0][0] ]
     x0 = [ e_min, 2.0, 10.0, v_min ] #initial guess of parameters
@@ -115,15 +115,18 @@ def make_plot( df, fit_params ):
     plt.tight_layout()
     plt.savefig( 'murn.pdf' )
 
-def main():
-    args = parse_args()
-    df = read_data( verbose=args.verbose )
-    e0, b0, bp, v0 = fit( np.array( df.volume ), np.array( df.energy  ) )[0]
-    if args.plot:
+def fit( verbose=False, plot=False ):
+    df = read_data( verbose=verbose )
+    e0, b0, bp, v0 = lstsq_fit( np.array( df.volume ), np.array( df.energy  ) )[0]
+    if plot:
         make_plot( df, ( e0, b0, bp, v0 ) )
     print( "E0: {:.4f}".format( e0 ) )
     print( "V0: {:.4f}".format( v0 ) )
     print( "opt. scaling: {:.5f}".format( ( v0 / df.scaling_factor.mean() )**(1/3) ) )
+    
+def main():
+    args = parse_args()
+    fit( verbose=args.verbose, plot=args.plot )
 
 if __name__ == '__main__':
     main()

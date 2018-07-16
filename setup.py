@@ -25,6 +25,7 @@ scripts = [ 'murnfit',
             'spacegroup',
             'vasp_grid',
             'xdatcar_to_disp',
+            'xdatcar_to_poscart',
             'xdatcar_to_rdf' ]
 
 config = {

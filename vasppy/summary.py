@@ -54,6 +54,14 @@ def find_vasp_calculations():
     gz_dir_list = [ './' + re.sub( r'vasprun\.xml\.gz', '', path ) for path in glob.iglob( '**/vasprun.xml.gz', recursive=True ) ]
     return dir_list + gz_dir_list
 
+class CalculationRecord(dict):
+    """
+    TODO
+    """
+
+    def __init__( self ):
+        super
+
 class Summary:
     """
     TODO Document Summary class
@@ -85,7 +93,9 @@ class Summary:
                         'nelect': 'NELECT' }
 
     def __init__( self, directory='.' ):
+        self.record = CalculationRecord()
         self.directory = directory
+        self.record['directory'] = directory
         with cd( directory ):
             try:
                 self.meta = VASPMeta.from_file( 'vaspmeta.yaml' )
@@ -212,29 +222,37 @@ class Summary:
        
     def print_type( self ):
         if self.meta.type:
+            self.record['type'] = self.meta.type
             print( "type: {}".format( self.meta.type ) )
  
     def print_title( self ):
+        self.record['title'] = self.meta.title
         print( "title: {}".format( self.meta.title ) )
       
     def print_description( self ):
+        self.record['description'] = self.meta.description.strip()
         print( "description: {}".format( self.meta.description.strip() ) )
  
     def print_notes( self ):
+        self.record['notes'] = self.meta.notes.strip()
         print( "notes: {}".format( self.meta.notes.strip() ) )
  
     def print_status( self ):
+        self.record['status'] = self.meta.status
         print( "status: {}".format( self.meta.status ) )
 
     def print_lreal( self ):
+        self.record['lreal'] = str( self.vasprun.parameters['LREAL'] )
         print( "lreal: {}".format( self.vasprun.parameters['LREAL'] ) )
 
     def print_stoichiometry( self ):
+        self.record['stoichiometry'] = self.stoich
         print( "stoichiometry:" )
         for element in self.stoich:
             print( "    - {}: {}".format( element, int( self.stoich[ element ] ) ) )
 
     def print_potcar( self ):
+        self.record['potcar'] = { e: p for e, p in zip( self.stoich, self.vasprun.potcar_symbols }
         print( "potcar:" )
         for e, p in zip( self.stoich, self.vasprun.potcar_symbols ):
             print( "    - {}: {}".format( e, p ) )
@@ -244,6 +262,7 @@ class Summary:
         # appropriate method using a dictionary?
         # or we could subclass Summary --> NEB_Summary ?
         if not self.meta.type:
+            self.record['energy'] = self.vasprun.final_energy
             print( "energy: {}".format( self.vasprun.final_energy ) )    
         elif self.meta.type == 'neb':
             self.print_neb_energy()
@@ -260,6 +279,7 @@ class Summary:
 
     def print_version( self ):
         version_string = vasp_version_from_outcar( '{}/OUTCAR'.format( self.directory ) ).split()[0]
+        self.record['version'] = version_string
         print( "version: {}".format( version_string ) )
 
     def print_eatom( self ):
@@ -270,34 +290,44 @@ class Summary:
             print( "    - {}: {} eV".format( e, eatom ) )
         
     def print_kpoints( self ):
+        self.record['kpoints'] = { 'scheme': str( self.vasprun.kpoints.style ),
+                                   'grid': " ".join( str( k ) for k in self.vasprun.kpoints.kpts[0] ) } 
         print( "k-points:" )
         print( "    scheme: {}".format( self.vasprun.kpoints.style ) )
         print( "    grid: {}".format( " ".join( str( k ) for k in self.vasprun.kpoints.kpts[0] ) ) )
 
     def print_functional( self ):
+        self.record['functional'] = self.functional
         print( "functional: {}".format( self.functional ) )
 
     def print_ibrion( self ):
+        self.record['ibrion'] = str( self.vasprun.incar['IBRION'] )
         print( "ibrion: {}".format( self.vasprun.incar['IBRION'] ) )
 
     def print_ediffg( self ):
+        self.record['ediffg'] = str( self.vasprun.incar['EDIFFG'] ) 
         print( "ediffg: {}".format( self.vasprun.incar['EDIFFG'] ) )
 
     def print_encut( self ):
         if 'ENCUT' in self.vasprun.incar:
+            self.record['encut'] = self.vasprun.incar['ENCUT']
             print( "encut: {}".format( self.vasprun.incar['ENCUT'] ) )
         elif 'ENMAX' in self.vasprun.incar:
+            self.record['encut'] = self.vasprun.incar['ENMAX']
             print( "encut: {}".format( self.vasprun.incar['ENMAX'] ) )
 
     def print_converged( self ):
+        self.record['converged'] = self.vasprun.converged
         print( "converged: {}".format( self.vasprun.converged ) )
 
     def print_vasprun_md5( self ):
+        self.record['vasprun_md5'] = file_md5( "{}/{}".format( self.directory, self.vasprun_filename ) )
         print( "vasprun md5: {}".format( file_md5( "{}/{}".format( self.directory, self.vasprun_filename ) ) ) )
 
     def print_file_tracking( self ):
         if self.meta.track:
-            print( "file tracking:" )
+            self.record['file_tracking'] = {}
+            print( "file_tracking:" )
             for f, new_filename in self.meta.track.items():
                 print( "    {}:".format( f ) )
                 if not new_filename:
@@ -308,9 +338,12 @@ class Summary:
                     md5 = file_md5( filename )
                 else:
                     md5 = 'null'
+                self.record['file_tracking'][f] = { 'filename' = new_filename,
+                                                    'md5' = md5 } 
                 print( "        md5: {}".format( md5 ) )
  
     def print_directory( self ):
+        self.record['directory'] = self.directory
         print( "directory: {}".format( self.directory ) )
 
     def print_plus_u( self ):
@@ -320,17 +353,22 @@ class Summary:
             ldauj = self.vasprun.incar[ 'LDAUJ' ]
             ldaul = self.vasprun.incar[ 'LDAUL' ]
             if any( v != 0 for v in ldauu ):
+                self.record['ldau'] = {}
                 print( 'ldau:' )
                 for e, u, j, l in zip( self.stoich, ldauu, ldauj, ldaul ):
                     if u != 0:
+                        self.record['ldau'][e] = '{} {} {}'.format( lqn[l], u, j )
                         print( "    - {}: {} {} {}".format( e, lqn[l], u, j ) )
 
     def print_cbm( self ):
+        self.record['cbm'] = self.vasprun.eigenvalue_band_properties[1]
         print( 'cbm: {}'.format( self.vasprun.eigenvalue_band_properties[1] ) )
 
     def print_vbm( self ):
+        self.record['vbm'] = self.vasprun.eigenvalue_band_properties[2]
         print( 'vbm: {}'.format( self.vasprun.eigenvalue_band_properties[2] ) )
 
     def print_nelect( self ):
+        self.record['nelect'] = self.vasprun.parameters['NELECT']
         print( 'nelect: {}'.format( self.vasprun.parameters['NELECT'] ) )
         

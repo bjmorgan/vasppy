@@ -1,13 +1,12 @@
+"""
+vasppy: Python utilities for working with VASP inputs and outputs
+"""
+
 from setuptools import setup, find_packages
+from vasppy import __version__ as VERSION
 
 readme = 'README.md'
-try:
-    import pypandoc
-    long_description = pypandoc.convert( readme, 'rst')
-except ImportError:
-    long_description = open( readme ).read()
-
-from vasppy import __version__ as VERSION
+long_description = open( readme ).read()
 
 scripts = [ 'murnfit', 
             'vasp_summary', 
@@ -28,27 +27,27 @@ scripts = [ 'murnfit',
             'xdatcar_to_poscart',
             'xdatcar_to_rdf' ]
 
-config = {
-    'name': 'vasppy',
-    'description': 'A library for manipulating VASP input / output files',
-    'long_description': long_description,
-    'author': 'Benjamin J. Morgan',
-    'author_email':'bjm42@bath.ac.uk',
-    'url': 'https://github.com/bjmorgan/vasppy', 
-    'download_url': "https://github.com/bjmorgan/vasppy/archive/%s.tar.gz" % (VERSION),
-    'version': VERSION,
-    'keywords': ['vasp'], # keywords
-    'packages': find_packages( exclude=['docs', 'tests*']),
-    'package_data': {'vasppy': ['data/*.yaml']},
-    'entry_points': { 'console_scripts': [
-                          '{} = vasppy.scripts.{}:main'.format( s, s ) for s in scripts ] },
-    'license': 'MIT',
-    'install_requires': [ 'numpy',
-                          'pandas',
-                          'pymatgen',
-                          'PyYAML', 
-                          'coverage==4.3.4',
-                          'codeclimate-test-reporter' ]
-}
-
-setup(**config)
+setup(
+    name='vasppy',
+    version=VERSION,
+    description='Python utilities for working with VASP inputs and outputs',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    author='Benjamin J. Morgan',
+    author_email='bjm42@bath.ac.uk',
+    url='https://github.com/bjmorgan/vasppy', 
+    download_url='https://github.com/bjmorgan/vasppy/archive/{}.tar.gz'.format( VERSION ),
+    keywords=['vasp'], # keywords
+    packages=find_packages( exclude=['docs', 'tests*'] ),
+    package_data={ 'vasppy': ['data/*.yaml'] },
+    entry_points={ 'console_scripts': [
+                       '{} = vasppy.scripts.{}:main'.format( s, s ) for s in scripts ] },
+    license='MIT',
+    install_requires= [ 'monty',
+                        'numpy',
+                        'pandas',
+                        'pymatgen',
+                        'PyYAML', 
+                        'coverage==4.3.4',
+                        'codeclimate-test-reporter' ]
+    )

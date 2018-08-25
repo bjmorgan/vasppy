@@ -168,7 +168,7 @@ class Doscar:
     def plot_pdos(self, ax=None, to_plot=None, colors=None, 
                   plot_total_dos=True, xrange=None, ymax=None, 
                   scaling=None, split=False, title=None, title_loc='center',
-                  labels=True, title_fontsize=16):
+                  labels=True, title_fontsize=16, legend_pos='outside'):
         if not ax:
             fig, ax = plt.subplots(1, 1, figsize=(8.0,3.0))
         else:
@@ -221,7 +221,10 @@ class Doscar:
         if not ymax:
             ymax = 1.1 * auto_ymax
         ax.set_ylim(-ymax*1.1,ymax*1.1)
-        ax.legend(bbox_to_anchor=(1.01, 1.04), loc='upper left')
+        if legend_pos == 'outside':
+            ax.legend(bbox_to_anchor=(1.01, 1.04), loc='upper left')
+        else:
+            ax.legend( loc=legend_pos )
         if labels:
             ax.set_xlabel( 'Energy [eV]')
         ax.axhline(y=0, c='lightgrey')

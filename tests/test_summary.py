@@ -4,12 +4,15 @@ import io
 import inspect
 from unittest.mock import Mock, patch, call
 from io import StringIO
+import os
 
 from vasppy.summary import (Summary, md5sum, potcar_spec, find_vasp_calculations,
                             load_vasp_summary)
 from vasppy.vaspmeta import VASPMeta
 
 from pymatgen.io.vasp.outputs import Vasprun
+
+test_data_dir = 'test_data'
 
 mock_potcar_string = """foo
 End of Dataset
@@ -194,7 +197,7 @@ class SummaryHelperFunctionsTestCase( unittest.TestCase ):
         self.assertEqual( v, [ './dir_A/', './dir_B/dir_C/' ] )
 
     def test_load_vasp_summary( self ):
-        vasp_summary_test_filename = 'test_data/vasp_summary_test.yaml'
+        vasp_summary_test_filename = os.path.join( os.path.dirname( __file__ ), test_data_dir, 'vasp_summary_test.yaml' )
         expected_dict = { 'foo': { 'title': 'foo', 'data': 'foo_data' }, 
                           'bar': { 'title': 'bar', 'data': 'bar_data' } }
         vasp_summary = load_vasp_summary( vasp_summary_test_filename )

@@ -5,7 +5,8 @@ import inspect
 from unittest.mock import Mock, patch, call
 from io import StringIO
 
-from vasppy.summary import Summary, md5sum, potcar_spec, find_vasp_calculations
+from vasppy.summary import (Summary, md5sum, potcar_spec, find_vasp_calculations,
+                            load_vasp_summary)
 from vasppy.vaspmeta import VASPMeta
 
 from pymatgen.io.vasp.outputs import Vasprun
@@ -191,6 +192,13 @@ class SummaryHelperFunctionsTestCase( unittest.TestCase ):
         with patch('glob.iglob', side_effect=[mock_glob_output, []]) as mock_glob:
             v = find_vasp_calculations()
         self.assertEqual( v, [ './dir_A/', './dir_B/dir_C/' ] )
- 
+
+    def test_load_vasp_summary( self ):
+        vasp_summary_test_filename = 'test_data/vasp_summary_test.yaml'
+        expected_dict = { 'foo': { 'title': 'foo', 'data': 'foo_data' }, 
+                          'bar': { 'title': 'bar', 'data': 'bar_data' } }
+        vasp_summary = load_vasp_summary( vasp_summary_test_filename )
+        self.assertEqual( vasp_summary, expected_dict )     
+
 if __name__ == '__main__':
     unittest.main()

@@ -15,6 +15,41 @@ import re
 
 potcar_sets = [ 'PBE', 'PBE_52', 'PBE_54' ]
 
+def load_vasp_summary( filename ):
+    """
+    Reads a `vasp_summary.yaml` format YAML file and returns
+    a dictionary of dictionaries. Each YAML document in the file
+    corresponds to one sub-dictionary, with the corresponding
+    top-level key given by the `title` value.
+
+    Example:
+        The file:
+    
+            ---
+            title: foo
+            data: foo_data
+            ---
+            title: bar
+            data: bar_data
+
+        is converted to the dictionary
+
+            { 'foo': { 'title': 'foo', 'data': 'foo_data' },
+              'bar': { 'title': 'bar', 'data': 'bar_data' } }
+
+    Args:
+        filename (str): File path for the `vasp_summary.yaml` file.
+
+    Returns:
+        dict(dict,dict,...): A dictionary of separate YAML documents,
+            each as dictionaries.a
+
+    """
+    with open( filename, 'r' ) as stream:
+        docs = yaml.load_all( stream )
+        data = { d['title']: d for d in docs }
+    return data
+
 def potcar_spec( filename ):
     """
     Returns a dictionary specifying the pseudopotentials contained in a POTCAR file.

@@ -2,6 +2,7 @@ import hashlib
 from monty.io import zopen
 from pathlib import Path
 import os
+import yaml
 from contextlib import contextmanager
 
 @contextmanager
@@ -64,4 +65,23 @@ def match_filename( filename ):
     f = next( ( '{}{}'.format( filename, extension ) for extension in [ '', '.gz' ]
         if Path( '{}{}'.format( filename, extension ) ).is_file() ), None ) 
     return f
-    
+   
+def validate_checksum( filename, md5sum ):
+    """
+    Compares the md5 checksum of a file with an expected value.
+    If the calculated and expected checksum values are not equal, 
+    ValueError is raised.
+    If the filename `foo` is not found, will try to read a gzipped file named
+    `foo.gz`. In this case, the checksum is calculated for the unzipped file.
+
+    Args:
+        filename (str): Path for the file to be checksummed.
+        md5sum (str):  The expected hex checksum.
+
+    Returns:
+        None
+    """
+    filename = match_filename( filename )
+    md5_hash = file_md5( filename=filename )
+    if md5_hash != md5sum:
+        raise ValueError('md5 checksums are inconsistent: {}'.format( filename ))

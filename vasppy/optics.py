@@ -83,7 +83,7 @@ def absorption_coefficient( dielectric ):
                            | element 2: imaginary dielectric tensors, in ``[xx, yy, zz, xy, xz, yz]`` format.
     
     Returns:
-        (np.array): absorption coefficient using eV as frequency units.
+        (np.array): absorption coefficient using eV as frequency units (cm^-1).
 
     Notes:
         The absorption coefficient is calculated as

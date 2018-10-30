@@ -13,7 +13,7 @@ import yaml
 import glob
 import re
 
-potcar_sets = [ 'PBE', 'PBE_52', 'PBE_54' ]
+potcar_sets = [ 'PBE', 'PBE_52', 'PBE_54', 'LDA', 'LDA_52', 'LDA_54', 'GGA', 'USPP_GGA', 'USPP_LDA' ]
 
 def load_vasp_summary( filename ):
     """

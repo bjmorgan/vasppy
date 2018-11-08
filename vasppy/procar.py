@@ -7,11 +7,11 @@ ev_to_hartree = 0.036749309
 
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
-    return [ float( s ) for s in p.findall( string ) ] 
+    return [ float( s ) for s in p.findall( string ) ]
 
 def k_point_parser( string ):
     regex = re.compile( 'k-point\s+\d+\s*:\s+((?:[- ][01].\d{8}){3})' )
-    return [ [ float(s) for s in [ x[0:11], x[11:22], x[22:33] ] ] for x in regex.findall( string ) ] 
+    return [ [ float(s) for s in [ x[0:11], x[11:22], x[22:33] ] ] for x in regex.findall( string ) ]
 
 def projections_parser( string ):
     regex = re.compile( '([-.\d\se]+tot.+)\n' )
@@ -23,7 +23,7 @@ def projections_parser( string ):
 def area_of_a_triangle_in_cartesian_space( a, b, c ):
     """
     Returns the area of a triangle defined by three points in Cartesian space.
-    
+
     Args:
         a (np.array): Cartesian coordinates of point A.
         b (np.array): Cartesian coordinates of point B.
@@ -39,7 +39,7 @@ def points_are_in_a_straight_line( points, tolerance=1e-7 ):
     Check whether a set of points fall on a straight line.
     Calculates the areas of triangles formed by triplets of the points.
     Returns False is any of these areas are larger than the tolerance.
-    
+
     Args:
         points (list(np.array)): list of Cartesian coordinates for each point.
         tolerance (optional:float): the maximum triangle size for these points to be considered colinear. Default is 1e-7.
@@ -58,9 +58,9 @@ def two_point_effective_mass( cartesian_k_points, eigenvalues ):
     """
     Calculate the effective mass given eigenvalues at two k-points.
     Reimplemented from Aron Walsh's original effective mass Fortran code.
-    
+
     Args:
-        cartesian_k_points (np.array): 2D numpy array containing the k-points in (reciprocal) Cartesian coordinates. 
+        cartesian_k_points (np.array): 2D numpy array containing the k-points in (reciprocal) Cartesian coordinates.
         eigenvalues (np.array):        numpy array containing the eigenvalues at each k-point.
 
     Returns:
@@ -140,9 +140,9 @@ class Procar:
     def parse_bands( self ):
         bands = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d\s]+)", self.read_in )
         self.bands = np.array( bands, dtype = float )
-        
+
     def parse_occupancy(self):
-        occupancy = re.findall(r"band\s*(\d+)\s*#\s*energy\s*[-.\d\s]+\s*#\s"r"*occ.\s*([.\d\s]+)", self.read_in)
+        occupancy = re.findall(r"band\s*(\d+)\s*#\s*energy\s*[-.\d\s]+\s*#\s"r"*occ.\s*([-.\d\s]+)", self.read_in)
         self.occupancy = np.array(occupancy, dtype = float)
 
     def sanity_check( self ):
@@ -153,7 +153,7 @@ class Procar:
         read_bands = len( self.bands ) / self.number_of_k_points / self.k_point_blocks
         assert( expected_bands == read_bands ), "band mismatch: {} in header; {} in file".format( expected_bands, read_bands )
         read_occupancy = len(self.occupancy) / self.number_of_k_points / self.k_point_blocks
-        assert( expected_bands == read_occupancy ), "error parsing occupancy data: {} bands in file, {} occupancy data points".format( expected_bands, read_occupancy ) 
+        assert( expected_bands == read_occupancy ), "error parsing occupancy data: {} bands in file, {} occupancy data points".format( expected_bands, read_occupancy )
 
     def read_from_file( self, filename, bands_in_range = None ):
         with open( filename, 'r' ) as file_in:
@@ -177,7 +177,7 @@ class Procar:
         # note: correct k-spacing is already implemented in weighted_band_structure
         assert( self.bands.shape == ( self.number_of_bands * self.number_of_k_points, 2 ) )
         to_return = np.insert( band_energies, 0, range( 1, self.number_of_k_points + 1 ), axis = 1 )
-        return to_return 
+        return to_return
 
     def print_weighted_band_structure( self, spins = None, ions = None, orbitals = None, scaling = 1.0, e_fermi = 0.0, reciprocal_lattice = None ):
         if spins:
@@ -185,7 +185,7 @@ class Procar:
         else:
             spins = list( range( self.spin_channels ) )
         if not ions:
-            ions = [ self.number_of_ions ] 
+            ions = [ self.number_of_ions ]
         if not orbitals:
             orbitals = [ self.data.shape[-1]-1 ] # !! NOT TESTED YET FOR f STATES !!
         if self.calculation[ 'spin_polarised' ]:
@@ -193,7 +193,7 @@ class Procar:
         else:
             band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands ).T
         orbital_projection = np.sum( self.data[ :, :, :, :, orbitals ], axis = 4 )
-        ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 ) 
+        ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 )
         spin_projection = np.sum( ion_projection[ :, :, spins ], axis = 2 )
         x_axis = self.x_axis( reciprocal_lattice )
         for i in range( self.number_of_bands ):

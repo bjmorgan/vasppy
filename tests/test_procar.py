@@ -38,6 +38,12 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( pcar.number_of_bands, 4 )
         self.assertEqual( pcar.number_of_k_points, 2 )
 
+    def test_procar_occupation_values_are_read( self ):
+        pcar = procar.Procar()
+        pcar.read_from_file( test_procar_filename )
+        np.testing.assert_array_equal( pcar.occupancy[:,1], 
+            np.array( [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -0.03191968 ] ) )
+
     def test_spin_polarised_procar_is_read_from_file( self ):
         """Checking that `PROCAR_spin_polarised_test` is read"""
         pcar = procar.Procar()

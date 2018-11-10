@@ -1,6 +1,7 @@
 import numpy as np
 import re
 import math
+import warnings
 
 angstrom_to_bohr = 0.52918
 ev_to_hartree = 0.036749309
@@ -155,16 +156,27 @@ class Procar:
         read_occupancy = len(self.occupancy) / self.number_of_k_points / self.k_point_blocks
         assert( expected_bands == read_occupancy ), "error parsing occupancy data: {} bands in file, {} occupancy data points".format( expected_bands, read_occupancy )
 
-    def read_from_file( self, filename ):
+    def read_from_file( self, filename, negative_occupancies='warn' ):
         """
         Reads the projected wavefunction character of each band from a VASP PROCAR file.
 
         Args:
             filename (str): Filename of the PROCAR file.
+            negative_occupancies (:obj:Str, optional): Sets the behaviour for handling
+                negative occupancies. Default is `warn`. 
+                Recognised options are:
+                    `warn` (default): Warn that some partial occupancies are negative,
+                                      but do not alter any values.
+                    `raise`:          Raise an AttributeError.
+                    `ignore`:         Do nothing.
+                    `zero`:           Negative partial occupancies will be set to zero.
 
         Returns:
             None
         """
+        valid_negative_occupancies = [ 'warn', 'raise', 'ignore', 'zero' ]
+        if negative_occupancies not in valid_negative_occupancies:
+            raise ValueError( '"{}" is not a valid value for the keyword `negative_occupancies`.'.format( negative_occupancies ) )
         with open( filename, 'r' ) as file_in:
             file_in.readline()
             self.number_of_k_points, self.number_of_bands, self.number_of_ions = [ int( f ) for f in get_numbers_from_string( file_in.readline() ) ]
@@ -172,6 +184,13 @@ class Procar:
         self.parse_k_points()
         self.parse_bands()
         self.parse_occupancy()
+        if np.any( self.occupancy[:,1] < 0 ): # Handle negative occupancies
+            if negative_occupancies == 'warn':
+                warnings.warn( "One or more occupancies in your PROCAR file are negative." )
+            elif negative_occupancies == 'raise':
+                raise ValueError( "One or more occupancies in your PROCAR file are negative." )
+            elif negative_occupancies == 'zero':
+                self.occupancy[ self.occupancy < 0 ] = 0.0
         self.parse_projections()
         self.sanity_check()
         self.read_in = None

@@ -155,7 +155,16 @@ class Procar:
         read_occupancy = len(self.occupancy) / self.number_of_k_points / self.k_point_blocks
         assert( expected_bands == read_occupancy ), "error parsing occupancy data: {} bands in file, {} occupancy data points".format( expected_bands, read_occupancy )
 
-    def read_from_file( self, filename, bands_in_range = None ):
+    def read_from_file( self, filename ):
+        """
+        Reads the projected wavefunction character of each band from a VASP PROCAR file.
+
+        Args:
+            filename (str): Filename of the PROCAR file.
+
+        Returns:
+            None
+        """
         with open( filename, 'r' ) as file_in:
             file_in.readline()
             self.number_of_k_points, self.number_of_bands, self.number_of_ions = [ int( f ) for f in get_numbers_from_string( file_in.readline() ) ]

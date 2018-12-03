@@ -150,7 +150,8 @@ class Poscar:
             opts = {}
         print( self.title )
         print( self.scaling )
-        [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.cell.matrix ]
+        for row in self.cell.matrix:
+            print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) )
         print( ' '.join( self.atoms ) )
         print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
         if opts.get('selective'):

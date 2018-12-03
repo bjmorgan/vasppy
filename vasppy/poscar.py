@@ -142,15 +142,20 @@ class Poscar:
         if opts is None:
             opts = {}
         if not opts.get( 'coordinates_only' ):
-            print( self.title )
-            print( self.scaling )
-            [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.cell.matrix ]
-            print( ' '.join( self.atoms ) )
-            print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
-            if opts.get('selective'):
-                print( 'Selective Dynamics' )
-            print( coordinate_type )
+            self.output_header( self )
         self.output_coordinates_only( coordinate_type=coordinate_type, opts=opts )
+
+    def output_header( self, coordinate_type='Direct', opts=None ):
+        if opts is None:
+            opts = {}
+        print( self.title )
+        print( self.scaling )
+        [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.cell.matrix ]
+        print( ' '.join( self.atoms ) )
+        print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
+        if opts.get('selective'):
+            print( 'Selective Dynamics' )
+        print( coordinate_type )
 
     def write_to( self, filename, coordinate_type='Direct', opts=None ):
         if opts is None:
@@ -158,6 +163,7 @@ class Poscar:
         with open( filename, 'w' ) as sys.stdout:
             self.output( coordinate_type=coordinate_type, opts=opts )
         sys.stdout = sys.__stdout__ # make sure sys.stdout is reset
+        
     def output_as_xtl( self ):
         print( self.title )
         print( "CELL" )

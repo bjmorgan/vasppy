@@ -43,11 +43,12 @@ setup(
     entry_points={ 'console_scripts': [
                        '{} = vasppy.scripts.{}:main'.format( s, s ) for s in scripts ] },
     license='MIT',
-    install_requires= [ 'monty',
-                        'numpy',
-                        'pandas',
-                        'pymatgen',
-                        'PyYAML', 
-                        'coverage==4.3.4',
-                        'codeclimate-test-reporter' ]
+    install_requires=[ 'monty',
+                       'numpy',
+                       'pandas',
+                       'pymatgen',
+                       'PyYAML', 
+                       'coverage==4.3.4',
+                       'codeclimate-test-reporter' ],
+    python_requires='>=3.5'
     )

@@ -49,7 +49,7 @@ def main():
     coordinates, velocities, dipoles, full_cell_matrix = read_pimaim_restart( filename )
     assert( sum( args.atom_numbers ) == len( coordinates ) )
     poscar = Poscar()
-    poscar.cell = Cell( full_cell_matrix ) # TODO: possibly this needs transposing?
+    poscar.cell = Cell( full_cell_matrix.transpose()) # TODO: possibly this needs transposing?
     poscar.atoms = args.labels
     poscar.atom_numbers = args.atom_numbers
     poscar.coordinate_type = 'Cartesian'

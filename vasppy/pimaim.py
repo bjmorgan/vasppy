@@ -12,7 +12,6 @@ def read_restart_file( filename, number_of_atoms ):
         file_data = f.readlines()
 
     cr_dump_log, vel_dump_log, chg_dump_log, full_dump_log = [ ( line.strip() == 'T' ) for line in file_data[:4] ]
-
     # this assumes coordinates, velocities, and dipoles are all present.
     # not sure what happens if atoms have qudrupoles, etc.
     coordinates = lines_to_numpy_array( file_data[ 4 : 4 + number_of_atoms ] ) * 0.52918 # convert bohr to Angstroms
@@ -31,11 +30,12 @@ def read_restart_file( filename, number_of_atoms ):
     return( coordinates, velocities, dipoles, full_cell_matrix )
 
 def poscar_from_pimaim_restart( filename, atom_numbers, atom_labels ):
+    print("Gonna convert from pimaim to poscar")
     number_of_atoms = sum( atom_numbers )
     coordinates, velocities, dipoles, full_cell_matrix = read_restart_file( filename, number_of_atoms )
 
     poscar = Poscar()
-    poscar.cell = Cell( full_cell_matrix ) # TODO: possibly this needs transposing
+    poscar.cell = Cell( full_cell_matrix .transpose()) # TODO: possibly this needs transposing
     poscar.atoms = atom_labels
     poscar.atom_numbers = atom_numbers
     poscar.coordinate_type = 'Direct'

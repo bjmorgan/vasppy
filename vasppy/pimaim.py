@@ -31,8 +31,6 @@ def read_restart_file( filename, number_of_atoms ):
 
 def get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix, cell_lengths):
 
-#    temp = np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])
-
     return(np.dot(coordinates, np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])
 ))
 

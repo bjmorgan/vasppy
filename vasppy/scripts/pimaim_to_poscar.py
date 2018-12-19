@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 from vasppy.poscar import Poscar
 from vasppy.cell import Cell
+from vasppy.pimaim import get_cart_coords_from_pimaim_restart
 
 def parse_command_line_arguments():
     parser = argparse.ArgumentParser( description = 'TODO' )
@@ -41,9 +42,9 @@ def read_pimaim_restart( filename ):
     
     return( coordinates, velocities, dipoles, full_cell_matrix, cell_lengths)
 
-def get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix, cell_lengths):
+#def get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix, cell_lengths):
 
-    return(np.dot(coordinates,np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])))
+#   return(np.dot(coordinates,np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])))
 
 def main():
     filename = 'testout.rst'

@@ -26,22 +26,24 @@ def read_restart_file( filename, number_of_atoms ):
     cell_matrix = lines_to_numpy_array( file_data[ -6: -3 ] )
     cell_lengths = lines_to_numpy_array( file_data[ -3: ] ) * 0.52918 # convert bohr to Angstroms
     full_cell_matrix = cell_matrix * cell_lengths
-    # TODO! need to check this with a non-orthorhombic cell
+    
     return( coordinates, velocities, dipoles, full_cell_matrix, cell_lengths )
 
 def get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix, cell_lengths):
 
-    temp = np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])
+#    temp = np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])
 
-    return(np.dot(coordinates,temp.transpose()))
+    return(np.dot(coordinates, np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])
+))
 
 def poscar_from_pimaim_restart( filename, atom_numbers, atom_labels ):
     number_of_atoms = sum( atom_numbers )
     coordinates, velocities, dipoles, full_cell_matrix, cell_lengths = read_restart_file( filename, number_of_atoms, cell_lengths )
 
     poscar = Poscar()
+    full_cell_matrix = full_cell_matrix.transpose()
     coordinates = get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix,cell_lengths)
-    poscar.cell = Cell( full_cell_matrix .transpose()) # TODO: possibly this needs transposing
+    poscar.cell = Cell( full_cell_matrix)
     poscar.atoms = atom_labels
     poscar.atom_numbers = atom_numbers
     poscar.coordinate_type = 'Direct'

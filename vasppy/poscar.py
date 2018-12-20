@@ -3,6 +3,7 @@ import sys
 import re
 import copy
 from vasppy import configuration, atom, cell
+from .units import angstrom_to_bohr
 from pymatgen import Lattice as pmg_Lattice
 from pymatgen import Structure as pmg_Structure
 from pymatgen.io.cif import CifWriter
@@ -181,7 +182,7 @@ class Poscar:
 
     def output_as_pimaim( self, to_bohr = True ):
         if to_bohr is True:
-            unit_scaling = 0.52918
+            unit_scaling = angstrom_to_bohr
         else:
             unit_scaling = 1.0
         cell_lengths = self.cell.lengths() * self.scaling / unit_scaling

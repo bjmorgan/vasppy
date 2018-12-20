@@ -2,8 +2,8 @@ import numpy as np
 import re
 import math
 import warnings
+from .units import angstrom_to_bohr
 
-angstrom_to_bohr = 0.52918
 ev_to_hartree = 0.036749309
 
 def get_numbers_from_string( string ):
@@ -164,15 +164,17 @@ class Procar:
             filename (str): Filename of the PROCAR file.
             negative_occupancies (:obj:Str, optional): Sets the behaviour for handling
                 negative occupancies. Default is `warn`. 
-                Recognised options are:
-                    `warn` (default): Warn that some partial occupancies are negative,
-                                      but do not alter any values.
-                    `raise`:          Raise an AttributeError.
-                    `ignore`:         Do nothing.
-                    `zero`:           Negative partial occupancies will be set to zero.
 
         Returns:
             None
+        
+        Note:
+            Valid options for `negative_occupancies` are:
+                `warn` (default): Warn that some partial occupancies are negative,
+                                  but do not alter any values.
+                `raise`:          Raise an AttributeError.
+                `ignore`:         Do nothing.
+                `zero`:           Negative partial occupancies will be set to zero.
         """
         valid_negative_occupancies = [ 'warn', 'raise', 'ignore', 'zero' ]
         if negative_occupancies not in valid_negative_occupancies:

@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 from vasppy.poscar import Poscar
 from vasppy.cell import Cell
+from vasppy.pimaim import get_cart_coords_from_pimaim_restart
 
 def parse_command_line_arguments():
     parser = argparse.ArgumentParser( description = 'TODO' )
@@ -38,20 +39,27 @@ def read_pimaim_restart( filename ):
     cell_matrix = lines_to_numpy_array( file_data[ -6: -3 ] )
     cell_lengths = lines_to_numpy_array( file_data[ -3: ] )
     full_cell_matrix = cell_matrix * cell_lengths
-    # TODO! need to check this with a non-orthorhombic cell
-    return( coordinates, velocities, dipoles, full_cell_matrix )
+    
+    return( coordinates, velocities, dipoles, full_cell_matrix, cell_lengths)
+
+#def get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix, cell_lengths):
+
+#   return(np.dot(coordinates,np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])))
 
 def main():
     filename = 'testout.rst'
     restart_file = True
 
     args = parse_command_line_arguments()
-    coordinates, velocities, dipoles, full_cell_matrix = read_pimaim_restart( filename )
+    coordinates, velocities, dipoles, full_cell_matrix, cell_lengths = read_pimaim_restart( filename )
     assert( sum( args.atom_numbers ) == len( coordinates ) )
     poscar = Poscar()
-    poscar.cell = Cell( full_cell_matrix ) # TODO: possibly this needs transposing?
+    full_cell_matrix = full_cell_matrix.transpose()
+    coordinates = get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix,cell_lengths)
+    poscar.cell = Cell( full_cell_matrix)
     poscar.atoms = args.labels
     poscar.atom_numbers = args.atom_numbers
+
     poscar.coordinate_type = 'Cartesian'
     poscar.coordinates = coordinates
     poscar.output()

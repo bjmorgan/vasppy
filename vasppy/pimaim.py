@@ -13,7 +13,6 @@ def read_restart_file( filename, number_of_atoms ):
         file_data = f.readlines()
 
     cr_dump_log, vel_dump_log, chg_dump_log, full_dump_log = [ ( line.strip() == 'T' ) for line in file_data[:4] ]
-
     # this assumes coordinates, velocities, and dipoles are all present.
     # not sure what happens if atoms have qudrupoles, etc.
     coordinates = lines_to_numpy_array( file_data[ 4 : 4 + number_of_atoms ] ) * angstrom_to_bohr
@@ -28,15 +27,22 @@ def read_restart_file( filename, number_of_atoms ):
     cell_matrix = lines_to_numpy_array( file_data[ -6: -3 ] )
     cell_lengths = lines_to_numpy_array( file_data[ -3: ] ) * angstrom_to_bohr
     full_cell_matrix = cell_matrix * cell_lengths
-    # TODO! need to check this with a non-orthorhombic cell
-    return( coordinates, velocities, dipoles, full_cell_matrix )
+    
+    return( coordinates, velocities, dipoles, full_cell_matrix, cell_lengths )
+
+def get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix, cell_lengths):
+
+    return(np.dot(coordinates, np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])
+))
 
 def poscar_from_pimaim_restart( filename, atom_numbers, atom_labels ):
     number_of_atoms = sum( atom_numbers )
-    coordinates, velocities, dipoles, full_cell_matrix = read_restart_file( filename, number_of_atoms )
+    coordinates, velocities, dipoles, full_cell_matrix, cell_lengths = read_restart_file( filename, number_of_atoms, cell_lengths )
 
     poscar = Poscar()
-    poscar.cell = Cell( full_cell_matrix ) # TODO: possibly this needs transposing
+    full_cell_matrix = full_cell_matrix.transpose()
+    coordinates = get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix,cell_lengths)
+    poscar.cell = Cell( full_cell_matrix)
     poscar.atoms = atom_labels
     poscar.atom_numbers = atom_numbers
     poscar.coordinate_type = 'Direct'

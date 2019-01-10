@@ -8,7 +8,8 @@ from vasppy import __version__ as VERSION
 readme = 'README.md'
 long_description = open( readme ).read()
 
-scripts = [ 'murnfit', 
+scripts = [ 'check_specis',
+            'murnfit', 
             'vasp_summary', 
             'poscar_to_cif', 
             'potcar_spec',

@@ -143,7 +143,7 @@ class Poscar:
         if opts is None:
             opts = {}
         if not opts.get( 'coordinates_only' ):
-            self.output_header( self )
+            self.output_header( coordinate_type=coordinate_type )
         self.output_coordinates_only( coordinate_type=coordinate_type, opts=opts )
 
     def output_header( self, coordinate_type='Direct', opts=None ):

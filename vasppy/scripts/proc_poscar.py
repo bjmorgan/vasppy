@@ -48,7 +48,7 @@ def main():
                     'numbered' : args.number_atoms,
                     'coordinates_only' : args.coordinates_only,
                     'selective': args.selective }
-    poscar.output( coordinate_type = coordinate_type, opts = output_opts )
+    poscar.output( coordinate_type=coordinate_type, opts=output_opts )
 
 if __name__ == "__main__":
     main()

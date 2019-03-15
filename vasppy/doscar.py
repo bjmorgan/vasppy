@@ -135,7 +135,8 @@ class Doscar:
                            `l='f'`: One or more of [ 'y(3x2-y2)', 'xyz', 'yz2', 'z3', 'xz2', 'z(x2-y2)', 'x(x2-3y2)' ]
 
         Returns:
-            np.array: A 4-dimensional numpy array containing the selected pdos values. The array dimensions are [ atom_no, energy_value, lm-projection, spin ]
+            np.array: A 4-dimensional numpy array containing the selected pdos values. 
+            The array dimensions are [ atom_no, energy_value, lm-projection, spin ]
 
         """
         valid_m_values = { 's': [],
@@ -156,7 +157,7 @@ class Doscar:
         elif spin is 'both':
             spin_idx = [0,1]
         else:
-            raise ArgumentError( "valid spin values are 'up', 'down', and 'both'. The default is 'both'" )
+            raise ValueError( "valid spin values are 'up', 'down', and 'both'. The default is 'both'" )
         to_return = to_return[ :, :, :, spin_idx ]
         if not l:
             channel_idx = list(range( self.number_of_channels ))

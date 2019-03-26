@@ -68,6 +68,7 @@ class SummaryTestCase( unittest.TestCase ):
         self.summary = Summary()
         self.summary.vasprun = Mock( spec=Vasprun )
         self.summary.meta = Mock( spec=VASPMeta )
+        self.summary.meta.notes = None
 
     def test_functional_not_PBE( self ):
         self.summary.potcars_are_pbe = Mock( return_value=False )
@@ -169,6 +170,17 @@ class SummaryTestCase( unittest.TestCase ):
         self.summary.print_title()
         self.assertEqual( mock_stdout.getvalue(), 'title: TITLE\n' )
 
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_print_notes( self, mock_stdout ):
+        self.summary.meta.notes = 'NOTES'
+        self.summary.print_notes()
+        self.assertEqual( mock_stdout.getvalue(), 'notes: NOTES\n' )
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def test_print_notes_handles_empty_notes_attribute( self, mock_stdout ):
+        self.summary.print_notes()
+        self.assertEqual( mock_stdout.getvalue(), 'notes: ~\n' )
+
 class SummaryHelperFunctionsTestCase( unittest.TestCase ):
 
     def test_md5sum( self ):
@@ -208,6 +220,7 @@ class SummaryHelperFunctionsTestCase( unittest.TestCase ):
                           'bar': { 'title': 'bar', 'data': 'bar_data' } }
         vasp_summary = load_vasp_summary( vasp_summary_test_filename )
         self.assertEqual( vasp_summary, expected_dict )     
+
 
 if __name__ == '__main__':
     unittest.main()

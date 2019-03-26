@@ -118,6 +118,26 @@ class Doscar:
     def pdos_select( self, atoms=None, spin=None, l=None, m=None ):
         """
         Returns a subset of the projected density of states array.
+
+        Args:
+            atoms (int or list(int)): Atom numbers to include in the selection. Atom numbers count from 1. 
+                                   Default is to select all atoms.
+            spin (str): Select up or down, or both spin channels to include in the selection.
+                        Accepted options are 'up', 'down', and 'both'. Default is to select both spins.
+            l (str): Select one angular momentum to include in the selectrion.
+                     Accepted options are 's', 'p', 'd', and 'f'. Default is to include all l-values.
+                     Setting `l` and not setting `m` will return all projections for that angular momentum value.
+            m (list(str)): Select one or more m-values. Requires `l` to be set. 
+                           The accepted values depend on the value of `l`:
+                           `l='s'`: Only one projection. Not set.
+                           `l='p'`: One or more of [ 'x', 'y', 'z' ]
+                           `l='d'`: One or more of [ 'xy', 'yz', 'z2-r2', 'xz', 'x2-y2' ]
+                           `l='f'`: One or more of [ 'y(3x2-y2)', 'xyz', 'yz2', 'z3', 'xz2', 'z(x2-y2)', 'x(x2-3y2)' ]
+
+        Returns:
+            np.array: A 4-dimensional numpy array containing the selected pdos values. 
+            The array dimensions are [ atom_no, energy_value, lm-projection, spin ]
+
         """
         valid_m_values = { 's': [],
                            'p': [ 'x', 'y', 'z' ],
@@ -137,7 +157,7 @@ class Doscar:
         elif spin is 'both':
             spin_idx = [0,1]
         else:
-            raise ArgumentError
+            raise ValueError( "valid spin values are 'up', 'down', and 'both'. The default is 'both'" )
         to_return = to_return[ :, :, :, spin_idx ]
         if not l:
             channel_idx = list(range( self.number_of_channels ))
@@ -146,18 +166,18 @@ class Doscar:
         elif l == 'p':
             if not m:
                 channel_idx = [ 1, 2, 3 ]
-            else:
-                channel_idx = [ i for i, v in enumerate( valid_m_values['p'] ) if v in m ]
+            else: # TODO this looks like it should be i+1
+                channel_idx = [ i+1 for i, v in enumerate( valid_m_values['p'] ) if v in m ]
         elif l == 'd':
             if not m:
                 channel_idx = [ 4, 5, 6, 7, 8 ]
-            else:
-                channel_idx = [ i for i, v in enumerate( valid_m_values['d'] ) if v in m ]
+            else: # TODO this looks like it should be i+4
+                channel_idx = [ i+4 for i, v in enumerate( valid_m_values['d'] ) if v in m ]
         elif l == 'f':
             if not m:
                 channel_idx = [ 9, 10, 11, 12, 13, 14, 15 ]
-            else:
-                channel_idx = [ i for i, v in enumerate( valid_m_values['f'] ) if v in m ]
+            else: # TODO this looks like it should be i+9
+                channel_idx = [ i+9 for i, v in enumerate( valid_m_values['f'] ) if v in m ]
         else:
             raise ValueError
         return to_return[ :, :, channel_idx, : ]

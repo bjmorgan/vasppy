@@ -137,7 +137,7 @@ def import_calculations_from_file( filename ):
     """
     calcs = {}
     with open( filename, 'r' ) as stream:
-        docs = yaml.load_all( stream )
+        docs = yaml.load_all( stream, Loader=yaml.SafeLoader )
         for d in docs:
             stoichiometry = Counter()
             for s in d['stoichiometry']:

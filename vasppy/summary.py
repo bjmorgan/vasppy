@@ -46,7 +46,7 @@ def load_vasp_summary( filename ):
 
     """
     with open( filename, 'r' ) as stream:
-        docs = yaml.load_all( stream )
+        docs = yaml.load_all( stream, Loader=yaml.SafeLoader )
         data = { d['title']: d for d in docs }
     return data
 

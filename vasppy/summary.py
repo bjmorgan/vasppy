@@ -256,7 +256,10 @@ class Summary:
         print( "description: {}".format( self.meta.description.strip() ) )
  
     def print_notes( self ):
-        print( "notes: {}".format( self.meta.notes.strip() ) )
+        if self.meta.notes:
+            print( "notes: {}".format( self.meta.notes.strip() ) )
+        else:
+            print( "notes: ~" )
  
     def print_status( self ):
         print( "status: {}".format( self.meta.status ) )

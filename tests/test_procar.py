@@ -129,6 +129,8 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( combined_pcar.number_of_k_points, 4 )
         np.testing.assert_equal( combined_pcar.occupancy, np.vstack( ( pcar1.occupancy, pcar2.occupancy ) ) )
         np.testing.assert_equal( combined_pcar.bands, np.vstack( ( pcar1.bands, pcar2.bands ) ) )
+        np.testing.assert_equal( combined_pcar.k_points, np.vstack( ( pcar1.k_points, pcar2.k_points ) ) )
+        print( combined_pcar.k_points )
 
     def test___add___spin_polarised_procars( self ):
         pcar1 = procar.Procar()

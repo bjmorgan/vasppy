@@ -203,6 +203,14 @@ class Procar:
         assert( expected_bands == read_occupancy ), "error parsing occupancy data: {} bands in file, {} occupancy data points".format( expected_bands, read_occupancy )
 
     @classmethod
+    def from_files( cls, filenames, negative_occupancies='warn' ):
+        """
+        TODO
+        """
+        pcars = [ cls.from_file( f ) for f in filenames ]
+        return sum( pcars )
+
+    @classmethod
     def from_file( cls, filename, negative_occupancies='warn' ):
         """
         Create a Procar object by reading the projected wavefunction character of each band

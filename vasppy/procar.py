@@ -115,11 +115,12 @@ class Procar:
                     | ( number_of_k_points, number_of_bands, number_of_spin_channels, number_of_ions+1, number_of_projections )
         bands (numpy.array(float)): A 2D numpy array containing [ band_no, energy ] pairs.
         occupancy (numpy.array(float)): A 2D numpy array containing [ band_no, occupancy ] pairs.
+        k_points (numpy.array(fliat)): A 2D numpy array containing k-points in fractional coordinates.
         number_of_projections (int): The number of projections, e.g. TODO
         k_point_blocks (int): TODO
         calculation (dict(str:bool): Dictionary of True | False values describing the calculation type.
             Dictionary keys are 'non_spin_polarised', 'non_collinear', and 'spin_polarised'
- 
+      
     """
 
     def __init__( self, spin=1 ):
@@ -156,6 +157,7 @@ class Procar:
         new_procar.number_of_k_points = self.number_of_k_points + other.number_of_k_points
         new_procar.bands = np.concatenate( ( self.bands, other.bands ) )
         new_procar.occupancy = np.concatenate( ( self.occupancy, other.occupancy ) )
+        new_procar.k_points = np.concatenate( ( self.k_points, other.k_points ) )
         return new_procar
  
     def parse_projections( self ):

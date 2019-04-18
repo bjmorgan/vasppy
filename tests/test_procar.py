@@ -41,6 +41,36 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( pcar.number_of_bands, 4 )
         self.assertEqual( pcar.number_of_k_points, 2 )
 
+    def test_procar_from_file_correctly_parses_bands( self ):
+        pcar = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            pcar.read_from_file( test_procar_filename )
+        np.testing.assert_equal( pcar.bands, 
+                             np.array([[ 1., -13.17934476],
+                                       [ 2., -13.17934476],
+                                       [ 3., -13.16936722],
+                                       [ 4., -13.16936722],
+                                       [ 1., -13.1849117 ],
+                                       [ 2., -13.1849117 ],
+                                       [ 3., -13.16621473],
+                                       [ 4., -13.16621472]] ) )
+
+    def test_procar_from_file_correctly_parses_occupancies( self ):
+        pcar = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            pcar.read_from_file( test_procar_filename )
+        np.testing.assert_equal( pcar.occupancy,
+                             np.array([[ 1., 1. ],
+                                       [ 2., 1. ],
+                                       [ 3., 1. ],
+                                       [ 4., 1. ],
+                                       [ 1., 1. ],
+                                       [ 2., 1. ],
+                                       [ 3., 1. ],
+                                       [ 4., -0.03191968]] ) )
+
     def test_read_from_file_raises_valueerror_if_negative_occupancies_is_invalid( self ):
         pcar = procar.Procar()
         with self.assertRaises( ValueError ):
@@ -84,7 +114,35 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( pcar.number_of_ions, 25 )
         self.assertEqual( pcar.number_of_bands, 112 )
         self.assertEqual( pcar.number_of_k_points, 8 )
-                 
+        
+    def test___add___( self ):
+        pcar1 = procar.Procar()
+        pcar2 = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            pcar1.read_from_file( test_procar_filename )
+            pcar2.read_from_file( test_procar_filename )
+        combined_pcar = pcar1 + pcar2
+        self.assertEqual( combined_pcar.spin_channels, 4 )
+        self.assertEqual( combined_pcar.number_of_ions, 22 )
+        self.assertEqual( combined_pcar.number_of_bands, 4 )
+        self.assertEqual( combined_pcar.number_of_k_points, 4 )
+        np.testing.assert_equal( combined_pcar.occupancy, np.vstack( ( pcar1.occupancy, pcar2.occupancy ) ) )
+        np.testing.assert_equal( combined_pcar.bands, np.vstack( ( pcar1.bands, pcar2.bands ) ) )
+
+    def test___add___spin_polarised_procars( self ):
+        pcar1 = procar.Procar()
+        pcar2 = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            pcar1.read_from_file( test_procar_spin_polarised_filename )
+            pcar2.read_from_file( test_procar_spin_polarised_filename )
+        combined_pcar = pcar1 + pcar2
+        self.assertEqual( combined_pcar.spin_channels, 2 )
+        self.assertEqual( combined_pcar.number_of_ions, 25 )
+        self.assertEqual( combined_pcar.number_of_bands, 112 )
+        self.assertEqual( combined_pcar.number_of_k_points, 16 )
+ 
 class ParserTestCase( unittest.TestCase ):
     """Test for VASP output parsers"""
 
@@ -145,7 +203,7 @@ class ProcarSupportFunctionsTestCase( unittest.TestCase ):
         eigenvalues = np.array( [ 0.0, 1.0, 4.0 ] )
         with patch( 'vasppy.procar.points_are_in_a_straight_line' ) as mock_straight_line_test:
             mock_straight_line_test.return_value = True
-            self.assertAlmostEqual( procar.least_squares_effective_mass( k_points, eigenvalues ), 13.605698001 )  
+            self.assertAlmostEqual( procar.least_squares_effective_mass( k_points, eigenvalues ), 13.6056930 )  
  
     def test_least_squares_effective_mass_raises_valueerror_if_points_are_not_collinear( self ):
         k_points = np.array( [ [ 0.0, 0.0, 0.0 ],
@@ -161,7 +219,7 @@ class ProcarSupportFunctionsTestCase( unittest.TestCase ):
         k_points = np.array( [ [ 0.0, 0.0, 0.0 ],
                                [ 1.0, 0.0, 0.0 ] ] )
         eigenvalues = np.array( [ 0.0, 1.0 ] )
-        self.assertAlmostEqual( procar.two_point_effective_mass( k_points, eigenvalues ), 13.605698001 )
+        self.assertAlmostEqual( procar.two_point_effective_mass( k_points, eigenvalues ), 13.605693010 )
 
 if __name__ == '__main__':
     unittest.main()

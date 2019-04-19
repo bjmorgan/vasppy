@@ -158,6 +158,7 @@ class Procar:
         new_procar.bands = np.concatenate( ( self.bands, other.bands ) )
         new_procar.occupancy = np.concatenate( ( self.occupancy, other.occupancy ) )
         new_procar.k_points = np.concatenate( ( self.k_points, other.k_points ) )
+        new_procar.sanity_check()
         return new_procar
  
     def parse_projections( self ):

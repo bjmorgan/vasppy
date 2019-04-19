@@ -129,7 +129,7 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( combined_pcar.number_of_k_points, 4 )
         np.testing.assert_equal( combined_pcar.occupancy, np.vstack( ( pcar1.occupancy, pcar2.occupancy ) ) )
         np.testing.assert_equal( combined_pcar.bands, np.vstack( ( pcar1.bands, pcar2.bands ) ) )
-        np.testing.assert_equal( combined_pcar.k_points, np.vstack( ( pcar1.k_points, pcar2.k_points ) ) )
+        np.testing.assert_equal( combined_pcar.k_points, pcar1.k_points + pcar2.k_points )
 
     def test___add___spin_polarised_procars( self ):
         pcar1 = procar.Procar()
@@ -150,17 +150,23 @@ class ParserTestCase( unittest.TestCase ):
     def test_k_points_are_parsed( self ):
         """Checking that k-points are parsed from PROCAR format strings"""
         procar_string = " k-point    1 :    0.50000000 0.25000000 0.75000000     weight = 0.00806452\nk-point    2 :    0.50000000 0.25735294 0.74264706     weight = 0.00806452"
-        self.assertEqual( procar.k_point_parser( procar_string ), 
+        k_points = procar.k_point_parser( procar_string )
+        np.testing.assert_array_equal( [ k.fractional_coordinates for k in k_points ],
             [ [ 0.50000000, 0.25000000, 0.75000000 ], 
               [ 0.50000000, 0.25735294, 0.74264706 ] ] )
+        self.assertEqual( [ k.weight for k in k_points ],
+            [ 0.00806452, 0.00806452 ] )
 
     def test_negative_k_points_are_parsed( self ): 
         """Checking that negative k-points are parsed from PROCAR format strings"""
         procar_string = "  k-point  119 :   -0.01282051 0.00000000 0.00000000     weight = 0.00500000\n k-point  122 :    0.00000000-0.01282051 0.01282051     weight = 0.00500000\n k-point    1 :   -0.50000000 0.00000000-0.50000000     weight = 0.00500000"
-        self.assertEqual( procar.k_point_parser( procar_string ), 
+        k_points = procar.k_point_parser( procar_string )
+        np.testing.assert_array_equal( [ k.fractional_coordinates for k in k_points ],
             [ [-0.01282051,  0.00000000,  0.00000000], 
               [ 0.00000000, -0.01282051,  0.01282051],
               [-0.50000000,  0.00000000, -0.50000000]  ] )
+        self.assertEqual( [ k.weight for k in k_points ],
+            [ 0.005, 0.005, 0.005 ] )
 
     def test_get_numbers_from_string( self ):
         """Checking function for extracting numbers from a string"""

@@ -4,14 +4,27 @@ import math
 import warnings
 from .units import angstrom_to_bohr, ev_to_hartree
 from copy import deepcopy
+import fortranformat as ff
+
+class KPoint():
+
+    def __init__( self, fractional_coordinates, weight ):
+        self.fractional_coordinates = fractional_coordinates
+        self.weight = weight
 
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
     return [ float( s ) for s in p.findall( string ) ]
 
 def k_point_parser( string ):
-    regex = re.compile( 'k-point\s+\d+\s*:\s+((?:[- ][01].\d{8}){3})' )
-    return [ [ float(s) for s in [ x[0:11], x[11:22], x[22:33] ] ] for x in regex.findall( string ) ]
+    regex = re.compile( 'k-point\s+\d+\s*:\s+([- ][01].\d{8})([- ][01].\d{8})([- ][01].\d{8})\s+weight = ([01].\d+)' )
+    captured = regex.findall( string ) 
+    k_points = []
+    for kp in captured:
+        fractional_coordinates = np.array( [ float(s) for s in kp[0:3] ] )
+        weight = float(kp[3])
+        k_points.append( KPoint( fractional_coordinates=fractional_coordinates, weight=weight ) )
+    return k_points
 
 def projections_parser( string ):
     regex = re.compile( '([-.\d\se]+tot.+)\n' )
@@ -115,7 +128,7 @@ class Procar:
                     | ( number_of_k_points, number_of_bands, number_of_spin_channels, number_of_ions+1, number_of_projections )
         bands (numpy.array(float)): A 2D numpy array containing [ band_no, energy ] pairs.
         occupancy (numpy.array(float)): A 2D numpy array containing [ band_no, occupancy ] pairs.
-        k_points (numpy.array(fliat)): A 2D numpy array containing k-points in fractional coordinates.
+        k_points (list(KPoint)): A list of KPoint objects, that contain fractional coordinates and weights for each k-point.
         number_of_projections (int): The number of projections, e.g. TODO
         k_point_blocks (int): TODO
         calculation (dict(str:bool): Dictionary of True | False values describing the calculation type.
@@ -157,7 +170,7 @@ class Procar:
         new_procar.number_of_k_points = self.number_of_k_points + other.number_of_k_points
         new_procar.bands = np.concatenate( ( self.bands, other.bands ) )
         new_procar.occupancy = np.concatenate( ( self.occupancy, other.occupancy ) )
-        new_procar.k_points = np.concatenate( ( self.k_points, other.k_points ) )
+        new_procar.k_points = self.k_points + other.k_points
         new_procar.sanity_check()
         return new_procar
  
@@ -184,8 +197,7 @@ class Procar:
         self.number_of_projections = int( self.projection_data.shape[1] / ( self.number_of_ions + 1 ) )
 
     def parse_k_points( self ):
-        k_points = k_point_parser( self.read_in )
-        self.k_points = np.array( k_points, dtype = float )
+        self.k_points = k_point_parser( self.read_in )
 
     def parse_bands( self ):
         bands = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d\s]+)", self.read_in )
@@ -319,7 +331,7 @@ class Procar:
         assert( spin <= self.k_point_blocks )
         assert( len( k_point_indices ) > 1 ) # we need at least 2 k-points
         band_energies = self.bands[:,1:].reshape( self.k_point_blocks, self.number_of_k_points, self.number_of_bands )
-        k_points = np.array( [ self.k_points[ k - 1 ] for k in k_point_indices ] )
+        k_points = np.array( [ self.k_points[ k - 1 ].fractional_coordinates for k in k_point_indices ] )
         eigenvalues = np.array( [ band_energies[ spin - 1 ][ k - 1 ][ band_index - 1 ] for k in k_point_indices ] )
         if printing:
             print( '# h k l e' )
@@ -334,7 +346,7 @@ class Procar:
 
     def x_axis( self, reciprocal_lattice ):
         if reciprocal_lattice is not None:
-            cartesian_k_points = np.dot( self.k_points, reciprocal_lattice )
+            cartesian_k_points = np.dot( np.array( [ k.fractional_coordinates for k in self.k_points ] ), reciprocal_lattice )
             x_axis = [ 0.0 ]
             for i in range( 1, len( cartesian_k_points ) ):
                 dk = cartesian_k_points[ i - 1 ] - cartesian_k_points[ i ]
@@ -345,3 +357,10 @@ class Procar:
             x_axis = np.arange( len( self.k_points ) )
         return x_axis
 
+    def write_file( self, filename ):
+        with open( filename, 'w' ) as f:
+            f.write( 'PROCAR lm decomposed\n' )
+            line = ff.FortranRecordWriter("'# of k-points:',I5,9X,'# of bands:',I5,9X,'# of ions:',I5")
+            f.write( line.write( [ self.number_of_k_points, self.number_of_bands, self.number_of_ions ] )+'\n' )
+            #for nk in self.k_points:
+            #f.write('\n'+ line.write(

@@ -394,7 +394,7 @@ class Procar:
         else:
             spins = list( range( self.spin_channels ) )
         if not ions:
-            ions = list( range( self.number_of_ions ) )
+            ions = [ self.number_of_ions ] # nions+1 is the `tot` index
         if not orbitals:
             orbitals = list( range( self.number_of_projections ) )
         if self.calculation[ 'spin_polarised' ]:

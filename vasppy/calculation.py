@@ -60,7 +60,7 @@ class Calculation:
             scaling (float): The scaling factor.
 
         Returns:
-            (Counter(Str:Int)): The scaled stoichiometry as a Counter of label: stoichiometry pairs
+            (Counter(Str:Int)): The scaled stoichiometry as a :obj:`Counter` of ``label: stoichiometry`` pairs
         """ 
         return { k:v*scaling for k,v in self.stoichiometry.items() }
     
@@ -69,9 +69,9 @@ def delta_E( reactants, products, check_balance=True ):
     Calculate the change in energy for reactants --> products.
     
     Args:
-        reactants (list(vasppy.Calculation): A list of vasppy.Calculation objects. The initial state.
-        products  (list(vasppy.Calculation): A list of vasppy.Calculation objects. The final state.
-        check_balance (bool:optional): Check that the reaction stoichiometry is balanced. Default: True.
+        reactants (list(:obj:`vasppy.Calculation`)): A `list` of :obj:`vasppy.Calculation` objects. The initial state.
+        products  (list(:obj:`vasppy.Calculation`)): A `list` of :obj:`vasppy.Calculation` objects. The final state.
+        check_balance (:obj:`bool`, optional): Check that the reaction stoichiometry is balanced. Default is ``True``.
 
     Returns:
         (float) The change in energy.
@@ -86,8 +86,8 @@ def delta_stoichiometry( reactants, products ):
     Calculate the change in stoichiometry for reactants --> products.
 
     Args:
-        reactants (list(vasppy.Calculation): A list of vasppy.Calculation objects. The initial state.
-        products  (list(vasppy.Calculation): A list of vasppy.Calculation objects. The final state.
+        reactants (list(:obj:`vasppy.Calculation`): A `list` of :obj:`vasppy.Calculation objects.` The initial state.
+        products  (list(:obj:`vasppy.Calculation`): A `list` of :obj:`vasppy.Calculation objects.` The final state.
 
     Returns:
         (Counter): The change in stoichiometry.
@@ -118,8 +118,8 @@ def energy_string_to_float( string ):
     
 def import_calculations_from_file( filename ):
     """
-    Construct a list of Calculation objects by reading a YAML file.
-    Each YAML document should include 'title', 'stoichiometry', and 'energy' fields. e.g.::
+    Construct a list of :obj:`Calculation` objects by reading a YAML file.
+    Each YAML document should include ``title``, ``stoichiometry``, and ``energy`` fields, e.g.::
 
         title: my calculation
         stoichiometry:
@@ -133,7 +133,7 @@ def import_calculations_from_file( filename ):
         filename (str): Name of the YAML file to read.
 
     Returns:
-        (dict(vasppy.Calculation)): A dictionary of Calculation objects. For each Calculation object, the 'title' field from the YAML input is used as the dictionary key.
+        (dict(vasppy.Calculation)): A dictionary of :obj:`Calculation` objects. For each :obj:`Calculation` object, the ``title`` field from the YAML input is used as the dictionary key.
     """
     calcs = {}
     with open( filename, 'r' ) as stream:

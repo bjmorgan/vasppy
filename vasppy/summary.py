@@ -23,7 +23,7 @@ def load_vasp_summary( filename ):
     top-level key given by the `title` value.
 
     Example:
-        The file:
+        The file::
     
             ---
             title: foo
@@ -32,7 +32,7 @@ def load_vasp_summary( filename ):
             title: bar
             data: bar_data
 
-        is converted to the dictionary
+        is converted to the dictionary::
 
             { 'foo': { 'title': 'foo', 'data': 'foo_data' },
               'bar': { 'title': 'bar', 'data': 'bar_data' } }
@@ -41,7 +41,7 @@ def load_vasp_summary( filename ):
         filename (str): File path for the `vasp_summary.yaml` file.
 
     Returns:
-        dict(dict,dict,...): A dictionary of separate YAML documents,
+        (dict(dict,dict,...)): A dictionary of separate YAML documents,
             each as dictionaries.a
 
     """

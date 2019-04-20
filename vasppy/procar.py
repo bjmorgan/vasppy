@@ -8,10 +8,24 @@ import fortranformat as ff
 
 class KPoint():
 
-    def __init__( self, fractional_coordinates, weight ):
-        self.fractional_coordinates = fractional_coordinates
+    def __init__( self, frac_coords, weight ):
+        self.frac_coords = frac_coords
         self.weight = weight
 
+    def cart_coords( self, reciprocal_lattice ):
+        """Convert the reciprocal fractional coordinates for this k-point to \
+        reciprocal Cartesian coordinates.
+
+        Args:
+            reciprocal_lattice (np.array(float)): 3x3 numpy array containing the \
+                Cartesian reciprocal lattice.
+
+        Returns:
+            (np.array): The reciprocal Cartesian coordinates of this k-point.
+
+        """
+        return np.dot( self.frac_coords, reciprocal_lattice )
+    
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
     return [ float( s ) for s in p.findall( string ) ]
@@ -21,9 +35,9 @@ def k_point_parser( string ):
     captured = regex.findall( string ) 
     k_points = []
     for kp in captured:
-        fractional_coordinates = np.array( [ float(s) for s in kp[0:3] ] )
+        frac_coords = np.array( [ float(s) for s in kp[0:3] ] )
         weight = float(kp[3])
-        k_points.append( KPoint( fractional_coordinates=fractional_coordinates, weight=weight ) )
+        k_points.append( KPoint( frac_coords=frac_coords, weight=weight ) )
     return k_points
 
 def projections_parser( string ):
@@ -114,38 +128,38 @@ class Procar:
     Object for working with PROCAR files.
 
     Attributes:
-        spin_channels (int): Number of spin channels in the PROCAR data. 
-                    |  1 for non-spin-polarised calculations.
-                    |  2 for spin-polarised calculations.
-                    |  4 for non-collinear calculations.
-        number_of_k_points (int): The number of k-points.
-        number_of_ions (int): The number of ions.
-        number_of_bands (int): The number of bands.
         data (numpy.array(float)): A 5D numpy array that stores the projection data.
-                    |  For a spin-polarised calculation, the axes are:
-                    |  ( spin_channels, number_of_k_points, number_of_bands, number_of_ions+1, number_oof_projections )
-                    | For a non-spin-polarised calculation, the axes are:
-                    | ( number_of_k_points, number_of_bands, number_of_spin_channels, number_of_ions+1, number_of_projections )
+
+                    Axes are k-points, bands, spin-channels, ions and sum over ions, lm-projections.
+
         bands (numpy.array(float)): A 2D numpy array containing [ band_no, energy ] pairs.
         occupancy (numpy.array(float)): A 2D numpy array containing [ band_no, occupancy ] pairs.
         k_points (list(KPoint)): A list of KPoint objects, that contain fractional coordinates and weights for each k-point.
+        number_of_k_points (int): The number of k-points.
+        number_of_bands (int): The number of bands.
+        spin_channels (int): Number of spin channels in the PROCAR data:
+ 
+                    -  1 for non-spin-polarised calculations.
+                    -  2 for spin-polarised calculations.
+                    -  4 for non-collinear calculations.
+        number_of_ions (int): The number of ions.
         number_of_projections (int): The number of projections, e.g. TODO
-        k_point_blocks (int): TODO
-        calculation (dict(str:bool): Dictionary of True | False values describing the calculation type.
-            Dictionary keys are 'non_spin_polarised', 'non_collinear', and 'spin_polarised'
+        calculation (dict): Dictionary of True | False values describing the calculation type.
+
+            Dictionary keys are 'non_spin_polarised', 'non_collinear', and 'spin_polarised'.
       
     """
 
     def __init__( self, spin=1 ):
-        self.spin_channels = spin # should be determined from PROCAR
-        self.number_of_k_points = None
-        self.number_of_ions = None
-        self.number_of_bands = None
+        self._spin_channels = spin # should be determined from PROCAR
+        self._number_of_k_points = None
+        self._number_of_ions = None
+        self._number_of_bands = None
+        self._number_of_projections = None
+        self._k_point_blocks = None
         self.data = None
         self.bands = None
         self.occupancy = None
-        self.number_of_projections = None
-        self.k_point_blocks = None
         self.calculation = { 'non_spin_polarised': False, 'non_collinear': False, 'spin_polarised': False }
         #self.non_spin_polarised = None
 
@@ -158,16 +172,13 @@ class Procar:
             raise ValueError( 'Can only concatenate Procars with equal number_of_bands: {}, {}'.format( self.number_of_bands, other.number_of_bands ) )
         if self.number_of_projections != other.number_of_projections:
             raise ValueError( 'Can only concatenate Procars with equal number_of_projections: {}, {}'.format( self.number_of_projections, other.number_of_projections ) )
-        if self.k_point_blocks != other.k_point_blocks:
-            raise ValueError( 'Can only concatenate Procars with equal k_point_blocks: {}, {}'.format( self.k_point_blocks, other.k_point_blocks ) )
+        if self._k_point_blocks != other._k_point_blocks:
+            raise ValueError( 'Can only concatenate Procars with equal k_point_blocks: {}, {}'.format( self._k_point_blocks, other._k_point_blocks ) )
         if self.calculation != other.calculation:
             raise ValueError( 'Can only concatenate Procars from equal calculations: {}, {}'.format( self.calculation, other.calculation ) )
         new_procar = deepcopy( self )
-        if self.calculation['spin_polarised']:
-            new_procar.data = np.concatenate( ( self.data, other.data ), axis=1 )
-        else:
-            new_procar.data = np.concatenate( ( self.data, other.data ) )
-        new_procar.number_of_k_points = self.number_of_k_points + other.number_of_k_points
+        new_procar.data = np.concatenate( ( self.data, other.data ) )
+        new_procar._number_of_k_points = self.number_of_k_points + other.number_of_k_points
         new_procar.bands = np.concatenate( ( self.bands, other.bands ) )
         new_procar.occupancy = np.concatenate( ( self.occupancy, other.occupancy ) )
         new_procar.k_points = self.k_points + other.k_points
@@ -177,24 +188,24 @@ class Procar:
     def parse_projections( self ):
         self.projection_data = projections_parser( self.read_in )
         try:
-            assert( self.number_of_bands * self.number_of_k_points == len( self.projection_data ) )
-            self.spin_channels = 1 # non-magnetic, non-spin-polarised
-            self.k_point_blocks = 1
+            assert( self._number_of_bands * self._number_of_k_points == len( self.projection_data ) )
+            self._spin_channels = 1 # non-magnetic, non-spin-polarised
+            self._k_point_blocks = 1
             self.calculation[ 'non_spin_polarised' ] = True
         except:
-            if self.number_of_bands * self.number_of_k_points * 4 == len( self.projection_data ):
-                self.spin_channels = 4 # non-collinear (spin-orbit coupling)
-                self.k_point_blocks = 1
+            if self._number_of_bands * self._number_of_k_points * 4 == len( self.projection_data ):
+                self._spin_channels = 4 # non-collinear (spin-orbit coupling)
+                self._k_point_blocks = 1
                 self.calculation[ 'non_collinear' ] = True
                 pass
-            elif self.number_of_bands * self.number_of_k_points * 2 == len( self.projection_data ):
-                self.spin_channels = 2 # spin-polarised
-                self.k_point_blocks = 2
+            elif self._number_of_bands * self._number_of_k_points * 2 == len( self.projection_data ):
+                self._spin_channels = 2 # spin-polarised
+                self._k_point_blocks = 2
                 self.calculation[ 'spin_polarised' ] = True
                 pass
             else:
                 raise
-        self.number_of_projections = int( self.projection_data.shape[1] / ( self.number_of_ions + 1 ) )
+        self._number_of_projections = int( self.projection_data.shape[1] / ( self._number_of_ions + 1 ) ) - 1
 
     def parse_k_points( self ):
         self.k_points = k_point_parser( self.read_in )
@@ -208,13 +219,13 @@ class Procar:
         self.occupancy = np.array(occupancy, dtype = float)
 
     def sanity_check( self ):
-        expected_k_points = self.number_of_k_points
-        read_k_points = len( self.k_points ) / self.k_point_blocks
+        expected_k_points = self._number_of_k_points
+        read_k_points = len( self.k_points ) / self._k_point_blocks
         assert( expected_k_points == read_k_points ), "k-point number mismatch: {} in header; {} in file".format( expected_k_points, read_k_points )
-        expected_bands = self.number_of_bands
-        read_bands = len( self.bands ) / self.number_of_k_points / self.k_point_blocks
+        expected_bands = self._number_of_bands
+        read_bands = len( self.bands ) / self._number_of_k_points / self._k_point_blocks
         assert( expected_bands == read_bands ), "band mismatch: {} in header; {} in file".format( expected_bands, read_bands )
-        read_occupancy = len(self.occupancy) / self.number_of_k_points / self.k_point_blocks
+        read_occupancy = len(self.occupancy) / self._number_of_k_points / self._k_point_blocks
         assert( expected_bands == read_occupancy ), "error parsing occupancy data: {} bands in file, {} occupancy data points".format( expected_bands, read_occupancy )
 
     @classmethod
@@ -227,8 +238,7 @@ class Procar:
 
     @classmethod
     def from_file( cls, filename, negative_occupancies='warn' ):
-        """
-        Create a Procar object by reading the projected wavefunction character of each band
+        """Create a Procar object by reading the projected wavefunction character of each band
         from a VASP PROCAR file.
 
         Args:
@@ -241,19 +251,20 @@ class Procar:
         
         Note:
             Valid options for `negative_occupancies` are:
-                `warn` (default): Warn that some partial occupancies are negative,
-                                  but do not alter any values.
-                `raise`:          Raise an AttributeError.
-                `ignore`:         Do nothing.
-                `zero`:           Negative partial occupancies will be set to zero.
+
+                - `warn` (default): Warn that some partial occupancies are negative,
+                                    but do not alter any values.
+                - `raise`:          Raise an AttributeError.
+                - `ignore`:         Do nothing.
+                - `zero`:           Negative partial occupancies will be set to zero.
+
         """
         pcar = cls()
         pcar.read_from_file( filename=filename, negative_occupancies=negative_occupancies )
         return pcar
         
     def read_from_file( self, filename, negative_occupancies='warn' ):
-        """
-        Reads the projected wavefunction character of each band from a VASP PROCAR file.
+        """Reads the projected wavefunction character of each band from a VASP PROCAR file.
 
         Args:
             filename (str): Filename of the PROCAR file.
@@ -265,18 +276,19 @@ class Procar:
         
         Note:
             Valid options for `negative_occupancies` are:
-                `warn` (default): Warn that some partial occupancies are negative,
-                                  but do not alter any values.
-                `raise`:          Raise an AttributeError.
-                `ignore`:         Do nothing.
-                `zero`:           Negative partial occupancies will be set to zero.
+
+                - `warn` (default): Warn that some partial occupancies are negative,
+                                    but do not alter any values.
+                - `raise`:          Raise an AttributeError.
+                - `ignore`:         Do nothing.
+                - `zero`:           Negative partial occupancies will be set to zero.
         """
         valid_negative_occupancies = [ 'warn', 'raise', 'ignore', 'zero' ]
         if negative_occupancies not in valid_negative_occupancies:
             raise ValueError( '"{}" is not a valid value for the keyword `negative_occupancies`.'.format( negative_occupancies ) )
         with open( filename, 'r' ) as file_in:
             file_in.readline()
-            self.number_of_k_points, self.number_of_bands, self.number_of_ions = [ int( f ) for f in get_numbers_from_string( file_in.readline() ) ]
+            self._number_of_k_points, self._number_of_bands, self._number_of_ions = [ int( f ) for f in get_numbers_from_string( file_in.readline() ) ]
             self.read_in = file_in.read()
         self.parse_k_points()
         self.parse_bands()
@@ -292,9 +304,34 @@ class Procar:
         self.sanity_check()
         self.read_in = None # clear memory
         if self.calculation[ 'spin_polarised' ]:
-            self.data = self.projection_data.reshape( self.spin_channels, self.number_of_k_points, self.number_of_bands, self.number_of_ions + 1, self.number_of_projections )[:,:,:,:,1:].swapaxes( 0, 1).swapaxes( 1, 2 )
+            self.data = self.projection_data.reshape( self._spin_channels, self._number_of_k_points, self._number_of_bands, self._number_of_ions+1, self._number_of_projections+1 )[:,:,:,:,1:].swapaxes( 0, 1).swapaxes( 1, 2 )
         else:
-            self.data = self.projection_data.reshape( self.number_of_k_points, self.number_of_bands, self.spin_channels, self.number_of_ions + 1, self.number_of_projections )[:,:,:,:,1:]
+            self.data = self.projection_data.reshape( self._number_of_k_points, self._number_of_bands, self._spin_channels, self._number_of_ions+1, self._number_of_projections+1 )[:,:,:,:,1:]
+
+    @property
+    def number_of_k_points( self ):
+        assert( self._number_of_k_points == self.data.shape[0] ), "Number of k-points in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_k_points, self.data.shape[0] )
+        return self._number_of_k_points
+
+    @property
+    def number_of_bands( self ):
+        assert( self._number_of_bands == self.data.shape[1] ), "Number of bands in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_bands, self.data.shape[1] )
+        return self._number_of_bands
+
+    @property
+    def spin_channels( self ):
+        assert( self._spin_channels == self.data.shape[2] ), "Number of spin channels in metadata ({}) not equal to number in PROCAR data ({})".format( self._spin_channels, self.data.shape[2] )
+        return self._spin_channels
+
+    @property
+    def number_of_ions( self ):
+        assert( self._number_of_ions == self.data.shape[3]-1 ), "Number of ions in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_ions, self.data.shape[3]-1 )
+        return self._number_of_ions
+
+    @property
+    def number_of_projections( self ):
+        assert (self._number_of_projections == self.data.shape[4]), "Number of projections in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_projections, self.data.shape[4] ) 
+        return self._number_of_projections
 
     def total_band_structure( self, spin ):
         # note: currently gives k-points linear spacing
@@ -331,22 +368,22 @@ class Procar:
         assert( spin <= self.k_point_blocks )
         assert( len( k_point_indices ) > 1 ) # we need at least 2 k-points
         band_energies = self.bands[:,1:].reshape( self.k_point_blocks, self.number_of_k_points, self.number_of_bands )
-        k_points = np.array( [ self.k_points[ k - 1 ].fractional_coordinates for k in k_point_indices ] )
+        frac_k_point_coords = np.array( [ self.k_points[ k - 1 ].frac_coords for k in k_point_indices ] )
         eigenvalues = np.array( [ band_energies[ spin - 1 ][ k - 1 ][ band_index - 1 ] for k in k_point_indices ] )
         if printing:
             print( '# h k l e' )
-            [ print( ' '.join( [ str( f ) for f in row ] ) ) for row in np.concatenate( ( k_points, np.array( [ eigenvalues ] ).T ), axis = 1 ) ]
+            [ print( ' '.join( [ str( f ) for f in row ] ) ) for row in np.concatenate( ( frac_k_point_coords, np.array( [ eigenvalues ] ).T ), axis = 1 ) ]
         reciprocal_lattice = reciprocal_lattice * 2 * math.pi * angstrom_to_bohr
-        cartesian_k_points = np.array( [ np.dot( k, reciprocal_lattice ) for k in k_points ] ) # convert k-points to cartesian
+        cart_k_point_coords = np.array( [ k.cart_coords( reciprocal_lattice ) for k in k_points ] ) # convert k-points to cartesian
         if len( k_point_indices ) == 2:
             effective_mass_function = two_point_effective_mass
         else:
             effective_mass_function = least_squares_effective_mass
-        return effective_mass_function( cartesian_k_points, eigenvalues )
+        return effective_mass_function( cart_k_point_coords, eigenvalues )
 
     def x_axis( self, reciprocal_lattice ):
         if reciprocal_lattice is not None:
-            cartesian_k_points = np.dot( np.array( [ k.fractional_coordinates for k in self.k_points ] ), reciprocal_lattice )
+            cartesian_k_points = np.array( [ k.cart_coords( reciprocal_lattice ) for k in k_points ] )
             x_axis = [ 0.0 ]
             for i in range( 1, len( cartesian_k_points ) ):
                 dk = cartesian_k_points[ i - 1 ] - cartesian_k_points[ i ]

@@ -17,15 +17,15 @@ class ProcarTestCase( unittest.TestCase ):
 
     def test_procar_is_initialised( self ):
         pcar = procar.Procar()
-        self.assertEqual( pcar.spin_channels, 1 )
-        self.assertEqual( pcar.number_of_k_points, None )
-        self.assertEqual( pcar.number_of_ions, None )
-        self.assertEqual( pcar.number_of_bands, None )
+        self.assertEqual( pcar._number_of_k_points, None )
+        self.assertEqual( pcar._number_of_bands, None )
+        self.assertEqual( pcar._spin_channels, 1 )
+        self.assertEqual( pcar._number_of_ions, None )
+        self.assertEqual( pcar._number_of_projections, None )
+        self.assertEqual( pcar._k_point_blocks, None )
         self.assertEqual( pcar.data, None )
         self.assertEqual( pcar.bands, None )
         self.assertEqual( pcar.occupancy, None )
-        self.assertEqual( pcar.number_of_projections, None )
-        self.assertEqual( pcar.k_point_blocks, None )
         self.assertEqual( pcar.calculation, { 'non_spin_polarised': False, 
                                               'non_collinear': False, 
                                               'spin_polarised': False } )
@@ -145,13 +145,13 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( combined_pcar.number_of_k_points, 16 )
  
 class ParserTestCase( unittest.TestCase ):
-    """Test for VASP output parsers"""
+    """Tests for VASP PROCAR parsers"""
 
     def test_k_points_are_parsed( self ):
         """Checking that k-points are parsed from PROCAR format strings"""
         procar_string = " k-point    1 :    0.50000000 0.25000000 0.75000000     weight = 0.00806452\nk-point    2 :    0.50000000 0.25735294 0.74264706     weight = 0.00806452"
         k_points = procar.k_point_parser( procar_string )
-        np.testing.assert_array_equal( [ k.fractional_coordinates for k in k_points ],
+        np.testing.assert_array_equal( [ k.frac_coords for k in k_points ],
             [ [ 0.50000000, 0.25000000, 0.75000000 ], 
               [ 0.50000000, 0.25735294, 0.74264706 ] ] )
         self.assertEqual( [ k.weight for k in k_points ],
@@ -161,7 +161,7 @@ class ParserTestCase( unittest.TestCase ):
         """Checking that negative k-points are parsed from PROCAR format strings"""
         procar_string = "  k-point  119 :   -0.01282051 0.00000000 0.00000000     weight = 0.00500000\n k-point  122 :    0.00000000-0.01282051 0.01282051     weight = 0.00500000\n k-point    1 :   -0.50000000 0.00000000-0.50000000     weight = 0.00500000"
         k_points = procar.k_point_parser( procar_string )
-        np.testing.assert_array_equal( [ k.fractional_coordinates for k in k_points ],
+        np.testing.assert_array_equal( [ k.frac_coords for k in k_points ],
             [ [-0.01282051,  0.00000000,  0.00000000], 
               [ 0.00000000, -0.01282051,  0.01282051],
               [-0.50000000,  0.00000000, -0.50000000]  ] )

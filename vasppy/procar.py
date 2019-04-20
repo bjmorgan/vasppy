@@ -8,7 +8,8 @@ import fortranformat as ff
 
 class KPoint():
 
-    def __init__( self, frac_coords, weight ):
+    def __init__( self, index, frac_coords, weight ):
+        self.index = index
         self.frac_coords = frac_coords
         self.weight = weight
 
@@ -25,19 +26,55 @@ class KPoint():
 
         """
         return np.dot( self.frac_coords, reciprocal_lattice )
-    
+
+    def __eq__( self, other ):
+        return ( ( self.index == other.index ) &
+                 ( self.frac_coords == other.frac_coords ).all() &
+                 ( self.weight == other.weight ) )
+
+    def __repr__( self ):
+        return "k-point {}: {} weight = {}".format( self.index, ' '.join( [ str(c) for c in self.frac_coords ] ), self.weight )
+
+def handle_occupancy( occupancy, negative_occupancies='warn' ):
+    valid_negative_occupancies = [ 'warn', 'raise', 'ignore', 'zero' ]
+    if negative_occupancies not in valid_negative_occupancies:
+        raise ValueError( "valid options for negative_occupancies are {}".format( valid_negative_occupancies ) )
+    if occupancy < 0:
+       if negative_occupancies == 'warn':
+           warnings.warn( "One or more occupancies in your PROCAR file are negative." )
+       elif negative_occupancies == 'raise':
+           raise ValueError( "One or more occupancies in your PROCAR file are negative." )
+       elif negative_occupancies == 'ignore':
+           pass
+       elif negative_occupancies == 'zero':
+           occupancy = 0.0
+    return occupancy
+
+class Band():
+
+    def __init__( self, index, energy, occupancy, negative_occupancies='warn' ):
+        self.index = index
+        self.energy = energy
+        self.occupancy = handle_occupancy( occupancy, negative_occupancies=negative_occupancies )
+
+    def __eq__( self, other ):
+        return ( ( self.index == other.index ) & 
+                 ( self.energy == other.energy ) & 
+                 ( self.occupancy == other.occupancy ) )
+
 def get_numbers_from_string( string ):
     p = re.compile('-?\d+[.\d]*')
     return [ float( s ) for s in p.findall( string ) ]
 
 def k_point_parser( string ):
-    regex = re.compile( 'k-point\s+\d+\s*:\s+([- ][01].\d{8})([- ][01].\d{8})([- ][01].\d{8})\s+weight = ([01].\d+)' )
+    regex = re.compile( 'k-point\s+(\d+)\s*:\s+([- ][01].\d{8})([- ][01].\d{8})([- ][01].\d{8})\s+weight = ([01].\d+)' )
     captured = regex.findall( string ) 
     k_points = []
     for kp in captured:
-        frac_coords = np.array( [ float(s) for s in kp[0:3] ] )
-        weight = float(kp[3])
-        k_points.append( KPoint( frac_coords=frac_coords, weight=weight ) )
+        index = int(kp[0])
+        frac_coords = np.array( [ float(s) for s in kp[1:4] ] )
+        weight = float(kp[4])
+        k_points.append( KPoint( index=index, frac_coords=frac_coords, weight=weight ) )
     return k_points
 
 def projections_parser( string ):
@@ -125,16 +162,15 @@ def least_squares_effective_mass( cartesian_k_points, eigenvalues ):
 
 class Procar:
     """
-    Object for working with PROCAR files.
+    Object for working with PROCAR data.
 
     Attributes:
         data (numpy.array(float)): A 5D numpy array that stores the projection data.
 
                     Axes are k-points, bands, spin-channels, ions and sum over ions, lm-projections.
 
-        bands (numpy.array(float)): A 2D numpy array containing [ band_no, energy ] pairs.
-        occupancy (numpy.array(float)): A 2D numpy array containing [ band_no, occupancy ] pairs.
-        k_points (list(KPoint)): A list of KPoint objects, that contain fractional coordinates and weights for each k-point.
+        bands (numpy.array(float)): A list of ``Band`` objects, that contain band index, energy, and occupancy data.
+        k_points (list(KPoint)): A list of ``KPoint`` objects, that contain fractional coordinates and weights for each k-point.
         number_of_k_points (int): The number of k-points.
         number_of_bands (int): The number of bands.
         spin_channels (int): Number of spin channels in the PROCAR data:
@@ -150,7 +186,7 @@ class Procar:
       
     """
 
-    def __init__( self, spin=1 ):
+    def __init__( self, spin=1, negative_occupancies='warn' ):
         self._spin_channels = spin # should be determined from PROCAR
         self._number_of_k_points = None
         self._number_of_ions = None
@@ -159,9 +195,15 @@ class Procar:
         self._k_point_blocks = None
         self.data = None
         self.bands = None
-        self.occupancy = None
         self.calculation = { 'non_spin_polarised': False, 'non_collinear': False, 'spin_polarised': False }
+        if negative_occupancies not in [ 'warn', 'raise', 'zero' ]:
+            raise ValueError( "negative_occupancies can be one of [ 'warn', 'raise', 'zero' ]" )
+        self.negative_occupancies = negative_occupancies
         #self.non_spin_polarised = None
+
+    @property
+    def occupancy( self ):
+        return np.array( [ [ band.index, band.occupancy ] for band in self.bands ] )
 
     def __add__( self, other ):
         if self.spin_channels != other.spin_channels:
@@ -179,9 +221,10 @@ class Procar:
         new_procar = deepcopy( self )
         new_procar.data = np.concatenate( ( self.data, other.data ) )
         new_procar._number_of_k_points = self.number_of_k_points + other.number_of_k_points
-        new_procar.bands = np.concatenate( ( self.bands, other.bands ) )
-        new_procar.occupancy = np.concatenate( ( self.occupancy, other.occupancy ) )
-        new_procar.k_points = self.k_points + other.k_points
+        new_procar.bands = deepcopy(self.bands) + deepcopy(other.bands)
+        new_procar.k_points = deepcopy(self.k_points) + deepcopy(other.k_points)
+        for i, kp in enumerate( new_procar.k_points, 1 ):
+            kp.index = i    
         new_procar.sanity_check()
         return new_procar
  
@@ -208,32 +251,23 @@ class Procar:
         self._number_of_projections = int( self.projection_data.shape[1] / ( self._number_of_ions + 1 ) ) - 1
 
     def parse_k_points( self ):
-        self.k_points = k_point_parser( self.read_in )
+        self.k_points = k_point_parser( self.read_in )[:self._number_of_k_points]
 
     def parse_bands( self ):
-        bands = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d\s]+)", self.read_in )
-        self.bands = np.array( bands, dtype = float )
-
-    def parse_occupancy(self):
-        occupancy = re.findall(r"band\s*(\d+)\s*#\s*energy\s*[-.\d\s]+\s*#\s"r"*occ.\s*([-.\d\s]+)", self.read_in)
-        self.occupancy = np.array(occupancy, dtype = float)
+        band_data = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d]+)\s?\s*#\s"r"*occ.\s*([-.\d]+)", self.read_in )
+        self.bands = [ Band( float(i), float(e), float(o), negative_occupancies=self.negative_occupancies ) for i, e, o in band_data ]
 
     def sanity_check( self ):
-        expected_k_points = self._number_of_k_points
-        read_k_points = len( self.k_points ) / self._k_point_blocks
-        assert( expected_k_points == read_k_points ), "k-point number mismatch: {} in header; {} in file".format( expected_k_points, read_k_points )
-        expected_bands = self._number_of_bands
+        assert( self._number_of_k_points == len( self.k_points ) ), "k-point number mismatch: {} in header; {} in file".format( self._number_of_k_points, len( self.k_points ) )
         read_bands = len( self.bands ) / self._number_of_k_points / self._k_point_blocks
-        assert( expected_bands == read_bands ), "band mismatch: {} in header; {} in file".format( expected_bands, read_bands )
-        read_occupancy = len(self.occupancy) / self._number_of_k_points / self._k_point_blocks
-        assert( expected_bands == read_occupancy ), "error parsing occupancy data: {} bands in file, {} occupancy data points".format( expected_bands, read_occupancy )
+        assert( self._number_of_bands == read_bands ), "band mismatch: {} in header; {} in file".format( self._number_of_bands, read_bands )
 
     @classmethod
     def from_files( cls, filenames, negative_occupancies='warn' ):
         """
         TODO
         """
-        pcars = [ cls.from_file( f ) for f in filenames ]
+        pcars = [ cls.from_file( f, negative_occupancies=negative_occupancies ) for f in filenames ]
         return sum( pcars )
 
     @classmethod
@@ -259,47 +293,26 @@ class Procar:
                 - `zero`:           Negative partial occupancies will be set to zero.
 
         """
-        pcar = cls()
-        pcar.read_from_file( filename=filename, negative_occupancies=negative_occupancies )
+        pcar = cls( negative_occupancies=negative_occupancies )
+        pcar.read_from_file( filename=filename )
         return pcar
         
-    def read_from_file( self, filename, negative_occupancies='warn' ):
+    def read_from_file( self, filename ):
         """Reads the projected wavefunction character of each band from a VASP PROCAR file.
 
         Args:
             filename (str): Filename of the PROCAR file.
-            negative_occupancies (:obj:Str, optional): Sets the behaviour for handling
-                negative occupancies. Default is `warn`. 
 
         Returns:
             None
         
-        Note:
-            Valid options for `negative_occupancies` are:
-
-                - `warn` (default): Warn that some partial occupancies are negative,
-                                    but do not alter any values.
-                - `raise`:          Raise an AttributeError.
-                - `ignore`:         Do nothing.
-                - `zero`:           Negative partial occupancies will be set to zero.
         """
-        valid_negative_occupancies = [ 'warn', 'raise', 'ignore', 'zero' ]
-        if negative_occupancies not in valid_negative_occupancies:
-            raise ValueError( '"{}" is not a valid value for the keyword `negative_occupancies`.'.format( negative_occupancies ) )
         with open( filename, 'r' ) as file_in:
             file_in.readline()
             self._number_of_k_points, self._number_of_bands, self._number_of_ions = [ int( f ) for f in get_numbers_from_string( file_in.readline() ) ]
             self.read_in = file_in.read()
         self.parse_k_points()
         self.parse_bands()
-        self.parse_occupancy()
-        if np.any( self.occupancy[:,1] < 0 ): # Handle negative occupancies
-            if negative_occupancies == 'warn':
-                warnings.warn( "One or more occupancies in your PROCAR file are negative." )
-            elif negative_occupancies == 'raise':
-                raise ValueError( "One or more occupancies in your PROCAR file are negative." )
-            elif negative_occupancies == 'zero':
-                self.occupancy[ self.occupancy < 0 ] = 0.0
         self.parse_projections()
         self.sanity_check()
         self.read_in = None # clear memory
@@ -394,10 +407,20 @@ class Procar:
             x_axis = np.arange( len( self.k_points ) )
         return x_axis
 
-    def write_file( self, filename ):
-        with open( filename, 'w' ) as f:
-            f.write( 'PROCAR lm decomposed\n' )
-            line = ff.FortranRecordWriter("'# of k-points:',I5,9X,'# of bands:',I5,9X,'# of ions:',I5")
-            f.write( line.write( [ self.number_of_k_points, self.number_of_bands, self.number_of_ions ] )+'\n' )
-            #for nk in self.k_points:
-            #f.write('\n'+ line.write(
+# TODO Need complete set of example PROCAR files before we start to write
+# something that can write these all back out in the appropriate format
+#    def write_file( self, filename ):
+#        if self.calculation['non_collinear']:
+#            raise NotImplementedError
+#        with open( filename, 'w' ) as f:
+#            f.write( 'PROCAR lm decomposed' )
+#            for s in range( self.spin_channels ): # not sure what happens for non-collinear calculations
+#                line = ff.FortranRecordWriter("/'# of k-points:',I5,9X,'# of bands:',I5,9X,'# of ions:',I5")
+#                f.write( line.write( [ self.number_of_k_points, self.number_of_bands, self.number_of_ions ] )+'\n' )
+#                for k_point in self.k_points:
+#                    line = ff.FortranRecordWriter("/' k-point ',I5,' :',3X,3F11.8,'     weight = ',F10.8/")
+#                    f.write( line.write( [ k_point.index, *k_point.frac_coords, k_point.weight ] ) )
+#                    for band in self.bands:
+#                        line = ff.FortranRecordWriter("/'band ',I5,' # energy',F14.8,' # occ.',F12.8/")
+#                        f.write( line.write( [ band.index, band.energy, band.occupancy ] ) )
+#                        f.write( '\nion      s     py     pz     px    dxy    dyz    dz2    dxz    dx2    tot\n' )

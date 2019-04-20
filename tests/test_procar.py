@@ -2,7 +2,7 @@ import unittest
 import os
 from vasppy import procar
 import numpy as np
-from unittest.mock import patch
+from unittest.mock import patch, call
 import warnings
 
 test_data_dir = 'test_data'
@@ -25,7 +25,6 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( pcar._k_point_blocks, None )
         self.assertEqual( pcar.data, None )
         self.assertEqual( pcar.bands, None )
-        self.assertEqual( pcar.occupancy, None )
         self.assertEqual( pcar.calculation, { 'non_spin_polarised': False, 
                                               'non_collinear': False, 
                                               'spin_polarised': False } )
@@ -46,65 +45,51 @@ class ProcarTestCase( unittest.TestCase ):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             pcar.read_from_file( test_procar_filename )
-        np.testing.assert_equal( pcar.bands, 
-                             np.array([[ 1., -13.17934476],
-                                       [ 2., -13.17934476],
-                                       [ 3., -13.16936722],
-                                       [ 4., -13.16936722],
-                                       [ 1., -13.1849117 ],
-                                       [ 2., -13.1849117 ],
-                                       [ 3., -13.16621473],
-                                       [ 4., -13.16621472]] ) )
+        np.testing.assert_equal( [ b.index for b in pcar.bands ], 
+                                 [ 1., 2., 3., 4., 1., 2., 3., 4. ] )
+        np.testing.assert_equal( [ b.energy for b in pcar.bands ], 
+                                 [ -13.17934476,
+                                   -13.17934476,
+                                   -13.16936722,
+                                   -13.16936722,
+                                   -13.1849117 ,
+                                   -13.1849117 ,
+                                   -13.16621473,
+                                   -13.16621472] )
+        np.testing.assert_equal( [ b.occupancy for b in pcar.bands ],
+                                 [ 1., 1., 1., 1., 1., 1., 1., -0.03191968 ] )
 
-    def test_procar_from_file_correctly_parses_occupancies( self ):
-        pcar = procar.Procar()
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            pcar.read_from_file( test_procar_filename )
-        np.testing.assert_equal( pcar.occupancy,
-                             np.array([[ 1., 1. ],
-                                       [ 2., 1. ],
-                                       [ 3., 1. ],
-                                       [ 4., 1. ],
-                                       [ 1., 1. ],
-                                       [ 2., 1. ],
-                                       [ 3., 1. ],
-                                       [ 4., -0.03191968]] ) )
-
-    def test_read_from_file_raises_valueerror_if_negative_occupancies_is_invalid( self ):
-        pcar = procar.Procar()
+    def test_band_init( self ):
+        index = 2
+        energy = 1.0
+        occupancy = 0.5
+        with patch( 'vasppy.procar.handle_occupancy' ) as mock_handle_occupancy:
+            mock_handle_occupancy.return_value = 0.5
+            band = procar.Band( index=index, energy=energy, occupancy=occupancy )
+        self.assertEqual( index, band.index )
+        self.assertEqual( energy, band.energy )
+        self.assertEqual( occupancy, band.occupancy )
+        mock_handle_occupancy.assert_has_calls( [call(0.5, negative_occupancies='warn')] )
+ 
+    def test_handle_occupancy_raises_valuerror_if_negative_occupancies_is_invalid_keyword( self ):
         with self.assertRaises( ValueError ):
-            pcar.read_from_file( test_procar_filename, negative_occupancies='foo' )
+            procar.handle_occupancy( 0.5, negative_occupancies='foo' ) 
 
-    def test_read_from_file_warns_about_negative_occupancies( self ):
-        pcar = procar.Procar()
+    def test_handle_occupancy_warns_about_negative_occupancies( self ):
         with warnings.catch_warnings( record=True ) as w:
-            pcar.read_from_file( test_procar_filename, negative_occupancies='warn' )
+            procar.handle_occupancy( -0.1, negative_occupancies='warn' )
             self.assertEqual( len(w), 1 )
             self.assertTrue( "negative" in str(w[-1].message) )
 
-    def test_read_from_file_raises_exception_if_negative_occupancies_is_raise( self ):
-        pcar = procar.Procar()
+    def test_handle_occupancy_raises_exception_if_negative_occupancies_is_raise( self ):
         with self.assertRaises( ValueError ):
-            pcar.read_from_file( test_procar_filename, negative_occupancies='raise' )
+            procar.handle_occupancy( -0.1, negative_occupancies='raise' )
 
-    def test_read_from_file_if_negative_occupancies_is_ignore( self ):
-        pcar = procar.Procar()
-        pcar.read_from_file( test_procar_filename, negative_occupancies='ignore' )
+    def test_handle_occupancy_if_negative_occupancies_is_ignore( self ):
+        self.assertEqual( procar.handle_occupancy( -0.1, negative_occupancies='ignore' ), -0.1 )
 
-    def test_read_from_file_zeros_occupancies_if_negative_occupancies_is_zero( self ):
-        pcar = procar.Procar()
-        pcar.read_from_file( test_procar_filename, negative_occupancies='zero' )
-        np.testing.assert_array_equal( pcar.occupancy[:,1],
-            np.array( [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0 ] ) )
-
-    def test_procar_occupation_values_are_read( self ):
-        pcar = procar.Procar()
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            pcar.read_from_file( test_procar_filename )
-            np.testing.assert_array_equal( pcar.occupancy[:,1], 
-                np.array( [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -0.03191968 ] ) )
+    def test_handle_occupancy_zeros_occupancies_if_negative_occupancies_is_zero( self ):
+        self.assertEqual( procar.handle_occupancy( -0.1, negative_occupancies='zero' ), 0.0 )
 
     def test_spin_polarised_procar_is_read_from_file( self ):
         """Checking that `PROCAR_spin_polarised_test` is read"""
@@ -127,9 +112,11 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( combined_pcar.number_of_ions, 22 )
         self.assertEqual( combined_pcar.number_of_bands, 4 )
         self.assertEqual( combined_pcar.number_of_k_points, 4 )
-        np.testing.assert_equal( combined_pcar.occupancy, np.vstack( ( pcar1.occupancy, pcar2.occupancy ) ) )
-        np.testing.assert_equal( combined_pcar.bands, np.vstack( ( pcar1.bands, pcar2.bands ) ) )
-        np.testing.assert_equal( combined_pcar.k_points, pcar1.k_points + pcar2.k_points )
+        np.testing.assert_equal( combined_pcar.bands, pcar1.bands + pcar2.bands )
+        for k1, k2 in zip( combined_pcar.k_points, pcar1.k_points + pcar2.k_points ):
+            np.testing.assert_equal( k1.frac_coords, k2.frac_coords )
+            self.assertEqual( k1.weight, k2.weight )
+        self.assertEqual( [ k.index for k in combined_pcar.k_points ], [ 1, 2, 3, 4 ] )
 
     def test___add___spin_polarised_procars( self ):
         pcar1 = procar.Procar()

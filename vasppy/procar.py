@@ -67,6 +67,22 @@ def get_numbers_from_string( string ):
     return [ float( s ) for s in p.findall( string ) ]
 
 def k_point_parser( string ):
+    """Parse k-point data from a PROCAR string.
+
+    Finds all lines of the form::
+
+         k-point    1 :    0.50000000 0.25000000 0.75000000     weight = 0.00806452
+
+    and extracts the k-point index, reciprocal fractional coordinates, and weight
+    into a :obj:`procar.KPoint` object.
+
+    Args:
+        string (str): String containing a full PROCAR file.
+
+    Returns:
+        (list(:obj:`procar.KPoint`)): A list of :obj:`procar.KPoint` objects.
+
+    """
     regex = re.compile( 'k-point\s+(\d+)\s*:\s+([- ][01].\d{8})([- ][01].\d{8})([- ][01].\d{8})\s+weight = ([01].\d+)' )
     captured = regex.findall( string ) 
     k_points = []
@@ -264,34 +280,47 @@ class Procar:
 
     @classmethod
     def from_files( cls, filenames, negative_occupancies='warn' ):
-        """
-        TODO
+        """Create a :obj:`Procar` object by reading the projected wavefunction character of each band
+        from a series of VASP ``PROCAR`` files.
+
+        Useful when e.g. a band-structure calculation has been split over multiple VASP calculations,
+        for example, when using hybrid functionals.
+
+        Args:
+            filename (str): Filename of the ``PROCAR`` file.
+            negative_occupancies (:obj:`Str`, optional): Select how negative occupancies are handled.
+                Options are:
+
+                    - ``warn`` (default): Warn that some partial occupancies are negative.
+                    - ``raise``:          Raise an AttributeError.
+                    - ``ignore``:         Do nothing.
+                    - ``zero``:           Negative partial occupancies will be set to zero.
+
+        Returns:
+            (:obj:`vasppy.Procar`)
+        
         """
         pcars = [ cls.from_file( f, negative_occupancies=negative_occupancies ) for f in filenames ]
         return sum( pcars )
 
     @classmethod
     def from_file( cls, filename, negative_occupancies='warn' ):
-        """Create a Procar object by reading the projected wavefunction character of each band
-        from a VASP PROCAR file.
+        """Create a :obj:`Procar` object by reading the projected wavefunction character of each band
+        from a VASP ``PROCAR`` file.
 
         Args:
-            filename (str): Filename of the PROCAR file.
-            negative_occupancies (:obj:Str, optional): Sets the behaviour for handling
-                negative occupancies. Default is `warn`. 
+            filename (str): Filename of the ``PROCAR`` file.
+            negative_occupancies (:obj:`Str`, optional): Select how negative occupancies are handled.
+                Options are:
+
+                    - ``warn`` (default): Warn that some partial occupancies are negative.
+                    - ``raise``:          Raise an AttributeError.
+                    - ``ignore``:         Do nothing.
+                    - ``zero``:           Negative partial occupancies will be set to zero.
 
         Returns:
-            (vasppy.Procar)
+            (:obj:`vasppy.Procar`)
         
-        Note:
-            Valid options for `negative_occupancies` are:
-
-                - `warn` (default): Warn that some partial occupancies are negative,
-                                    but do not alter any values.
-                - `raise`:          Raise an AttributeError.
-                - `ignore`:         Do nothing.
-                - `zero`:           Negative partial occupancies will be set to zero.
-
         """
         pcar = cls( negative_occupancies=negative_occupancies )
         pcar.read_from_file( filename=filename )
@@ -323,59 +352,65 @@ class Procar:
 
     @property
     def number_of_k_points( self ):
+        """The number of k-points described by this :obj:`Procar` object."""
         assert( self._number_of_k_points == self.data.shape[0] ), "Number of k-points in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_k_points, self.data.shape[0] )
         return self._number_of_k_points
 
     @property
     def number_of_bands( self ):
+        """The number of bands described by this :obj:`Procar` object."""
         assert( self._number_of_bands == self.data.shape[1] ), "Number of bands in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_bands, self.data.shape[1] )
         return self._number_of_bands
 
     @property
     def spin_channels( self ):
+        """The number of spin-channels described by this :obj:`Procar` object."""
         assert( self._spin_channels == self.data.shape[2] ), "Number of spin channels in metadata ({}) not equal to number in PROCAR data ({})".format( self._spin_channels, self.data.shape[2] )
         return self._spin_channels
 
     @property
     def number_of_ions( self ):
+        """The number of ions described by thie :obj:`Procar` object."""
         assert( self._number_of_ions == self.data.shape[3]-1 ), "Number of ions in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_ions, self.data.shape[3]-1 )
         return self._number_of_ions
 
     @property
     def number_of_projections( self ):
+        """The number of lm-projections described by this :obj:`Procar` object."""
         assert (self._number_of_projections == self.data.shape[4]), "Number of projections in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_projections, self.data.shape[4] ) 
         return self._number_of_projections
 
-    def total_band_structure( self, spin ):
-        # note: currently gives k-points linear spacing
-        # if we know the k-vectors for each k-point can instead use their geometric separations to give the correct k-point density
-        # note: correct k-spacing is already implemented in weighted_band_structure
-        assert( self.bands.shape == ( self.number_of_bands * self.number_of_k_points, 2 ) )
-        to_return = np.insert( band_energies, 0, range( 1, self.number_of_k_points + 1 ), axis = 1 )
-        return to_return
+    def print_weighted_band_structure( self, spins=None, ions=None, orbitals=None, scaling=1.0, e_fermi=0.0, reciprocal_lattice=None ):
+        band_structure_data = self.weighted_band_structure( spins=spins, ions=ions, orbitals=orbitals, scaling=scaling, e_fermi=e_fermi, reciprocal_lattice=reciprocal_lattice ) 
+        for i, band_data in enumerate( band_structure_data, 1 ):
+            print( '# band: {}'.format( i ) )
+            for k_point_data in band_data:
+                print( ' '.join( [ str(f) for f in k_point_data ] ) )
+            print()
 
-    def print_weighted_band_structure( self, spins = None, ions = None, orbitals = None, scaling = 1.0, e_fermi = 0.0, reciprocal_lattice = None ):
+    def weighted_band_structure( self, spins=None, ions=None, orbitals=None, scaling=1.0, e_fermi=0.0, reciprocal_lattice=None ):
         if spins:
             spins = [ s - 1 for s in spins ]
         else:
             spins = list( range( self.spin_channels ) )
         if not ions:
-            ions = [ self.number_of_ions ]
+            ions = list( range( self.number_of_ions ) )
         if not orbitals:
-            orbitals = [ self.data.shape[-1]-1 ] # !! NOT TESTED YET FOR f STATES !!
+            orbitals = list( range( self.number_of_projections ) )
         if self.calculation[ 'spin_polarised' ]:
-            band_energies = self.bands[:,1:].reshape( self.spin_channels, self.number_of_k_points, self.number_of_bands )[ spins[0] ].T
+            band_energies = np.array( [ band.energy for band in self.bands ] ).reshape( self.spin_channels, self.number_of_k_points, self.number_of_bands )[ spins[0] ].T
         else:
-            band_energies = self.bands[:,1:].reshape( self.number_of_k_points, self.number_of_bands ).T
+            band_energies = np.array( [ band.energy for band in self.bands ] ).reshape( self.number_of_k_points, self.number_of_bands ).T
         orbital_projection = np.sum( self.data[ :, :, :, :, orbitals ], axis = 4 )
         ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 )
         spin_projection = np.sum( ion_projection[ :, :, spins ], axis = 2 )
         x_axis = self.x_axis( reciprocal_lattice )
+        to_return = []
         for i in range( self.number_of_bands ):
-            print( '# band: {}'.format( i + 1 ) )
             for k, ( e, p ) in enumerate( zip( band_energies[i], spin_projection.T[i] ) ):
-                print( x_axis[ k ], e - e_fermi, p * scaling ) # k is the k_point index: currently gives linear k-point spacing
-            print()
+                to_return.append( [ x_axis[ k ], e - e_fermi, p * scaling ] )
+        to_return = np.array( to_return ).reshape( self.number_of_bands, -1, 3 )
+        return to_return
 
     def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, spin = 1, printing = False ):
         assert( spin <= self.k_point_blocks )

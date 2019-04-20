@@ -412,7 +412,7 @@ class Procar:
         to_return = np.array( to_return ).reshape( self.number_of_bands, -1, 3 )
         return to_return
 
-    def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, spin = 1, printing = False ):
+    def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, spin=1, printing=False ):
         assert( spin <= self.k_point_blocks )
         assert( len( k_point_indices ) > 1 ) # we need at least 2 k-points
         band_energies = self.bands[:,1:].reshape( self.k_point_blocks, self.number_of_k_points, self.number_of_bands )
@@ -429,7 +429,21 @@ class Procar:
             effective_mass_function = least_squares_effective_mass
         return effective_mass_function( cart_k_point_coords, eigenvalues )
 
-    def x_axis( self, reciprocal_lattice ):
+    def x_axis( self, reciprocal_lattice=None ):
+        """Generate the x-axis values for a band-structure plot.
+
+        Returns an array of cumulative distances in reciprocal space between sequential k-points.
+
+        Args:
+            reciprocal_lattice (:obj:`np.array`, optional): 3x3 Cartesian reciprocal lattice.    
+                Default is ``None``. If no reciprocal lattice is provided, the returned x-axis
+                values will be sequential integers, giving even spacings between sequential
+                k-points.
+        
+        Returns:
+            (np.array): An array of x-axis values.
+ 
+        """
         if reciprocal_lattice is not None:
             cartesian_k_points = np.array( [ k.cart_coords( reciprocal_lattice ) for k in k_points ] )
             x_axis = [ 0.0 ]

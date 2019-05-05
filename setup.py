@@ -50,6 +50,7 @@ setup(
                        'pymatgen',
                        'PyYAML', 
                        'coverage==4.3.4',
-                       'codeclimate-test-reporter' ],
+                       'codeclimate-test-reporter',
+                       'fortranformat' ],
     python_requires='>=3.5'
     )

@@ -55,7 +55,7 @@ class VASPMeta:
             (vasppy.VASPMeta): the VASPMeta object
         """
         with open( filename, 'r' ) as stream:
-            data = yaml.load( stream )
+            data = yaml.load( stream, Loader=yaml.SafeLoader )
             notes = data.get( 'notes' )
             v_type = data.get( 'type' )
             track = data.get( 'track' )

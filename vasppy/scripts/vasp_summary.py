@@ -39,7 +39,7 @@ def main():
         sys.exit()
     if args.file:
         with open( args.file, 'r' ) as stream:
-            settings = yaml.load( stream ) 
+            settings = yaml.load( stream, Loader=yaml.SafeLoader ) 
         if 'to_print' in settings:
             to_print = settings['to_print']
         if 'titles' in settings:

@@ -326,10 +326,14 @@ class Procar:
         
         """
         pcar = cls( negative_occupancies=negative_occupancies )
-        pcar.read_from_file( filename=filename )
+        pcar._read_from_file( filename=filename )
         return pcar
-        
+       
     def read_from_file( self, filename ):
+        warnings.warn( "read_from_file() is deprecated as a part of the public API.\nPlease use Procar.from_file() or Procar.from_files() instead" )
+        return self._read_from_file( filename=filename )
+ 
+    def _read_from_file( self, filename ):
         """Reads the projected wavefunction character of each band from a VASP PROCAR file.
 
         Args:

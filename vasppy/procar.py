@@ -209,8 +209,9 @@ class Procar:
         self._number_of_bands = None
         self._number_of_projections = None
         self._k_point_blocks = None
-        self.data = None
-        self.bands = None
+        self._data = None
+        self._bands = None
+        self._k_points = None
         self.calculation = { 'non_spin_polarised': False, 'non_collinear': False, 'spin_polarised': False }
         if negative_occupancies not in [ 'warn', 'raise', 'zero' ]:
             raise ValueError( "negative_occupancies can be one of [ 'warn', 'raise', 'zero' ]" )
@@ -219,7 +220,7 @@ class Procar:
 
     @property
     def occupancy( self ):
-        return np.array( [ [ band.index, band.occupancy ] for band in self.bands ] )
+        return np.array( [ [ band.index, band.occupancy ] for band in self._bands ] )
 
     def __add__( self, other ):
         if self.spin_channels != other.spin_channels:
@@ -235,13 +236,12 @@ class Procar:
         if self.calculation != other.calculation:
             raise ValueError( 'Can only concatenate Procars from equal calculations: {}, {}'.format( self.calculation, other.calculation ) )
         new_procar = deepcopy( self )
-        new_procar.data = np.concatenate( ( self.data, other.data ) )
+        new_procar._data = np.concatenate( ( self._data, other._data ), axis=0 )
         new_procar._number_of_k_points = self.number_of_k_points + other.number_of_k_points
-        new_procar.bands = []
-        new_procar.bands = np.ravel( np.concatenate( [ self.organised_bands(), 
-            other.organised_bands() ], axis=1 ) )
-        new_procar.k_points = deepcopy(self.k_points) + deepcopy(other.k_points)
-        for i, kp in enumerate( new_procar.k_points, 1 ):
+        new_procar._bands = []
+        new_procar._bands = np.ravel( np.concatenate( [ self.bands, other.bands ], axis=1 ) )
+        new_procar._k_points = self._k_points + other._k_points
+        for i, kp in enumerate( new_procar._k_points, 1 ):
             kp.index = i    
         new_procar.sanity_check()
         return new_procar
@@ -269,15 +269,15 @@ class Procar:
         self._number_of_projections = int( self.projection_data.shape[1] / ( self._number_of_ions + 1 ) ) - 1
 
     def parse_k_points( self ):
-        self.k_points = k_point_parser( self.read_in )[:self._number_of_k_points]
+        self._k_points = k_point_parser( self.read_in )[:self._number_of_k_points]
 
     def parse_bands( self ):
         band_data = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d]+)\s?\s*#\s"r"*occ.\s*([-.\d]+)", self.read_in )
-        self.bands = np.array( [ Band( float(i), float(e), float(o), negative_occupancies=self.negative_occupancies ) for i, e, o in band_data ] )
+        self._bands = np.array( [ Band( float(i), float(e), float(o), negative_occupancies=self.negative_occupancies ) for i, e, o in band_data ] )
 
     def sanity_check( self ):
-        assert( self._number_of_k_points == len( self.k_points ) ), "k-point number mismatch: {} in header; {} in file".format( self._number_of_k_points, len( self.k_points ) )
-        read_bands = len( self.bands ) / self._number_of_k_points / self._k_point_blocks
+        assert( self._number_of_k_points == len( self._k_points ) ), "k-point number mismatch: {} in header; {} in file".format( self._number_of_k_points, len( self._k_points ) )
+        read_bands = len( self._bands ) / self._number_of_k_points / self._k_point_blocks
         assert( self._number_of_bands == read_bands ), "band mismatch: {} in header; {} in file".format( self._number_of_bands, read_bands )
 
     @classmethod
@@ -348,38 +348,38 @@ class Procar:
         self.sanity_check()
         self.read_in = None # clear memory
         if self.calculation[ 'spin_polarised' ]:
-            self.data = self.projection_data.reshape( self._spin_channels, self._number_of_k_points, self._number_of_bands, self._number_of_ions+1, self._number_of_projections+1 )[:,:,:,:,1:].swapaxes( 0, 1).swapaxes( 1, 2 )
+            self._data = self.projection_data.reshape( self._spin_channels, self._number_of_k_points, self._number_of_bands, self._number_of_ions+1, self._number_of_projections+1 )[:,:,:,:,1:].swapaxes( 0, 1).swapaxes( 1, 2 )
         else:
-            self.data = self.projection_data.reshape( self._number_of_k_points, self._number_of_bands, self._spin_channels, self._number_of_ions+1, self._number_of_projections+1 )[:,:,:,:,1:]
+            self._data = self.projection_data.reshape( self._number_of_k_points, self._number_of_bands, self._spin_channels, self._number_of_ions+1, self._number_of_projections+1 )[:,:,:,:,1:]
 
     @property
     def number_of_k_points( self ):
         """The number of k-points described by this :obj:`Procar` object."""
-        assert( self._number_of_k_points == self.data.shape[0] ), "Number of k-points in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_k_points, self.data.shape[0] )
+        assert( self._number_of_k_points == self._data.shape[0] ), "Number of k-points in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_k_points, self._data.shape[0] )
         return self._number_of_k_points
 
     @property
     def number_of_bands( self ):
         """The number of bands described by this :obj:`Procar` object."""
-        assert( self._number_of_bands == self.data.shape[1] ), "Number of bands in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_bands, self.data.shape[1] )
+        assert( self._number_of_bands == self._data.shape[1] ), "Number of bands in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_bands, self._data.shape[1] )
         return self._number_of_bands
 
     @property
     def spin_channels( self ):
         """The number of spin-channels described by this :obj:`Procar` object."""
-        assert( self._spin_channels == self.data.shape[2] ), "Number of spin channels in metadata ({}) not equal to number in PROCAR data ({})".format( self._spin_channels, self.data.shape[2] )
+        assert( self._spin_channels == self._data.shape[2] ), "Number of spin channels in metadata ({}) not equal to number in PROCAR data ({})".format( self._spin_channels, self._data.shape[2] )
         return self._spin_channels
 
     @property
     def number_of_ions( self ):
         """The number of ions described by thie :obj:`Procar` object."""
-        assert( self._number_of_ions == self.data.shape[3]-1 ), "Number of ions in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_ions, self.data.shape[3]-1 )
+        assert( self._number_of_ions == self._data.shape[3]-1 ), "Number of ions in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_ions, self._data.shape[3]-1 )
         return self._number_of_ions
 
     @property
     def number_of_projections( self ):
         """The number of lm-projections described by this :obj:`Procar` object."""
-        assert (self._number_of_projections == self.data.shape[4]), "Number of projections in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_projections, self.data.shape[4] ) 
+        assert (self._number_of_projections == self._data.shape[4]), "Number of projections in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_projections, self._data.shape[4] ) 
         return self._number_of_projections
 
     def print_weighted_band_structure( self, spins=None, ions=None, orbitals=None, scaling=1.0, e_fermi=0.0, reciprocal_lattice=None ):
@@ -400,10 +400,10 @@ class Procar:
         if not orbitals:
             orbitals = list( range( self.number_of_projections ) )
         if self.calculation[ 'spin_polarised' ]:
-            band_energies = np.array( [ band.energy for band in self.bands ] ).reshape( self.spin_channels, self.number_of_k_points, self.number_of_bands )[ spins[0] ].T
+            band_energies = np.array( [ band.energy for band in self._bands ] ).reshape( self.spin_channels, self.number_of_k_points, self.number_of_bands )[ spins[0] ].T
         else:
-            band_energies = np.array( [ band.energy for band in self.bands ] ).reshape( self.number_of_k_points, self.number_of_bands ).T
-        orbital_projection = np.sum( self.data[ :, :, :, :, orbitals ], axis = 4 )
+            band_energies = np.array( [ band.energy for band in self._bands ] ).reshape( self.number_of_k_points, self.number_of_bands ).T
+        orbital_projection = np.sum( self._data[ :, :, :, :, orbitals ], axis = 4 )
         ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 )
         spin_projection = np.sum( ion_projection[ :, :, spins ], axis = 2 )
         x_axis = self.x_axis( reciprocal_lattice )
@@ -417,8 +417,8 @@ class Procar:
     def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, spin=1, printing=False ):
         assert( spin <= self.k_point_blocks )
         assert( len( k_point_indices ) > 1 ) # we need at least 2 k-points
-        band_energies = self.bands[:,1:].reshape( self.k_point_blocks, self.number_of_k_points, self.number_of_bands )
-        frac_k_point_coords = np.array( [ self.k_points[ k - 1 ].frac_coords for k in k_point_indices ] )
+        band_energies = self._bands[:,1:].reshape( self.k_point_blocks, self.number_of_k_points, self.number_of_bands )
+        frac_k_point_coords = np.array( [ self._k_points[ k - 1 ].frac_coords for k in k_point_indices ] )
         eigenvalues = np.array( [ band_energies[ spin - 1 ][ k - 1 ][ band_index - 1 ] for k in k_point_indices ] )
         if printing:
             print( '# h k l e' )
@@ -455,27 +455,29 @@ class Procar:
                 x_axis.append( mod_dk + x_axis[-1] )
             x_axis = np.array( x_axis )
         else:
-            x_axis = np.arange( len( self.k_points ) )
+            x_axis = np.arange( len( self._k_points ) )
         return x_axis
 
-    def organised_bands( self ):
-        return self.bands.reshape( self._k_point_blocks, 
-                                   self._number_of_k_points, 
-                                   self.number_of_bands )
-        
+    @property
+    def bands( self ):
+        return self._bands.reshape( self._k_point_blocks, 
+                                    self._number_of_k_points, 
+                                    self.number_of_bands )
+       
+    @property
+    def k_points( self ):
+        return self._k_points
+ 
     def select_bands_by_kpoint( self, band_indices ):
-        return np.ravel( self.organised_bands()[:,band_indices,:] )
-
-    def select_bands_by_block( self, block_indices ):
-        return np.ravel( self.organised_bands()[block_indices,:,:] )
+        return np.ravel( self.bands[:,band_indices,:] )
 
     def select_k_points( self, band_indices ):
         new_procar = deepcopy( self )
-        new_procar.bands = new_procar.select_bands_by_kpoint( band_indices )
-        new_procar.data = np.array( [ kp for i, kp in enumerate( new_procar.data ) if i in band_indices ] )
+        new_procar._bands = np.ravel( new_procar.bands[:,band_indices,:] )
+        new_procar._data = np.array( [ kp for i, kp in enumerate( new_procar._data ) if i in band_indices ] )
         new_procar._number_of_k_points = len( band_indices )
-        new_procar.k_points = [ kp for i, kp in enumerate( new_procar.k_points ) if i in band_indices ]
-        for i, kp in enumerate( new_procar.k_points, 1 ):
+        new_procar._k_points = [ kp for i, kp in enumerate( new_procar._k_points ) if i in band_indices ]
+        for i, kp in enumerate( new_procar._k_points, 1 ):
             kp.index = i
         new_procar.sanity_check()
         return new_procar

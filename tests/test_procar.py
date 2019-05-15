@@ -90,8 +90,9 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( pcar._number_of_ions, None )
         self.assertEqual( pcar._number_of_projections, None )
         self.assertEqual( pcar._k_point_blocks, None )
-        self.assertEqual( pcar.data, None )
-        self.assertEqual( pcar.bands, None )
+        self.assertEqual( pcar._data, None )
+        self.assertEqual( pcar._bands, None )
+        self.assertEqual( pcar._k_points, None )
         self.assertEqual( pcar.calculation, { 'non_spin_polarised': False, 
                                               'non_collinear': False, 
                                               'spin_polarised': False } )
@@ -112,9 +113,9 @@ class ProcarTestCase( unittest.TestCase ):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             pcar.read_from_file( test_procar_filename )
-        np.testing.assert_equal( [ b.index for b in pcar.bands ], 
+        np.testing.assert_equal( [ b.index for b in pcar._bands ], 
                                  [ 1., 2., 3., 4., 1., 2., 3., 4. ] )
-        np.testing.assert_equal( [ b.energy for b in pcar.bands ], 
+        np.testing.assert_equal( [ b.energy for b in pcar._bands ], 
                                  [ -13.17934476,
                                    -13.17934476,
                                    -13.16936722,
@@ -123,7 +124,7 @@ class ProcarTestCase( unittest.TestCase ):
                                    -13.1849117 ,
                                    -13.16621473,
                                    -13.16621472] )
-        np.testing.assert_equal( [ b.occupancy for b in pcar.bands ],
+        np.testing.assert_equal( [ b.occupancy for b in pcar._bands ],
                                  [ 1., 1., 1., 1., 1., 1., 1., -0.03191968 ] )
 
     def test_spin_polarised_procar_is_read_from_file( self ):
@@ -147,9 +148,9 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( combined_pcar.number_of_ions, 22 )
         self.assertEqual( combined_pcar.number_of_bands, 4 )
         self.assertEqual( combined_pcar.number_of_k_points, 4 )
-        expected_bands = np.ravel( np.concatenate( [ pcar1.organised_bands(),
-                             pcar2.organised_bands() ], axis=1 ) )
-        np.testing.assert_equal( combined_pcar.bands, expected_bands )
+        expected_bands = np.ravel( np.concatenate( [ pcar1.bands,
+                                                     pcar2.bands ], axis=1 ) )
+        np.testing.assert_equal( combined_pcar._bands, expected_bands )
         for k1, k2 in zip( combined_pcar.k_points, pcar1.k_points + pcar2.k_points ):
             np.testing.assert_equal( k1.frac_coords, k2.frac_coords )
             self.assertEqual( k1.weight, k2.weight )

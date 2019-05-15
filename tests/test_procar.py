@@ -147,7 +147,9 @@ class ProcarTestCase( unittest.TestCase ):
         self.assertEqual( combined_pcar.number_of_ions, 22 )
         self.assertEqual( combined_pcar.number_of_bands, 4 )
         self.assertEqual( combined_pcar.number_of_k_points, 4 )
-        np.testing.assert_equal( combined_pcar.bands, pcar1.bands + pcar2.bands )
+        expected_bands = np.ravel( np.concatenate( [ pcar1.organised_bands(),
+                             pcar2.organised_bands() ], axis=1 ) )
+        np.testing.assert_equal( combined_pcar.bands, expected_bands )
         for k1, k2 in zip( combined_pcar.k_points, pcar1.k_points + pcar2.k_points ):
             np.testing.assert_equal( k1.frac_coords, k2.frac_coords )
             self.assertEqual( k1.weight, k2.weight )

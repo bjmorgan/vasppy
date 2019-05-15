@@ -185,8 +185,8 @@ class Procar:
 
                     Axes are k-points, bands, spin-channels, ions and sum over ions, lm-projections.
 
-        bands (numpy.array(float)): A list of ``Band`` objects, that contain band index, energy, and occupancy data.
-        k_points (list(KPoint)): A list of ``KPoint`` objects, that contain fractional coordinates and weights for each k-point.
+        bands (numpy.array(:obj:`Band`)): A numpy array of ``Band`` objects, that contain band index, energy, and occupancy data.
+        k_points (numpy.array(:obj:`KPoint`)): A numpy array of ``KPoint`` objects, that contain fractional coordinates and weights for each k-point.
         number_of_k_points (int): The number of k-points.
         number_of_bands (int): The number of bands.
         spin_channels (int): Number of spin channels in the PROCAR data:
@@ -237,7 +237,9 @@ class Procar:
         new_procar = deepcopy( self )
         new_procar.data = np.concatenate( ( self.data, other.data ) )
         new_procar._number_of_k_points = self.number_of_k_points + other.number_of_k_points
-        new_procar.bands = deepcopy(self.bands) + deepcopy(other.bands)
+        new_procar.bands = []
+        new_procar.bands = np.ravel( np.concatenate( [ self.organised_bands(), 
+            other.organised_bands() ], axis=1 ) )
         new_procar.k_points = deepcopy(self.k_points) + deepcopy(other.k_points)
         for i, kp in enumerate( new_procar.k_points, 1 ):
             kp.index = i    
@@ -271,7 +273,7 @@ class Procar:
 
     def parse_bands( self ):
         band_data = re.findall( r"band\s*(\d+)\s*#\s*energy\s*([-.\d]+)\s?\s*#\s"r"*occ.\s*([-.\d]+)", self.read_in )
-        self.bands = [ Band( float(i), float(e), float(o), negative_occupancies=self.negative_occupancies ) for i, e, o in band_data ]
+        self.bands = np.array( [ Band( float(i), float(e), float(o), negative_occupancies=self.negative_occupancies ) for i, e, o in band_data ] )
 
     def sanity_check( self ):
         assert( self._number_of_k_points == len( self.k_points ) ), "k-point number mismatch: {} in header; {} in file".format( self._number_of_k_points, len( self.k_points ) )
@@ -455,6 +457,28 @@ class Procar:
         else:
             x_axis = np.arange( len( self.k_points ) )
         return x_axis
+
+    def organised_bands( self ):
+        return self.bands.reshape( self._k_point_blocks, 
+                                   self._number_of_k_points, 
+                                   self.number_of_bands )
+        
+    def select_bands_by_kpoint( self, band_indices ):
+        return np.ravel( self.organised_bands()[:,band_indices,:] )
+
+    def select_bands_by_block( self, block_indices ):
+        return np.ravel( self.organised_bands()[block_indices,:,:] )
+
+    def select_k_points( self, band_indices ):
+        new_procar = deepcopy( self )
+        new_procar.bands = new_procar.select_bands_by_kpoint( band_indices )
+        new_procar.data = np.array( [ kp for i, kp in enumerate( new_procar.data ) if i in band_indices ] )
+        new_procar._number_of_k_points = len( band_indices )
+        new_procar.k_points = [ kp for i, kp in enumerate( new_procar.k_points ) if i in band_indices ]
+        for i, kp in enumerate( new_procar.k_points, 1 ):
+            kp.index = i
+        new_procar.sanity_check()
+        return new_procar
 
 # TODO Need complete set of example PROCAR files before we start to write
 # something that can write these all back out in the appropriate format

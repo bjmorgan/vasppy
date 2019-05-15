@@ -5,6 +5,7 @@ import warnings
 from .units import angstrom_to_bohr, ev_to_hartree
 from copy import deepcopy
 import fortranformat as ff
+from functools import reduce
 
 class KPoint():
 
@@ -303,7 +304,7 @@ class Procar:
         
         """
         pcars = [ cls.from_file( f, negative_occupancies=negative_occupancies ) for f in filenames ]
-        return sum( pcars )
+        return reduce( cls.__add__, pcars )
 
     @classmethod
     def from_file( cls, filename, negative_occupancies='warn' ):

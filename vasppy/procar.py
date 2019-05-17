@@ -282,7 +282,7 @@ class Procar:
         assert( self._number_of_bands == read_bands ), "band mismatch: {} in header; {} in file".format( self._number_of_bands, read_bands )
 
     @classmethod
-    def from_files( cls, filenames, negative_occupancies='warn' ):
+    def from_files( cls, filenames, **kwargs ):
         """Create a :obj:`Procar` object by reading the projected wavefunction character of each band
         from a series of VASP ``PROCAR`` files.
 
@@ -291,23 +291,18 @@ class Procar:
 
         Args:
             filename (str): Filename of the ``PROCAR`` file.
-            negative_occupancies (:obj:`Str`, optional): Select how negative occupancies are handled.
-                Options are:
-
-                    - ``warn`` (default): Warn that some partial occupancies are negative.
-                    - ``raise``:          Raise an AttributeError.
-                    - ``ignore``:         Do nothing.
-                    - ``zero``:           Negative partial occupancies will be set to zero.
+            **kwargs: See the ``from_file()`` method for a description of keyword arguments.
 
         Returns:
             (:obj:`vasppy.Procar`)
         
         """
-        pcars = [ cls.from_file( f, negative_occupancies=negative_occupancies ) for f in filenames ]
+        pcars = [ cls.from_file( f, **kwargs ) for f in filenames ]
         return reduce( cls.__add__, pcars )
 
     @classmethod
-    def from_file( cls, filename, negative_occupancies='warn' ):
+    def from_file( cls, filename, negative_occupancies='warn',
+                   select_zero_weighted_k_points=False ):
         """Create a :obj:`Procar` object by reading the projected wavefunction character of each band
         from a VASP ``PROCAR`` file.
 
@@ -320,6 +315,8 @@ class Procar:
                     - ``raise``:          Raise an AttributeError.
                     - ``ignore``:         Do nothing.
                     - ``zero``:           Negative partial occupancies will be set to zero.
+            select_zero_weighted_k_points (:obj:`bool`, optional): Set to ``True`` to only 
+                read in zero-weighted k-points from the ``PROCAR`` file. Default is ``False``.
 
         Returns:
             (:obj:`vasppy.Procar`)
@@ -327,6 +324,9 @@ class Procar:
         """
         pcar = cls( negative_occupancies=negative_occupancies )
         pcar._read_from_file( filename=filename )
+        if select_zero_weighted_k_points:
+            k_point_indices = [ i for i, kp in enumerate( pcar.k_points ) if kp.weight == 0.0 ]
+            pcar = pcar.select_k_points( k_point_indices )
         return pcar
        
     def read_from_file( self, filename ):

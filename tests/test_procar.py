@@ -102,7 +102,7 @@ class ProcarTestCase( unittest.TestCase ):
         pcar = procar.Procar()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            pcar.read_from_file( test_procar_filename )
+            pcar._read_from_file( test_procar_filename )
         self.assertEqual( pcar.spin_channels, 4 )
         self.assertEqual( pcar.number_of_ions, 22 )
         self.assertEqual( pcar.number_of_bands, 4 )
@@ -112,7 +112,7 @@ class ProcarTestCase( unittest.TestCase ):
         pcar = procar.Procar()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            pcar.read_from_file( test_procar_filename )
+            pcar._read_from_file( test_procar_filename )
         np.testing.assert_equal( [ b.index for b in pcar._bands ], 
                                  [ 1., 2., 3., 4., 1., 2., 3., 4. ] )
         np.testing.assert_equal( [ b.energy for b in pcar._bands ], 
@@ -130,7 +130,9 @@ class ProcarTestCase( unittest.TestCase ):
     def test_spin_polarised_procar_is_read_from_file( self ):
         """Checking that `PROCAR_spin_polarised_test` is read"""
         pcar = procar.Procar()
-        pcar.read_from_file( test_procar_spin_polarised_filename )
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            pcar._read_from_file( test_procar_spin_polarised_filename )
         self.assertEqual( pcar.spin_channels, 2 )
         self.assertEqual( pcar.number_of_ions, 25 )
         self.assertEqual( pcar.number_of_bands, 112 )
@@ -141,8 +143,8 @@ class ProcarTestCase( unittest.TestCase ):
         pcar2 = procar.Procar()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            pcar1.read_from_file( test_procar_filename )
-            pcar2.read_from_file( test_procar_filename )
+            pcar1._read_from_file( test_procar_filename )
+            pcar2._read_from_file( test_procar_filename )
         combined_pcar = pcar1 + pcar2
         self.assertEqual( combined_pcar.spin_channels, 4 )
         self.assertEqual( combined_pcar.number_of_ions, 22 )
@@ -161,8 +163,8 @@ class ProcarTestCase( unittest.TestCase ):
         pcar2 = procar.Procar()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            pcar1.read_from_file( test_procar_spin_polarised_filename )
-            pcar2.read_from_file( test_procar_spin_polarised_filename )
+            pcar1._read_from_file( test_procar_spin_polarised_filename )
+            pcar2._read_from_file( test_procar_spin_polarised_filename )
         combined_pcar = pcar1 + pcar2
         self.assertEqual( combined_pcar.spin_channels, 2 )
         self.assertEqual( combined_pcar.number_of_ions, 25 )

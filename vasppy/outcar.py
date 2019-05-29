@@ -97,7 +97,6 @@ def forces_from_outcar( filename='OUTCAR' ):
         (np.array): The force as found in the ``OUTCAR`` file, as a NSTEPS x NIONS x 3 numpy array.
 
     """
-    # https://gist.github.com/gVallverdu/0e232988f32109b5dc6202cf193a49fb
     outcar = Outcar("OUTCAR")
     forces = outcar.read_table_pattern(
         header_pattern=r"\sPOSITION\s+TOTAL-FORCE \(eV/Angst\)\n\s-+",
@@ -108,4 +107,23 @@ def forces_from_outcar( filename='OUTCAR' ):
     )
     return np.array( forces )
 
+def coords_from_outcar( filename='OUTCAR' ):
+    """Finds and returns Cartesian coordinates from the OUTCAR file.
+      
+    Args:
+        filename (:obj:'str', optional): the name of the ``OUTCAR`` file to be read. Default is `OUTCAR`.
+
+    Returns:
+        (np.array): The Cartesian coordinates as found in the ``OUTCAR`` file, as a NSTEPS x NIONS x 3 numpy array.
+
+    """
+    outcar = Outcar("OUTCAR")
+    coords = outcar.read_table_pattern(
+        header_pattern=r"\sPOSITION\s+TOTAL-FORCE \(eV/Angst\)\n\s-+",
+        row_pattern=r"\s+[+-]?(\d+\.\d+)\s+[+-]?(\d+\.\d+)\s+[+-]?(\d+\.\d+)\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+",
+        footer_pattern=r"\s--+",
+        postprocess=lambda x: float(x),
+        last_one_only=False
+    )
+    return np.array( coords )
       

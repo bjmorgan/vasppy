@@ -1,5 +1,6 @@
 import numpy as np
 import re
+from pymatgen.io.vasp.outputs import Outcar
 
 def reciprocal_lattice_from_outcar( filename ): # from https://github.com/MaterialsDiscovery/PyChemia
     """
@@ -70,12 +71,14 @@ def potcar_eatom_list_from_outcar( filename='OUTCAR' ):
 
 
 def fermi_energy_from_outcar( filename='OUTCAR' ):
-    """Finds and returns the fermi energy.
+    """Finds and returns the Fermi energy.
+
     Args:
-    -filename: the name of the outcar file to be read
+        filename (:obj:'str', optional): the name of the ``OUTCAR`` file to be read. Default is `OUTCAR`.
 
     Returns:
-        (Float): The fermi energy as found in the OUTCAR 
+        (Float): The Fermi energy as found in the ``OUTCAR`` file.
+
     """
     outcar = open(filename, "r").read()
     # returns a match object
@@ -83,3 +86,26 @@ def fermi_energy_from_outcar( filename='OUTCAR' ):
     # take the first group - group(0) contains entire match
     fermi_energy = float(fermi_energy.group(1))
     return fermi_energy
+
+def forces_from_outcar( filename='OUTCAR' ):
+    """Finds and returns forces from the OUTCAR file.
+      
+    Args:
+        filename (:obj:'str', optional): the name of the ``OUTCAR`` file to be read. Default is `OUTCAR`.
+
+    Returns:
+        (np.array): The force as found in the ``OUTCAR`` file, as a NSTEPS x NIONS x 3 numpy array.
+
+    """
+    # https://gist.github.com/gVallverdu/0e232988f32109b5dc6202cf193a49fb
+    outcar = Outcar("OUTCAR")
+    forces = outcar.read_table_pattern(
+        header_pattern=r"\sPOSITION\s+TOTAL-FORCE \(eV/Angst\)\n\s-+",
+        row_pattern=r"\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+\s+([+-]?\d+\.\d+)\s+([+-]?\d+\.\d+)\s+([+-]?\d+\.\d+)",
+        footer_pattern=r"\s--+",
+        postprocess=lambda x: float(x),
+        last_one_only=False
+    )
+    return np.array( forces )
+
+      

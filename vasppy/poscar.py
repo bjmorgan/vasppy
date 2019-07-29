@@ -147,8 +147,8 @@ class Poscar:
             [ print( ''.join( ['   {: .10f}'.format( element ) for element in row ] ) ) for row in self.cell.matrix ]
             print( ' '.join( self.atoms ) )
             print( ' '.join( [ str(n) for n in self.atom_numbers ] ) )
-            if opts['selective']:
-                print( 'Selective Dynamics' )
+            if opts.get('selective'):
+                print('Selective Dynamics') 
             print( coordinate_type )
         self.output_coordinates_only( coordinate_type=coordinate_type, opts=opts )
 

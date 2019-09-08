@@ -1,18 +1,19 @@
 #! /usr/bin/env python3
 
-from vasppy.xdatcar import Xdatcar
-from vasppy.rdf import Rdf
+from pymatgen.io.vasp import Xdatcar
+from vasppy.rdf import RadialDistributionFunction
 import argparse
 import copy
 import math
+import numpy as np
 
 def parse_command_line_arguments():
     # command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument( 'xdatcar' )
-    parser.add_argument( 'label', nargs = 2 )
-    parser.add_argument( 'max_r', type = float )
-    parser.add_argument( 'n_bins', type = int )
+    parser.add_argument( 'label', nargs=2 )
+    parser.add_argument( 'max_r', type=float )
+    parser.add_argument( 'n_bins', type=int )
     args = parser.parse_args()
     return( args )
 
@@ -22,14 +23,19 @@ def main():
     number_of_bins = args.n_bins
     species_1 = args.label[ 0 ]
     species_2 = args.label[ 1 ]
-    xdatcar = Xdatcar()
-    xdatcar.read_from( args.xdatcar )
-    rdf = Rdf( max_r = max_r, number_of_bins = number_of_bins )
-    volume_scaling_factor = 4.0 * math.pi / ( 3.0 * xdatcar.poscar[0].cell.volume())
-    for poscar in xdatcar.poscar:
-        rdf += poscar.to_configuration().partial_rdf( species_1, species_2, max_r = max_r, number_of_bins = number_of_bins )
-    print( rdf.normalised_data() )
-    #[ print( dr, g_of_r / volume_scaling_factor ) for dr, g_of_r in rdf.normalised_data() ]
+    xdatcar = Xdatcar( args.xdatcar )
+    indices_i = [ i for i, s in enumerate(xdatcar.structures[0]) 
+                  if s.species_string == species_1 ]
+    if not indices_i:
+        raise ValueError( f'No species {species_1} found' )
+    indices_j = [ i for i, s in enumerate(xdatcar.structures[0]) 
+                  if s.species_string == species_2 ]
+    if not indices_j:
+        raise ValueError( f'No species {species_2} found' )
+    rdf = RadialDistributionFunction( xdatcar.structures, indices_i, indices_j, 
+                                      number_of_bins, 0.0, max_r )
+    for x, y in zip( rdf.r, rdf.rdf ):
+        print(x, y)
 
 if __name__ == "__main__":
     main()

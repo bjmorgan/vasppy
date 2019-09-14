@@ -16,22 +16,25 @@ class RadialDistributionFunction(object):
 
     """
     
-    def __init__(self, structures, indices_i, indices_j, nbins=500, r_min=0.0, r_max=10.0):
+    def __init__(self, structures, indices_i, indices_j=None, nbins=500, r_min=0.0, r_max=10.0):
         """
         Initialise a RadialDistributionFunction instance.
 
         Args:
             structures (list(pymatgen.Structure)): List of pymatgen Structure objects.
             indices_i (list(int)): List of indices for species i.
-            indices_j (list(int)): List of indices for species j.
-            nbins (:obj:`int`, optional): Number of bins used for the RDF, Optional, default is 500.
-            rmin (:obj:`floet`, optional): Minimum r value. Optional, default is 0.0.
-            rmax (:obj:`floet`, optional): Maximum r value. Optional, default is 10.0.
+            indices_j (:obj:list(int), optional): List of indices for species j. Optional,
+                default is `None`.
+            nbins (:obj:`int`, optional): Number of bins used for the RDF. Optional, default is 500.
+            rmin (:obj:`float`, optional): Minimum r value. Optional, default is 0.0.
+            rmax (:obj:`float`, optional): Maximum r value. Optional, default is 10.0.
 
         Returns:
              None
 
         """
+        if (indices_j is None) or (indices_j == indices_i):
+            self_reference = True
         self.nbins = nbins
         self.range = (r_min, r_max)
         self.intervals = np.linspace(r_min, r_max, nbins+1)
@@ -45,7 +48,11 @@ class RadialDistributionFunction(object):
             rho = float(len(indices_i)) / lattice.volume
             i_frac_coords = structure.frac_coords[indices_i]
             j_frac_coords = structure.frac_coords[indices_j]
-            dr_ij = np.ndarray.flatten(lattice.get_all_distances(i_frac_coords, j_frac_coords))
+            dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
+            mask = np.ones(dr_ij.shape, dtype=bool)
+            if self_reference:
+                np.fill_diagonal(mask, 0)
+            dr_ij = np.ndarray.flatten(dr_ij[mask])
             hist = np.histogram(dr_ij, bins=nbins, range=(r_min, r_max), density=False)[0]
             self.rdf += hist / rho
             self.coordination_number += np.cumsum(hist)

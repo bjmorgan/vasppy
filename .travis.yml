@@ -6,15 +6,12 @@ language: python
 notifications:
   email: false
 python:
-  - "3.5"
-  - "3.5-dev" # 3.5 development branch
   - "3.6"
   - "3.6-dev" # 3.6 development branch
-matrix:
-  include:
-    - python: 3.7
-      dist: xenial
-      sudo: true
+  - "3.7"
+  - "3.7-dev" # 3.7 development branch
+  - "3.8"
+  - "3.8-dev" # 3.8 development branch
 # command to install dependencies
 install: pip install -r requirements.txt
 # command to run tests

@@ -52,5 +52,5 @@ setup(
                        'coverage==4.3.4',
                        'codeclimate-test-reporter',
                        'fortranformat' ],
-    python_requires='>=3.5'
+    python_requires='>=3.6'
     )

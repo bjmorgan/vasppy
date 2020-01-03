@@ -32,12 +32,14 @@ class VASPMeta:
         self.notes = notes
         expected_status = [ 'to-run', 'incomplete', 'finished', 'dropped' ]
         if status not in expected_status:
-            raise ValueError( status )
+            raise ValueError(f'Unexpected calculations status: "{status}"'
+                             f' for calculation {title}')
         self.status = status
         expected_types = [ 'single-point', 'neb' ]
         if type:
             if type not in expected_types:
-                raise ValueError( type )
+                raise ValueError(f'Unexpected calculation type: "{type}"'
+                                 f' for calculation {title}')
             self.type = type 
         else:
             self.type = None

@@ -92,6 +92,26 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
             import_calculations_from_file( 'example_file' )
             mock_Calculation.assert_called_with( energy=-0.2414, stoichiometry=Counter({'B': 4, 'A': 2}), title='this_calculation' )
             mock_energy_converter.assert_called_with( '-0.2414 eV' )
+
+    def test_import_calculation_from_file_raises_ValueError_if_stoichiometry_is_not_set(self):
+        example_yaml = """
+        title: this_calculation
+        energy: -0.2414 eV
+        """
+        with patch('builtins.open', mock_open(read_data=example_yaml), create=True) as m:
+            with self.assertRaises(ValueError):
+                import_calculations_from_file('example_file')
+
+    def test_import_calculation_from_file_skips_incomplete_files(self):
+        example_yaml = """
+        title: this_calculation
+        energy: -0.2414 eV
+        """
+        with patch('builtins.open', mock_open(read_data=example_yaml), create=True) as m:
+            calcs = import_calculations_from_file('example_file', 
+                                                  skip_incomplete_records=True)
+            self.assertEqual(calcs, {})
  
+
 if __name__ == '__main__':
     unittest.main()

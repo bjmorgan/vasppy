@@ -116,7 +116,7 @@ def energy_string_to_float( string ):
     energy_re = re.compile( "(-?\d+\.\d+)" )
     return float( energy_re.match( string ).group(0) )
     
-def import_calculations_from_file( filename ):
+def import_calculations_from_file(filename, skip_incomplete_records=False):
     """
     Construct a list of :obj:`Calculation` objects by reading a YAML file.
     Each YAML document should include ``title``, ``stoichiometry``, and ``energy`` fields, e.g.::
@@ -131,6 +131,8 @@ def import_calculations_from_file( filename ):
     
     Args:
         filename (str): Name of the YAML file to read.
+        skip_incomplete_records (bool): Do not parse YAML documents missing one or more of
+            the required keys. Default is ``False``.
 
     Returns:
         (dict(vasppy.Calculation)): A dictionary of :obj:`Calculation` objects. For each :obj:`Calculation` object, the ``title`` field from the YAML input is used as the dictionary key.
@@ -139,9 +141,15 @@ def import_calculations_from_file( filename ):
     with open( filename, 'r' ) as stream:
         docs = yaml.load_all( stream, Loader=yaml.SafeLoader )
         for d in docs:
-            stoichiometry = Counter()
-            for s in d['stoichiometry']:
-                stoichiometry.update( s )
+            if skip_incomplete_records:
+                if ('title' not in d) or ('stoichiometry' not in d) or ('energy' not in d):
+                    continue
+            if 'stoichiometry' in d:
+                stoichiometry = Counter()
+                for s in d['stoichiometry']:
+                    stoichiometry.update( s )
+            else:
+                raise ValueError('stoichiometry not found for "{d["title"]}"')
             calcs[ d['title'] ] = Calculation( title=d['title'], 
                                                stoichiometry=stoichiometry, 
                                                energy=energy_string_to_float( d['energy'] ) )

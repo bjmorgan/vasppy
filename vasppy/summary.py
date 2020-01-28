@@ -13,7 +13,8 @@ import yaml
 import glob
 import re
 
-potcar_sets = [ 'PBE', 'PBE_52', 'PBE_54', 'LDA', 'LDA_52', 'LDA_54', 'GGA', 'USPP_GGA', 'USPP_LDA' ]
+potcar_sets = ['PBE', 'PBE_52', 'PBE_54', 'PBE_54r', 'LDA_54r', 
+               'LDA', 'LDA_52', 'LDA_54', 'GGA', 'USPP_GGA', 'USPP_LDA']
 
 def load_vasp_summary( filename ):
     """
@@ -123,9 +124,9 @@ class Summary:
         self.directory = directory
         with cd( directory ):
             try:
-                self.meta = VASPMeta.from_file( 'vaspmeta.yaml' )
+                self.meta = VASPMeta.from_file('vaspmeta.yaml')
             except FileNotFoundError as e:
-                raise type(e)( str(e) + ' in {}'.format( directory )).with_traceback( sys.exc_info()[2] )
+                raise FileNotFoundError(f'vaspmeta.yaml not found in {directory}')
             self.parse_vasprun()
         self.print_methods = { 'title': self.print_title,
                                'description': self.print_description,

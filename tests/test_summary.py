@@ -33,7 +33,9 @@ mock_potcar_data = { 'PBE':    { 'A': '12',
                      'LDA_54': { 'I': '202' },
                      'GGA':    { 'J': '303' },
                      'USPP_GGA': { 'K': '404' },
-                     'USPP_LDA': { 'L': '505' } }
+                     'USPP_LDA': { 'L': '505' },
+                     'PBE_54r': { 'M': '123' },
+                     'LDA_54r': { 'N': '456' } }
 
 class SummaryInitTestCase( unittest.TestCase ):
 

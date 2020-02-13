@@ -45,12 +45,13 @@ setup(
                        '{} = vasppy.scripts.{}:main'.format( s, s ) for s in scripts ] },
     license='MIT',
     install_requires=[ 'monty',
-                       'numpy',
+                       'numpy>=1.16.2',
                        'pandas',
                        'pymatgen',
                        'PyYAML', 
                        'coverage==4.3.4',
                        'codeclimate-test-reporter',
-                       'fortranformat' ],
+                       'fortranformat',
+                       'scipy>=1.4.1' ],
     python_requires='>=3.6'
     )

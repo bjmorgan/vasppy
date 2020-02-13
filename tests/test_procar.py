@@ -201,7 +201,7 @@ class ProcarSupportFunctionsTestCase( unittest.TestCase ):
         eigenvalues = np.array( [ 0.0, 1.0, 4.0 ] )
         with patch( 'vasppy.procar.points_are_in_a_straight_line' ) as mock_straight_line_test:
             mock_straight_line_test.return_value = True
-            self.assertAlmostEqual( procar.least_squares_effective_mass( k_points, eigenvalues ), 13.6056930 )  
+            self.assertAlmostEqual( procar.least_squares_effective_mass( k_points, eigenvalues ), 13.605693123 )  
  
     def test_least_squares_effective_mass_raises_valueerror_if_points_are_not_collinear( self ):
         k_points = np.array( [ [ 0.0, 0.0, 0.0 ],
@@ -217,7 +217,7 @@ class ProcarSupportFunctionsTestCase( unittest.TestCase ):
         k_points = np.array( [ [ 0.0, 0.0, 0.0 ],
                                [ 1.0, 0.0, 0.0 ] ] )
         eigenvalues = np.array( [ 0.0, 1.0 ] )
-        self.assertAlmostEqual( procar.two_point_effective_mass( k_points, eigenvalues ), 13.605693010 )
+        self.assertAlmostEqual( procar.two_point_effective_mass( k_points, eigenvalues ), 13.605693123 )
 
 if __name__ == '__main__':
     unittest.main()

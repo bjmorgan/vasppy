@@ -52,6 +52,7 @@ setup(
                        'coverage==4.3.4',
                        'codeclimate-test-reporter',
                        'fortranformat',
-                       'scipy>=1.4.1' ],
+                       'scipy>=1.4.1', 
+                       'tqdm' ],
     python_requires='>=3.6'
     )

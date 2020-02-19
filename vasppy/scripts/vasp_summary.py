@@ -3,6 +3,7 @@
 import sys
 from pathlib import Path
 import yaml
+import tqdm 
 
 """
 Script for collecting information about VASP calculations into YAML format, for further processing.
@@ -22,6 +23,7 @@ def get_args():
     parser.add_argument( '-p', '--print', help="Specify data to parse.", nargs='*' )
     parser.add_argument( '-f', '--file', help="Specify a file to read data flags from." )
     parser.add_argument( '-c', '--check', help="Checks whether VASP directories contain vaspmeta.yaml and vasprun.xml files", action='store_true' )
+    parser.add_argument( '-b', '--progress-bar', help="Show progress bar when parsing vasprun.xml files", action='store_true' )
     args = parser.parse_args()
     return args
 
@@ -71,7 +73,11 @@ def main():
                 if vm.title in titles:
                     matching_path.append( p )
             path = matching_path
-        for p in path:
+        if args.progress_bar:
+            path_iterator = tqdm.tqdm(path, unit='vasprun')
+        else:
+            path_iterator = path
+        for p in path_iterator:
             s = Summary( p )
             s.output( to_print=to_print )
 

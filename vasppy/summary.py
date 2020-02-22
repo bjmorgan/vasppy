@@ -176,7 +176,8 @@ class Summary:
         if not self.vasprun_filename:
             raise FileNotFoundError( 'Could not find vasprun.xml or vasprun.xml.gz file' )
         try:
-            self.vasprun = Vasprun( self.vasprun_filename, parse_potcar_file=False )
+            self.vasprun = Vasprun( self.vasprun_filename, parse_potcar_file=False, 
+                                    parse_dos=False )
         except ET.ParseError:
             self.vasprun = None
         except:

@@ -231,7 +231,7 @@ class Summary:
                              '91': 'PW91',
                              'RP': 'rPBE',
                              'AM': 'AM05' }
-                f = pbe_list[ self.vasprun.parameters['GGA'] ]
+                f = pbe_list[ self.vasprun.parameters['GGA'].upper() ]
         else:
             f = 'not recognised'    
         return f

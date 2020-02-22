@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 import yaml
 import tqdm 
+from multiprocessing import Pool
 
 """
 Script for collecting information about VASP calculations into YAML format, for further processing.
@@ -18,14 +19,18 @@ from vasppy.vaspmeta import VASPMeta
 
 def get_args():
     parser = argparse.ArgumentParser( description='Summarise a VASP calculation.' )
-    parser.add_argument( '-r', '--recursive', help='Recursively analyse directories.', action='store_true' )
-    parser.add_argument( '-l', '--list', help="List supported data flags.", action='store_true' )
-    parser.add_argument( '-p', '--print', help="Specify data to parse.", nargs='*' )
-    parser.add_argument( '-f', '--file', help="Specify a file to read data flags from." )
-    parser.add_argument( '-c', '--check', help="Checks whether VASP directories contain vaspmeta.yaml and vasprun.xml files", action='store_true' )
-    parser.add_argument( '-b', '--progress-bar', help="Show progress bar when parsing vasprun.xml files", action='store_true' )
+    parser.add_argument('-r', '--recursive', help='Recursively analyse directories.', action='store_true')
+    parser.add_argument('-l', '--list', help="List supported data flags.", action='store_true')
+    parser.add_argument('-p', '--print', help="Specify data to parse.", nargs='*')
+    parser.add_argument('-f', '--file', help="Specify a file to read data flags from.")
+    parser.add_argument('-c', '--check', help="Checks whether VASP directories contain vaspmeta.yaml and vasprun.xml files", action='store_true')
+    parser.add_argument('-b', '--progress-bar', help="Show progress bar when parsing vasprun.xml files", action='store_true')
+    parser.add_argument('-j', '--maxjobs', help="Maximum number of calculations to parse in parallel", type=int)
     args = parser.parse_args()
     return args
+
+def get_summary(p):
+    return Summary(p)
 
 # This should really be set in the vasppy.Summary code, so that it can be tested to be consistent with the supported print methods.
 # In fact, ideally the key, print method, and description would all be collected in a single object, which suggests writing this as a simple class.
@@ -73,13 +78,21 @@ def main():
                 if vm.title in titles:
                     matching_path.append( p )
             path = matching_path
-        if args.progress_bar:
-            path_iterator = tqdm.tqdm(path, unit='vasprun')
+        if args.maxjobs:
+            n = len(path)
+            with Pool(args.maxjobs) as p:
+                if args.progress_bar:
+                    summaries = list(tqdm.tqdm(p.imap(get_summary, path), total=len(path)))
+                else:
+                    summaries = p.map(get_summary, path)
         else:
-            path_iterator = path
-        for p in path_iterator:
-            s = Summary( p )
-            s.output( to_print=to_print )
+            if args.progress_bar:
+                path_iterator = tqdm.tqdm(path, unit='vasprun')
+            else:
+                path_iterator = path
+            summaries = [get_summary(p) for p in path_iterator]
+        for s in summaries:
+            s.output(to_print=to_print)
 
 if __name__ == "__main__":
     main()

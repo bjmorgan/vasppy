@@ -91,7 +91,11 @@ def main():
             else:
                 path_iterator = path
             summaries = [get_summary(p) for p in path_iterator]
-        for s in summaries:
+        if args.progress_bar:
+            iterable = tqdm.tqdm(summaries, unit='records')
+        else:
+            iterable = summaries
+        for s in iterable:
             s.output(to_print=to_print)
 
 if __name__ == "__main__":

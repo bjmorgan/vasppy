@@ -33,7 +33,9 @@ class RadialDistributionFunction(object):
              None
 
         """
-        self_reference = (indices_j is None) or (indices_j == indices_i)
+        self_reference = (not indices_j) or (indices_j == indices_i)
+        if not indices_j:
+            indices_j = indices_i
         self.nbins = nbins
         self.range = (r_min, r_max)
         self.intervals = np.linspace(r_min, r_max, nbins+1)

@@ -16,7 +16,8 @@ class RadialDistributionFunction(object):
 
     """
     
-    def __init__(self, structures, indices_i, indices_j=None, nbins=500, r_min=0.0, r_max=10.0):
+    def __init__(self, structures, indices_i, indices_j=None, 
+                 nbins=500, r_min=0.0, r_max=10.0, weights=None):
         """
         Initialise a RadialDistributionFunction instance.
 
@@ -28,11 +29,19 @@ class RadialDistributionFunction(object):
             nbins (:obj:`int`, optional): Number of bins used for the RDF. Optional, default is 500.
             rmin (:obj:`float`, optional): Minimum r value. Optional, default is 0.0.
             rmax (:obj:`float`, optional): Maximum r value. Optional, default is 10.0.
+            weights (:obj:`list(int)`, optional): List of weights for each structure.
+                Optional, default is `None`.
 
         Returns:
              None
 
         """
+        if weights:
+            if len(weights) != len(structures):
+                raise ValueError('List of structure weights needs to be the same length'
+                    ' as the list of structures.')
+        else:
+            weights = [1.0] * len(structures)
         self_reference = (not indices_j) or (indices_j == indices_i)
         if not indices_j:
             indices_j = indices_i
@@ -55,10 +64,10 @@ class RadialDistributionFunction(object):
                 np.fill_diagonal(mask, 0)
             dr_ij = np.ndarray.flatten(dr_ij[mask])
             hist = np.histogram(dr_ij, bins=nbins, range=(r_min, r_max), density=False)[0]
-            self.rdf += hist / rho
+            self.rdf += hist * weights / rho
             self.coordination_number += np.cumsum(hist)
-        self.rdf = self.rdf / ff / len(structures) / float(len(indices_j))
-        self.coordination_number = self.coordination_number / len(structures) / float(len(indices_j))
+        self.rdf = self.rdf / ff / sum(weights) / float(len(indices_j))
+        self.coordination_number = self.coordination_number / sum(weights) / float(len(indices_j))
         
     def smeared_rdf(self,sigma=0.1):
         """

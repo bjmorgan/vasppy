@@ -3,12 +3,22 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to vasppy's documentation!
-==================================
+vasppy
+======
 
 .. toctree::
-   :caption: API documentation
-   :maxdepth: 3
+   :caption: User Guide
+   :maxdepth: 2
+
+.. toctree::
+   :caption: Examples
+   :maxdepth: 1
+
+   examples/rdf_example
+
+.. toctree::
+   :caption: API Documentation
+   :maxdepth: 2
 
    modules
 

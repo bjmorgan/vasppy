@@ -9,3 +9,4 @@ MANIFEST
 .python-version
 /build
 /vasppy.egg-info
+/docs/build

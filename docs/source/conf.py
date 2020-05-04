@@ -102,7 +102,12 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 #
 # html_theme_options = {}
+
 nbsphinx_prompt_width = 0
+
+# NbSphinx configuration
+nbsphinx_execute = 'never'
+nbsphinx_codecell_lexer = 'python3'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

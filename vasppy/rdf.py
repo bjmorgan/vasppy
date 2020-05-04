@@ -53,7 +53,7 @@ class RadialDistributionFunction(object):
         ff = 4.0 / 3.0 * np.pi * (self.intervals[1:]**3 - self.intervals[:-1]**3)
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
-        for structure in structures:
+        for structure, weight in zip(structures, weights):
             lattice = structure.lattice
             rho = float(len(indices_i)) / lattice.volume
             i_frac_coords = structure.frac_coords[indices_i]
@@ -64,7 +64,7 @@ class RadialDistributionFunction(object):
                 np.fill_diagonal(mask, 0)
             dr_ij = np.ndarray.flatten(dr_ij[mask])
             hist = np.histogram(dr_ij, bins=nbins, range=(r_min, r_max), density=False)[0]
-            self.rdf += hist * weights / rho
+            self.rdf += hist * weight / rho
             self.coordination_number += np.cumsum(hist)
         self.rdf = self.rdf / ff / sum(weights) / float(len(indices_j))
         self.coordination_number = self.coordination_number / sum(weights) / float(len(indices_j))
@@ -74,7 +74,8 @@ class RadialDistributionFunction(object):
         Smear the RDF with a Gaussian kernel.
 
         Args:
-            sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel. Optional, default is 0.1.
+            sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel. 
+                Optional, default is 0.1.
 
         Returns:
             (np.array): Smeared RDF data.
@@ -82,8 +83,32 @@ class RadialDistributionFunction(object):
         """
         sigma_n_bins = sigma / self.dr
         return gaussian_filter1d(self.rdf, sigma=sigma_n_bins)
+   
+    @classmethod
+    def from_species_strings(cls, structures, species_i, species_j=None, **kwargs):
+        """
+        Initialise a RadialDistributionFunctinoo instance by specifying species strings.
 
-    
+        Args:
+            structures (list(pymatgen.Structure)): List of pymatgen Structure objects.
+            species_i (str): String for species i, e.g. `"Na"`.
+            species_j (:obj:str, optional): String for species j, e.g. `"Cl"`. Optional,
+                default is `None`. 
+            **kwargs: Variable length keyword argument list. 
+                See :func:`vasppy.rdf.RadialDistributionFunction`
+                for the full list of accepted arguments.
+
+        Returns:
+            (RadialDistributionFunction)
+
+        """
+        indices_i = [i for i, site in enumerate(structures[0]) if site.species_string is species_i]
+        if species_j:
+            indices_j = [j for j, site in enumerate(structures[0]) if site.species_string is species_j]
+        else:
+            indices_j = None
+        return cls(structures, indices_i, indices_j, *args, **kwargs)
+ 
 class VanHoveAnalysis(object):
     """
     Class for computing Van Hove correlation functions.

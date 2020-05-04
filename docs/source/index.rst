@@ -9,7 +9,7 @@ vasppy
    :caption: Examples
    :maxdepth: 1
 
-   examples/rdf_example
+   examples/rdfs
 
 .. toctree::
    :hidden:

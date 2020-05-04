@@ -1,6 +1,11 @@
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter1d
 
+"""
+This module provides classes for calculating radial disitrbution functions
+and Van Hove correlation functions.
+"""
+
 class RadialDistributionFunction(object):
     """
     Class for computing radial distribution functions.
@@ -24,7 +29,7 @@ class RadialDistributionFunction(object):
         Args:
             structures (list(pymatgen.Structure)): List of pymatgen Structure objects.
             indices_i (list(int)): List of indices for species i.
-            indices_j (:obj:list(int), optional): List of indices for species j. Optional,
+            indices_j (:obj:`list(int)`, optional): List of indices for species j. Optional,
                 default is `None`.
             nbins (:obj:`int`, optional): Number of bins used for the RDF. Optional, default is 500.
             rmin (:obj:`float`, optional): Minimum r value. Optional, default is 0.0.
@@ -87,12 +92,12 @@ class RadialDistributionFunction(object):
     @classmethod
     def from_species_strings(cls, structures, species_i, species_j=None, **kwargs):
         """
-        Initialise a RadialDistributionFunctinoo instance by specifying species strings.
+        Initialise a RadialDistributionFunction instance by specifying species strings.
 
         Args:
             structures (list(pymatgen.Structure)): List of pymatgen Structure objects.
-            species_i (str): String for species i, e.g. `"Na"`.
-            species_j (:obj:str, optional): String for species j, e.g. `"Cl"`. Optional,
+            species_i (str): String for species i, e.g. ``"Na"``.
+            species_j (:obj:`str`, optional): String for species j, e.g. ``"Cl"``. Optional,
                 default is `None`. 
             **kwargs: Variable length keyword argument list. 
                 See :func:`vasppy.rdf.RadialDistributionFunction`

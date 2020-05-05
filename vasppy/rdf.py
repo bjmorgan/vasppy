@@ -58,6 +58,7 @@ class RadialDistributionFunction(object):
         ff = 4.0 / 3.0 * np.pi * (self.intervals[1:]**3 - self.intervals[:-1]**3)
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
+        rdf_obs = []
         for structure, weight in zip(structures, weights):
             lattice = structure.lattice
             rho = float(len(indices_i)) / lattice.volume
@@ -69,11 +70,32 @@ class RadialDistributionFunction(object):
                 np.fill_diagonal(mask, 0)
             dr_ij = np.ndarray.flatten(dr_ij[mask])
             hist = np.histogram(dr_ij, bins=nbins, range=(r_min, r_max), density=False)[0]
+            rdf_obs.append(hist / rho)
             self.rdf += hist * weight / rho
             self.coordination_number += np.cumsum(hist)
         self.rdf = self.rdf / ff / sum(weights) / float(len(indices_j))
         self.coordination_number = self.coordination_number / sum(weights) / float(len(indices_j))
-        
+        self.rdf_obs = np.array(rdf_obs) / ff / float(len(indices_j))
+        self.weights = weights
+       
+    def resample(self):
+        """Returns a single resampled RDF.
+
+        Args:
+            None
+
+        Returns:
+            np.array
+
+        """ 
+        probabilities = np.array(self.weights) / sum(self.weights)
+        rng = np.random.default_rng()
+        sampled_rdf = np.sum(rng.choice(self.rdf_obs, 
+                                        p=self.probabilities, 
+                                        size=sum(self.weights)),
+                             axis=0) / sum(self.weights)
+        return sampled_rdf
+
     def smeared_rdf(self,sigma=0.1):
         """
         Smear the RDF with a Gaussian kernel.
@@ -112,7 +134,7 @@ class RadialDistributionFunction(object):
             indices_j = [j for j, site in enumerate(structures[0]) if site.species_string is species_j]
         else:
             indices_j = None
-        return cls(structures, indices_i, indices_j, *args, **kwargs)
+        return cls(structures, indices_i, indices_j, **kwargs)
  
 class VanHoveAnalysis(object):
     """

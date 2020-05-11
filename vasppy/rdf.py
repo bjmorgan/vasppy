@@ -111,7 +111,7 @@ class RadialDistributionFunction(object):
             indices_j = None
         return cls(structures, indices_i, indices_j, **kwargs)
 
-    def dr_ij(self, structure, apply_mic=True):
+    def dr_ij(self, structure):
         """
         Calculate all i-j interatomic distances for a single pymatgen Structure.
 
@@ -122,9 +122,6 @@ class RadialDistributionFunction(object):
             np.array: 1D numpy array of length N_i x N_j of distances.
 
         """
-        if apply_mic:
-            structure = structure*[3,3,3]
-            print(structure)
         lattice = structure.lattice
         i_frac_coords = structure.frac_coords[self.indices_i]
         j_frac_coords = structure.frac_coords[self.indices_j]

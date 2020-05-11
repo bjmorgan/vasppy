@@ -47,9 +47,11 @@ class RadialDistributionFunction(object):
                     ' as the list of structures.')
         else:
             weights = [1.0] * len(structures)
-        self_reference = (not indices_j) or (indices_j == indices_i)
+        self.self_reference = (not indices_j) or (indices_j == indices_i)
         if not indices_j:
             indices_j = indices_i
+        self.indices_i = indices_i
+        self.indices_j = indices_j
         self.nbins = nbins
         self.range = (r_min, r_max)
         self.intervals = np.linspace(r_min, r_max, nbins+1)
@@ -59,20 +61,15 @@ class RadialDistributionFunction(object):
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
         for structure, weight in zip(structures, weights):
-            lattice = structure.lattice
-            rho = float(len(indices_i)) / lattice.volume
-            i_frac_coords = structure.frac_coords[indices_i]
-            j_frac_coords = structure.frac_coords[indices_j]
-            dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
-            mask = np.ones(dr_ij.shape, dtype=bool)
-            if self_reference:
-                np.fill_diagonal(mask, 0)
-            dr_ij = np.ndarray.flatten(dr_ij[mask])
-            hist = np.histogram(dr_ij, bins=nbins, range=(r_min, r_max), density=False)[0]
+            hist = np.histogram(self.dr_ij(structure), 
+                                bins=nbins, 
+                                range=(r_min, r_max), 
+                                density=False)[0]
+            rho = float(len(self.indices_i)) / structure.lattice.volume
             self.rdf += hist * weight / rho
             self.coordination_number += np.cumsum(hist)
         self.rdf = self.rdf / ff / sum(weights) / float(len(indices_j))
-        self.coordination_number = self.coordination_number / sum(weights) / float(len(indices_j))
+        self.coordination_number = self.coordination_number / sum(weights) / float(len(self.indices_j))
 
     def smeared_rdf(self,sigma=0.1):
         """
@@ -113,7 +110,31 @@ class RadialDistributionFunction(object):
         else:
             indices_j = None
         return cls(structures, indices_i, indices_j, **kwargs)
- 
+
+    def dr_ij(self, structure, apply_mic=True):
+        """
+        Calculate all i-j interatomic distances for a single pymatgen Structure.
+
+        Args:
+            structure (:obj:`pymatgen.Structure`): A pymatgen Structure.
+
+        Returns:
+            np.array: 1D numpy array of length N_i x N_j of distances.
+
+        """
+        if apply_mic:
+            structure = structure*[3,3,3]
+            print(structure)
+        lattice = structure.lattice
+        i_frac_coords = structure.frac_coords[self.indices_i]
+        j_frac_coords = structure.frac_coords[self.indices_j]
+        dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
+        # Mask dr_ij 2D array to remove i=j dr=0 terms
+        mask = np.ones(dr_ij.shape, dtype=bool)
+        if self.self_reference:
+            np.fill_diagonal(mask, 0)
+        return np.ndarray.flatten(dr_ij[mask])
+
 class VanHoveAnalysis(object):
     """
     Class for computing Van Hove correlation functions.

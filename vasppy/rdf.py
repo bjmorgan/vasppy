@@ -57,11 +57,11 @@ class RadialDistributionFunction(object):
         self.intervals = np.linspace(r_min, r_max, nbins+1)
         self.dr = (r_max - r_min)/nbins
         self.r = self.intervals[:-1]+self.dr/2.0
-        ff = 4.0 / 3.0 * np.pi * (self.intervals[1:]**3 - self.intervals[:-1]**3)
+        ff = shell_volumes(self.intervals)
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
         for structure, weight in zip(structures, weights):
-            hist = np.histogram(self.dr_ij(structure), 
+            hist = np.histogram(self.__dr_ij(structure), 
                                 bins=nbins, 
                                 range=(r_min, r_max), 
                                 density=False)[0]
@@ -111,7 +111,7 @@ class RadialDistributionFunction(object):
             indices_j = None
         return cls(structures, indices_i, indices_j, **kwargs)
 
-    def dr_ij(self, structure):
+    def __dr_ij(self, structure):
         """
         Calculate all i-j interatomic distances for a single pymatgen Structure.
 
@@ -126,7 +126,7 @@ class RadialDistributionFunction(object):
         i_frac_coords = structure.frac_coords[self.indices_i]
         j_frac_coords = structure.frac_coords[self.indices_j]
         dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
-        # Mask dr_ij 2D array to remove i=j dr=0 terms
+        # Mask dr_ij 2D array to remove i==j dr=0 terms
         mask = np.ones(dr_ij.shape, dtype=bool)
         if self.self_reference:
             np.fill_diagonal(mask, 0)
@@ -172,7 +172,7 @@ class VanHoveAnalysis(object):
         self.gsrt = np.zeros((nbins), dtype=np.double)
         rho = len(indices) / structures[0].lattice.volume
         lattice = structures[0].lattice
-        ff = 4.0 / 3.0 * np.pi * (self.intervals[1:]**3 - self.intervals[:-1]**3)
+        ff = shell_volumes(intervals)
         rho = len(indices) / lattice.volume
         for struc_i, struc_j in zip( structures[:len(structures)-d_steps], structures[d_steps:]):
             i_frac_coords = struc_i.frac_coords[indices]
@@ -228,3 +228,15 @@ class VanHoveAnalysis(object):
         """
         sigma_n_bins = sigma / self.dr
         return gaussian_filter1d(self.gdrt, sigma=sigma_n_bins)
+
+def shell_volumes(intervals):
+    """Volumes of concentric spherical shells.
+
+    Args:
+        intervals (np.array): N radial boundaries used to define the set of N-1 shells.
+
+    Returns:
+        np.array: Volumes of each shell.
+
+    """
+    return 4.0 / 3.0 * np.pi * (intervals[1:]**3 - intervals[:-1]**3)

@@ -51,27 +51,32 @@ def load_vasp_summary( filename ):
         data = { d['title']: d for d in docs }
     return data
 
-def potcar_spec( filename ):
+def potcar_spec(filename, return_hashes=False):
     """
     Returns a dictionary specifying the pseudopotentials contained in a POTCAR file.
 
     Args:
-        filename (Str): The name of the POTCAR file to process.
+        filename (str): The name of the POTCAR file to process.
+        return_hash (bool): If True the return dictionary values will be the md5 hashes of
+            the component pseudopotential files.
 
     Returns:
         (Dict): A dictionary of pseudopotential filename: dataset pairs, e.g.
-                { 'Fe_pv': 'PBE_54', 'O', 'PBE_54' }
+                {'Fe_pv': 'PBE_54', 'O', 'PBE_54'}
     """
     p_spec = {}
-    with open( filename, 'r' ) as f:
+    with open(filename, 'r') as f:
         potcars = re.split('(End of Dataset\n)', f.read() )
-    potcar_md5sums = [ md5sum( ''.join( pair ) ) for pair in zip( potcars[::2], potcars[1:-1:2] ) ]
+    potcar_md5sums = [md5sum(''.join(pair)) for pair in zip(potcars[::2], potcars[1:-1:2])]
     for this_md5sum in potcar_md5sums:
         for ps in potcar_sets:
-            for p, p_md5sum in potcar_md5sum_data[ ps ].items():
+            for p, p_md5sum in potcar_md5sum_data[ps].items():
                 if this_md5sum == p_md5sum:
-                    p_spec[ p ] = ps
-    if len( p_spec ) != len( potcar_md5sums ):
+                    if return_hashes:
+                        p_spec[p] = this_md5sum
+                    else:
+                        p_spec[p] = ps
+    if len(p_spec) != len(potcar_md5sums):
         raise ValueError( 'One or more POTCARs did not have matching md5 hashes' )
     return p_spec
   

@@ -188,18 +188,31 @@ class SummaryHelperFunctionsTestCase( unittest.TestCase ):
     def test_md5sum( self ):
         self.assertEqual( md5sum('hello\n'), 'b1946ac92492d2347c6235b4d2611184' )
 
-    def test_potcar_spec( self ):
+    def test_potcar_spec(self):
         mock_potcar_filename = 'POTCAR'
-        md5sum_return_values = ( '12', '56', '23' ) 
+        md5sum_return_values = ('12', '56', '23') 
         with patch('builtins.open', return_value=io.StringIO(mock_potcar_string)) as mock_open:
-            with patch('vasppy.summary.md5sum', side_effect=md5sum_return_values ) as mock_md5sum:
-                with patch.dict('vasppy.data.potcar_data.potcar_md5sum_data', mock_potcar_data, clear=True ):
-                    p_spec = potcar_spec( mock_potcar_filename )
-                    mock_open.assert_called_with( mock_potcar_filename, 'r' )
-                    mock_md5sum.assert_has_calls( [ call('foo\nEnd of Dataset\n'), 
-                                                    call('bar\nEnd of Dataset\n'),
-                                                    call('sds\nEnd of Dataset\n') ] )
+            with patch('vasppy.summary.md5sum', side_effect=md5sum_return_values) as mock_md5sum:
+                with patch.dict('vasppy.data.potcar_data.potcar_md5sum_data', mock_potcar_data, clear=True):
+                    p_spec = potcar_spec(mock_potcar_filename)
+                    mock_open.assert_called_with(mock_potcar_filename, 'r')
+                    mock_md5sum.assert_has_calls([ call('foo\nEnd of Dataset\n'), 
+                                                   call('bar\nEnd of Dataset\n'),
+                                                   call('sds\nEnd of Dataset\n')])
         self.assertEqual( p_spec, {'A': 'PBE', 'E': 'PBE_54', 'D': 'PBE_52'} )
+
+    def test_potcar_spec_returns_hashes(self):
+        mock_potcar_filename = 'POTCAR'
+        md5sum_return_values = ('12', '56', '23')
+        with patch('builtins.open', return_value=io.StringIO(mock_potcar_string)) as mock_open:
+            with patch('vasppy.summary.md5sum', side_effect=md5sum_return_values) as mock_md5sum:
+                with patch.dict('vasppy.data.potcar_data.potcar_md5sum_data', mock_potcar_data, clear=True):
+                    p_spec = potcar_spec(mock_potcar_filename, return_hashes=True)
+                    mock_open.assert_called_with(mock_potcar_filename, 'r')
+                    mock_md5sum.assert_has_calls([ call('foo\nEnd of Dataset\n'), 
+                                                   call('bar\nEnd of Dataset\n'),
+                                                   call('sds\nEnd of Dataset\n')])
+        self.assertEqual(p_spec, {'A': '12', 'E': '56', 'D': '23'})
 
     def test_potcar_spec_raises_valueerror_if_md5sum_not_matched( self ):
         mock_potcar_filename = 'POTCAR'

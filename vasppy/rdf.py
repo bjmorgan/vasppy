@@ -1,10 +1,13 @@
 import numpy as np  # type: ignore
 from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
+from pymatgen import Structure  # type: ignore
+from typing import List, Optional, TypeVar, Type
 
 """
 This module provides classes for calculating radial disitrbution functions
 and Van Hove correlation functions.
 """
+RDF = TypeVar('RDF', bound='RadialDistributionFunction')
 
 
 class RadialDistributionFunction(object):
@@ -22,8 +25,14 @@ class RadialDistributionFunction(object):
 
     """
 
-    def __init__(self, structures, indices_i, indices_j=None,
-                 nbins=500, r_min=0.0, r_max=10.0, weights=None):
+    def __init__(self,
+                 structures: List[Structure],
+                 indices_i: List[int],
+                 indices_j: Optional[List[int]] = None,
+                 nbins: int = 500,
+                 r_min: float = 0.0,
+                 r_max: float = 10.0,
+                 weights: Optional[List[float]] = None) -> None:
         """
         Initialise a RadialDistributionFunction instance.
 
@@ -35,7 +44,7 @@ class RadialDistributionFunction(object):
             nbins (:obj:`int`, optional): Number of bins used for the RDF. Optional, default is 500.
             rmin (:obj:`float`, optional): Minimum r value. Optional, default is 0.0.
             rmax (:obj:`float`, optional): Maximum r value. Optional, default is 10.0.
-            weights (:obj:`list(int)`, optional): List of weights for each structure.
+            weights (:obj:`list(float)`, optional): List of weights for each structure.
                 Optional, default is `None`.
 
         Returns:
@@ -73,7 +82,8 @@ class RadialDistributionFunction(object):
         self.coordination_number = self.coordination_number / \
             sum(weights) / float(len(self.indices_j))
 
-    def smeared_rdf(self, sigma=0.1):
+    def smeared_rdf(self, 
+                    sigma: float = 0.1) -> np.ndarray:
         """
         Smear the RDF with a Gaussian kernel.
 
@@ -89,7 +99,11 @@ class RadialDistributionFunction(object):
         return gaussian_filter1d(self.rdf, sigma=sigma_n_bins)
 
     @classmethod
-    def from_species_strings(cls, structures, species_i, species_j=None, **kwargs):
+    def from_species_strings(cls: Type[RDF], 
+                             structures: List[Structure], 
+                             species_i: str, 
+                             species_j: Optional[str] = None, 
+                             **kwargs) -> RDF:
         """
         Initialise a RadialDistributionFunction instance by specifying species strings.
 
@@ -106,16 +120,23 @@ class RadialDistributionFunction(object):
             (RadialDistributionFunction)
 
         """
-        indices_i = [i for i, site in enumerate(
-            structures[0]) if site.species_string is species_i]
+        indices_i: List[int]
+        indices_j: Optional[List[int]]
+
+        indices_i = [i for i, site in 
+                     enumerate(structures[0]) if site.species_string is species_i]
         if species_j:
-            indices_j = [j for j, site in enumerate(
-                structures[0]) if site.species_string is species_j]
+            indices_j = [j for j, site in 
+                         enumerate(structures[0]) if site.species_string is species_j]
         else:
             indices_j = None
-        return cls(structures, indices_i, indices_j, **kwargs)
+        return cls(structures=structures, 
+                   indices_i=indices_i, 
+                   indices_j=indices_j, 
+                   **kwargs)
 
-    def __dr_ij(self, structure):
+    def __dr_ij(self, 
+                structure: Structure) -> np.ndarray:
         """
         Calculate all i-j interatomic distances for a single pymatgen Structure.
 
@@ -137,6 +158,9 @@ class RadialDistributionFunction(object):
         return np.ndarray.flatten(dr_ij[mask])
 
 
+VHA = TypeVar('VHA', bound='VanHoveAnalysis')
+
+
 class VanHoveAnalysis(object):
     """
     Class for computing Van Hove correlation functions.
@@ -152,7 +176,13 @@ class VanHoveAnalysis(object):
 
     """
 
-    def __init__(self, structures, indices, d_steps, nbins=500, r_min=0.0, r_max=10.0):
+    def __init__(self,
+                 structures: List[Structure],
+                 indices: List[int],
+                 d_steps: int,
+                 nbins: int = 500,
+                 r_min: float = 0.0,
+                 r_max: float = 10.0):
         """
         Initialise a VanHoveCorrelationFunction instance.
 
@@ -198,19 +228,22 @@ class VanHoveAnalysis(object):
         self.gsrt = self.gsrt / \
             (len(structures) - d_steps) / float(len(indices))
 
-    def self(self, sigma=None):
+    def self(self, 
+             sigma: Optional[float] = None) -> np.ndarray:
         if sigma:
             return self.smeared_gsrt(sigma=sigma)
         else:
             return self.gsrt
 
-    def distinct(self, sigma=None):
+    def distinct(self,
+                 sigma: Optional[float] = None) -> np.ndarray:
         if sigma:
             return self.smeared_gdrt(sigma=sigma)
         else:
             return self.gdrt
 
-    def smeared_gsrt(self, sigma=0.1):
+    def smeared_gsrt(self, 
+                     sigma: float = 0.1) -> np.ndarray:
         """
         Smear the self part of the Van Hove correlation function with a Gaussian kernel.
 
@@ -224,7 +257,8 @@ class VanHoveAnalysis(object):
         sigma_n_bins = sigma / self.dr
         return gaussian_filter1d(self.gsrt, sigma=sigma_n_bins)
 
-    def smeared_gdrt(self, sigma=0.1):
+    def smeared_gdrt(self,
+                     sigma: float = 0.1) -> np.ndarray:
         """
         Smear the distinct part of the Van Hove correlation function with a Gaussian kernel.
 
@@ -239,7 +273,7 @@ class VanHoveAnalysis(object):
         return gaussian_filter1d(self.gdrt, sigma=sigma_n_bins)
 
 
-def shell_volumes(intervals):
+def shell_volumes(intervals: np.ndarray) -> np.ndarray:
     """Volumes of concentric spherical shells.
 
     Args:

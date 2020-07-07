@@ -177,7 +177,7 @@ class VanHoveAnalysis(object):
         self.gsrt = np.zeros((nbins), dtype=np.double)
         rho = len(indices) / structures[0].lattice.volume
         lattice = structures[0].lattice
-        ff = shell_volumes(intervals)
+        ff = shell_volumes(self.intervals)
         rho = len(indices) / lattice.volume
         for struc_i, struc_j in zip(structures[:len(structures) - d_steps], structures[d_steps:]):
             i_frac_coords = struc_i.frac_coords[indices]

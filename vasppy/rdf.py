@@ -1,15 +1,16 @@
-import numpy as np
-from scipy.ndimage.filters import gaussian_filter1d
+import numpy as np  # type: ignore
+from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
 
 """
 This module provides classes for calculating radial disitrbution functions
 and Van Hove correlation functions.
 """
 
+
 class RadialDistributionFunction(object):
     """
     Class for computing radial distribution functions.
-    
+
     Attributes:
         nbins (int): Number of bins.
         range ((float, float)): Minimum and maximum values of r.
@@ -20,8 +21,8 @@ class RadialDistributionFunction(object):
         coordination_number (np.array(float)): Volume integral of the RDF.
 
     """
-    
-    def __init__(self, structures, indices_i, indices_j=None, 
+
+    def __init__(self, structures, indices_i, indices_j=None,
                  nbins=500, r_min=0.0, r_max=10.0, weights=None):
         """
         Initialise a RadialDistributionFunction instance.
@@ -44,7 +45,7 @@ class RadialDistributionFunction(object):
         if weights:
             if len(weights) != len(structures):
                 raise ValueError('List of structure weights needs to be the same length'
-                    ' as the list of structures.')
+                                 ' as the list of structures.')
         else:
             weights = [1.0] * len(structures)
         self.self_reference = (not indices_j) or (indices_j == indices_i)
@@ -54,24 +55,25 @@ class RadialDistributionFunction(object):
         self.indices_j = indices_j
         self.nbins = nbins
         self.range = (r_min, r_max)
-        self.intervals = np.linspace(r_min, r_max, nbins+1)
-        self.dr = (r_max - r_min)/nbins
-        self.r = self.intervals[:-1]+self.dr/2.0
+        self.intervals = np.linspace(r_min, r_max, nbins + 1)
+        self.dr = (r_max - r_min) / nbins
+        self.r = self.intervals[:-1] + self.dr / 2.0
         ff = shell_volumes(self.intervals)
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
         for structure, weight in zip(structures, weights):
-            hist = np.histogram(self.__dr_ij(structure), 
-                                bins=nbins, 
-                                range=(r_min, r_max), 
+            hist = np.histogram(self.__dr_ij(structure),
+                                bins=nbins,
+                                range=(r_min, r_max),
                                 density=False)[0]
             rho = float(len(self.indices_i)) / structure.lattice.volume
             self.rdf += hist * weight / rho
             self.coordination_number += np.cumsum(hist)
         self.rdf = self.rdf / ff / sum(weights) / float(len(indices_j))
-        self.coordination_number = self.coordination_number / sum(weights) / float(len(self.indices_j))
+        self.coordination_number = self.coordination_number / \
+            sum(weights) / float(len(self.indices_j))
 
-    def smeared_rdf(self,sigma=0.1):
+    def smeared_rdf(self, sigma=0.1):
         """
         Smear the RDF with a Gaussian kernel.
 
@@ -85,7 +87,7 @@ class RadialDistributionFunction(object):
         """
         sigma_n_bins = sigma / self.dr
         return gaussian_filter1d(self.rdf, sigma=sigma_n_bins)
-   
+
     @classmethod
     def from_species_strings(cls, structures, species_i, species_j=None, **kwargs):
         """
@@ -104,9 +106,11 @@ class RadialDistributionFunction(object):
             (RadialDistributionFunction)
 
         """
-        indices_i = [i for i, site in enumerate(structures[0]) if site.species_string is species_i]
+        indices_i = [i for i, site in enumerate(
+            structures[0]) if site.species_string is species_i]
         if species_j:
-            indices_j = [j for j, site in enumerate(structures[0]) if site.species_string is species_j]
+            indices_j = [j for j, site in enumerate(
+                structures[0]) if site.species_string is species_j]
         else:
             indices_j = None
         return cls(structures, indices_i, indices_j, **kwargs)
@@ -132,10 +136,11 @@ class RadialDistributionFunction(object):
             np.fill_diagonal(mask, 0)
         return np.ndarray.flatten(dr_ij[mask])
 
+
 class VanHoveAnalysis(object):
     """
     Class for computing Van Hove correlation functions.
-    
+
     Attributes:
         nbins (int): Number of bins.
         range ((float, float)): Minimum and maximum values of r.
@@ -146,7 +151,7 @@ class VanHoveAnalysis(object):
         gdrt (np.array(float)): Distinct part of the Van Hove correlation function.
 
     """
-    
+
     def __init__(self, structures, indices, d_steps, nbins=500, r_min=0.0, r_max=10.0):
         """
         Initialise a VanHoveCorrelationFunction instance.
@@ -165,30 +170,34 @@ class VanHoveAnalysis(object):
         """
         self.nbins = nbins
         self.range = (r_min, r_max)
-        self.intervals = np.linspace(r_min, r_max, nbins+1)
-        self.dr = (r_max - r_min)/nbins
-        self.r = self.intervals[:-1]+self.dr/2.0
+        self.intervals = np.linspace(r_min, r_max, nbins + 1)
+        self.dr = (r_max - r_min) / nbins
+        self.r = self.intervals[:-1] + self.dr / 2.0
         self.gdrt = np.zeros((nbins), dtype=np.double)
         self.gsrt = np.zeros((nbins), dtype=np.double)
         rho = len(indices) / structures[0].lattice.volume
         lattice = structures[0].lattice
         ff = shell_volumes(intervals)
         rho = len(indices) / lattice.volume
-        for struc_i, struc_j in zip( structures[:len(structures)-d_steps], structures[d_steps:]):
+        for struc_i, struc_j in zip(structures[:len(structures) - d_steps], structures[d_steps:]):
             i_frac_coords = struc_i.frac_coords[indices]
             j_frac_coords = struc_j.frac_coords[indices]
             dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
             mask = np.ones(dr_ij.shape, dtype=bool)
             np.fill_diagonal(mask, 0)
             distinct_dr_ij = np.ndarray.flatten(dr_ij[mask])
-            hist = np.histogram(distinct_dr_ij, bins=nbins, range=(0.0, r_max), density=False)[0]
+            hist = np.histogram(distinct_dr_ij, bins=nbins,
+                                range=(0.0, r_max), density=False)[0]
             self.gdrt += hist / rho
             self_dr_ij = np.ndarray.flatten(dr_ij[np.invert(mask)])
-            hist = np.histogram(self_dr_ij, bins=nbins, range=(0.0, r_max), density=False)[0]
+            hist = np.histogram(self_dr_ij, bins=nbins,
+                                range=(0.0, r_max), density=False)[0]
             self.gsrt += hist / rho
-        self.gdrt = self.gdrt / ff / (len(structures)-d_steps) / float(len(indices))
-        self.gsrt = self.gsrt / (len(structures)-d_steps) / float(len(indices))        
-       
+        self.gdrt = self.gdrt / ff / \
+            (len(structures) - d_steps) / float(len(indices))
+        self.gsrt = self.gsrt / \
+            (len(structures) - d_steps) / float(len(indices))
+
     def self(self, sigma=None):
         if sigma:
             return self.smeared_gsrt(sigma=sigma)
@@ -200,8 +209,8 @@ class VanHoveAnalysis(object):
             return self.smeared_gdrt(sigma=sigma)
         else:
             return self.gdrt
- 
-    def smeared_gsrt(self,sigma=0.1):
+
+    def smeared_gsrt(self, sigma=0.1):
         """
         Smear the self part of the Van Hove correlation function with a Gaussian kernel.
 
@@ -214,20 +223,21 @@ class VanHoveAnalysis(object):
         """
         sigma_n_bins = sigma / self.dr
         return gaussian_filter1d(self.gsrt, sigma=sigma_n_bins)
-    
-    def smeared_gdrt(self,sigma=0.1):
+
+    def smeared_gdrt(self, sigma=0.1):
         """
         Smear the distinct part of the Van Hove correlation function with a Gaussian kernel.
 
         Args:
             sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel. Optional, default is 0.1.
-        
+
         Returns:
             (np.array): Smeared data.
 
         """
         sigma_n_bins = sigma / self.dr
         return gaussian_filter1d(self.gdrt, sigma=sigma_n_bins)
+
 
 def shell_volumes(intervals):
     """Volumes of concentric spherical shells.

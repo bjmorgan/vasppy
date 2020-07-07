@@ -3,7 +3,7 @@
 from vasppy.poscar import Poscar
 import argparse
 import copy
-import numpy as np
+import numpy as np  # type: ignore
 
 def parse_command_line_arguments():
     # command line arguments

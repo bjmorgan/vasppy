@@ -1,7 +1,7 @@
 #! /usr/bin/env python3 
 
 from vasppy.poscar import Poscar
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer  # type: ignore
 import argparse
 
 def parse_command_line_arguments():

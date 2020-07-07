@@ -3,20 +3,20 @@
 # Adapted from http://kitchingroup.cheme.cmu.edu/blog/2013/02/18/Nonlinear-curve-fitting/
 
 import glob
-import numpy as np
-import pandas as pd
-from scipy.optimize import leastsq
+import numpy as np  # type: ignore
+import pandas as pd  # type: ignore
+from scipy.optimize import leastsq  # type: ignore
 import argparse
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning,
                             module="pymatgen")
-from pymatgen.io.vasp import Vasprun
-from pymatgen.io.vasp.outputs import UnconvergedVASPWarning
+from pymatgen.io.vasp import Vasprun  # type: ignore
+from pymatgen.io.vasp.outputs import UnconvergedVASPWarning  # type: ignore
 
-import matplotlib
+import matplotlib  # type: ignore
 matplotlib.use('agg')
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 
 from vasppy.poscar import Poscar
 from vasppy.summary import find_vasp_calculations

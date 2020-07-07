@@ -1,11 +1,11 @@
-import numpy as np
+import numpy as np  # type: ignore
 import re
 import math
 import warnings
 from .units import angstrom_to_bohr, ev_to_hartree
 from .band import Band
 from copy import deepcopy
-import fortranformat as ff
+import fortranformat as ff  # type: ignore
 from functools import reduce
 
 class KPoint():

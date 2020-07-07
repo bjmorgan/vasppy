@@ -1,9 +1,9 @@
 # routines for interacting with PIMAIM data / filetypes
 
-import numpy as np
+import numpy as np  # type: ignore
 from vasppy.poscar import Poscar
 from vasppy.cell import Cell
-from .units import angstrom_to_bohr
+from vasppy.units import angstrom_to_bohr
 
 def lines_to_numpy_array( data ):
     return np.array( [ [ float( s ) for s in line.split() ] for line in data ] )

@@ -1,6 +1,6 @@
-import numpy as np
+import numpy as np  # type: ignore
 import re
-from pymatgen.io.vasp.outputs import Outcar
+from pymatgen.io.vasp.outputs import Outcar  # type: ignore
 
 def reciprocal_lattice_from_outcar( filename ): # from https://github.com/MaterialsDiscovery/PyChemia
     """

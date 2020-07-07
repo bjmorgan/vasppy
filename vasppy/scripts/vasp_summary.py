@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 import yaml
-import tqdm 
+import tqdm  # type: ignore
 from multiprocessing import Pool
 
 """

@@ -1,5 +1,5 @@
 import hashlib
-from monty.io import zopen
+from monty.io import zopen  # type: ignore
 from pathlib import Path
 import os
 import yaml

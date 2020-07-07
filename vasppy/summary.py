@@ -1,8 +1,8 @@
 # Summary class and helper methods
 # Used for summarising VASP calculations as YAML
 
-from pymatgen.io.vasp.outputs import Vasprun
-from pymatgen.analysis.transition_state import NEBAnalysis
+from pymatgen.io.vasp.outputs import Vasprun  # type: ignore
+from pymatgen.analysis.transition_state import NEBAnalysis  # type: ignore
 from vasppy.vaspmeta import VASPMeta
 from vasppy.outcar import final_energy_from_outcar, vasp_version_from_outcar, potcar_eatom_list_from_outcar
 from vasppy.data.potcar_data import potcar_md5sum_data, potcar_nelect

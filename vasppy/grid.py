@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np  # type: ignore
 import sys
 import math
 from vasppy import poscar, cell

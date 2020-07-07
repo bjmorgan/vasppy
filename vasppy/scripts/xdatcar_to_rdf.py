@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from pymatgen.io.vasp import Xdatcar
+from pymatgen.io.vasp import Xdatcar  # type: ignore
 from vasppy.rdf import RadialDistributionFunction
 import argparse
 import copy
 import math
-import numpy as np
+import numpy as np  # type: ignore
 
 def parse_command_line_arguments():
     # command line arguments

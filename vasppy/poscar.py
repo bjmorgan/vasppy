@@ -1,12 +1,12 @@
-import numpy as np
+import numpy as np  # type: ignore
 import sys
 import re
 import copy
 from vasppy import configuration, atom, cell
-from .units import angstrom_to_bohr
-from pymatgen import Lattice as pmg_Lattice
-from pymatgen import Structure as pmg_Structure
-from pymatgen.io.cif import CifWriter
+from vasppy.units import angstrom_to_bohr
+from pymatgen import Lattice as pmg_Lattice  # type: ignore
+from pymatgen import Structure as pmg_Structure  # type: ignore
+from pymatgen.io.cif import CifWriter  # type: ignore
 from collections import Counter
 
 # Ignore SIG_PIPE and don't throw exceptions on it... 

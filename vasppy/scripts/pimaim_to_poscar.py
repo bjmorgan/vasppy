@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import numpy as np
+import numpy as np  # type: ignore
 import argparse
 from vasppy.poscar import Poscar
 from vasppy.cell import Cell

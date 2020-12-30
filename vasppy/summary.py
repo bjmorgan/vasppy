@@ -76,7 +76,7 @@ def potcar_spec(filename, return_hashes=False):
                         p_spec[p] = this_md5sum
                     else:
                         p_spec[p] = ps
-    if len(p_spec) != len(potcar_md5sums):
+    if len(set(p_spec)) != len(set(potcar_md5sums)):
         raise ValueError( 'One or more POTCARs did not have matching md5 hashes' )
     return p_spec
   

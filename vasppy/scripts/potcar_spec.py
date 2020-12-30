@@ -18,9 +18,9 @@ def main():
             hashes[p] = md5hash
     for p, ps in potcar_spec(args.potcar).items():
         if args.hash:
-            print(p, ps, hashes[p])
+            print(f'{p} {ps} md5:{hashes[p]}')
         else:
-            print(p, ps, hashes[p])
+            print(f'{p} {ps}')
 
 if __name__ == '__main__':
     main()

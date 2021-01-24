@@ -1,6 +1,7 @@
 from lxml import etree # type: ignore
 from typing import List, Union, Optional, Any, Dict
 from pymatgen import Structure # type: ignore
+import numpy as np # type: ignore
 
 def parse_varray(varray: etree.Element) -> Union[List[List[float]], 
                                                  List[List[int]],
@@ -160,3 +161,31 @@ class Vasprun:
                 )
             )
         return structures
+
+    @property
+    def frac_coords(self) -> np.ndarray:
+        """Fractional coordinates from each calculation structure.
+
+        Args:
+            None
+
+        Returns:
+            (np.ndarray): timesteps x atoms x 3 numpy array of fractional coordinates.
+
+        """
+        frac_coords = np.array([s.frac_coords for s in self.structures])
+        return frac_coords
+
+    @property
+    def cart_coords(self) -> np.ndarray:
+        """Cartesian coordinates from each calculation structure.
+
+        Args:
+            None
+
+        Returns:
+            (np.ndarray): timesteps x atoms x 3 numpy array of cartesian coordinates.
+
+        """
+        cart_coords = np.array([s.cart_coords for s in self.structures])
+        return cart_coords

@@ -221,6 +221,40 @@ class TestVasprun(unittest.TestCase):
         mock_parse_structure.assert_has_calls([call(s1), call(s2)])
         mock_structure_from_structure_data.assert_has_calls([call(**structure_data_1),
                                                              call(**structure_data_2)])
-                         
+    
+    def test_frac_coords(self):
+        with patch('vasppy.vasprun.Vasprun.structures', 
+                   new_callable=PropertyMock) as mock_structures:
+            structures = [Mock(spec=Structure), Mock(spec=Structure)]
+            frac_coords = [[[0.0, 0.1, 0.2],
+                            [0.3, 0.4, 0.5]],
+                           [[0.6, 0.7, 0.8],
+                            [0.9, 0.0, 0.1]]]
+            structures[0].frac_coords = frac_coords[0]
+            structures[1].frac_coords = frac_coords[1]
+            mock_structures.return_value = structures
+            dummy_xml = ("<modeling>\n"
+                     "  data"
+                     "</modeling>")
+            vasprun = vasprun_from_xml_string(dummy_xml) 
+            np.testing.assert_array_equal(vasprun.frac_coords, np.array(frac_coords))
+                             
+    def test_cart_coords(self):
+        with patch('vasppy.vasprun.Vasprun.structures', 
+                   new_callable=PropertyMock) as mock_structures:
+            structures = [Mock(spec=Structure), Mock(spec=Structure)]
+            cart_coords = [[[0.0, 0.1, 0.2],
+                            [0.3, 0.4, 0.5]],
+                           [[0.6, 0.7, 0.8],
+                            [0.9, 0.0, 0.1]]]
+            structures[0].cart_coords = cart_coords[0]
+            structures[1].cart_coords = cart_coords[1]
+            mock_structures.return_value = structures
+            dummy_xml = ("<modeling>\n"
+                     "  data"
+                     "</modeling>")
+            vasprun = vasprun_from_xml_string(dummy_xml) 
+            np.testing.assert_array_equal(vasprun.cart_coords, np.array(cart_coords))
+                             
 if __name__ == '__main__':
     unittest.main()

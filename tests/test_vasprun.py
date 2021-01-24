@@ -20,8 +20,8 @@ class TestVasprun(unittest.TestCase):
         for element in vasprun.doc.iter():
             self.assertEqual(element.tag, 'root')
             self.assertEqual(element.text, 'data')
-        self.assertEqual(vasprun._atom_names, None)
-        self.assertEqual(vasprun._structures, None)
+        self.assertIsNone(vasprun._atom_names)
+        self.assertIsNone(vasprun._structures)
 
     def test_parse_atom_names(self):
         dummy_xml = ("<root>\n"
@@ -162,7 +162,7 @@ class TestVasprun(unittest.TestCase):
             structure_dict = parse_structure(elem)
         self.assertEqual(structure_dict['lattice'], expected_lattice)
         self.assertEqual(structure_dict['frac_coords'], expected_frac_coords)
-        self.assertEqual(structure_dict['selective_dynamics'], None)
+        self.assertIsNone(structure_dict['selective_dynamics'])
         mock_parse_varray.assert_has_calls([call(v1), call(v2)])
 
     # TODO test_parse_structure_with_selective_dynamics
@@ -255,6 +255,40 @@ class TestVasprun(unittest.TestCase):
                      "</modeling>")
             vasprun = vasprun_from_xml_string(dummy_xml) 
             np.testing.assert_array_equal(vasprun.cart_coords, np.array(cart_coords))
-                             
+    
+    def test_forces(self):
+        dummy_xml = ("<modeling>\n"
+                     "  <calculation>\n"
+                     "    <varray name='forces'>\n"
+                     "    </varray>\n"
+                     "  </calculation>\n"
+                     "  <calculation>\n"
+                     "    <varray name='forces'>\n"
+                     "    </varray>\n"
+                     "  </calculation>\n"
+                     "</modeling>")
+        expected_forces = [[[0.1, 0.2, 0.3],
+                            [0.4, 0.5, 0.6]],
+                           [[0.7, 0.8, 0.9],
+                            [1.0, 0.0, 0.1]]]
+        vasprun = vasprun_from_xml_string(dummy_xml)
+        with patch('vasppy.vasprun.parse_varray') as mock_parse_varray:
+            mock_parse_varray.side_effect = expected_forces
+            forces = vasprun.forces
+        self.assertEqual(mock_parse_varray.call_count, 2)
+        np.testing.assert_array_equal(forces, np.array(expected_forces)) 
+
+    def test_forces_is_none_if_no_forces_in_vasprun(self):
+        dummy_xml = ("<modeling>\n"
+                     "  <calculation>\n"
+                     "  </calculation>\n"
+                     "  <calculation>\n"
+                     "  </calculation>\n"
+                     "</modeling>")
+        vasprun = vasprun_from_xml_string(dummy_xml)            
+        with patch('vasppy.vasprun.parse_varray') as mock_parse_varray:
+            forces = vasprun.forces
+        self.assertIsNone(forces)
+
 if __name__ == '__main__':
     unittest.main()

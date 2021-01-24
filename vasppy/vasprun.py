@@ -36,12 +36,14 @@ def parse_structure(structure: etree.Element) -> Dict[str, Any]:
         (dict): Dictionary of structure data:
             `lattice`: cell matrix (list(list(float))..
             `frac_coords`: atom fractional coordinates (list(list(float)).
-            `selective_dynamics`: selective dynamics (bool|None).
+            `selective_dynamics`: selective dynamics (list(bool)|None).
 
     """
     latt = parse_varray(structure.find("crystal").find("varray"))
     pos = parse_varray(structure.find("varray"))
     sdyn = structure.find("varray/[@name='selective']")
+    if sdyn:
+        sdyn = parse_varray(sdyn)
     structure_dict = {'lattice': latt,
                       'frac_coords': pos,
                       'selective_dynamics': sdyn}
@@ -189,3 +191,27 @@ class Vasprun:
         """
         cart_coords = np.array([s.cart_coords for s in self.structures])
         return cart_coords
+
+    @property
+    def forces(self) -> Optional[np.ndarray]:
+        """Cartesian forces from each calculation structure
+           (if present in the vasprun XML).
+
+        Args:
+            None
+
+        Returns:
+            (np.ndarray|None): timesteps x atoms x 3 numpy array of cartesian forces
+                if forces are included in the vasprun XML. If not, returns None. 
+
+        """
+        forces = []
+        for child in self.doc.iterfind("calculation"):
+            elem = child.find("varray/[@name='forces']")
+            if elem != None:
+                forces.append(parse_varray(elem))
+        if forces:
+            return np.array(forces)
+        else:
+            return None
+ 

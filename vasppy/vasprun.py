@@ -70,7 +70,21 @@ def structure_from_structure_data(lattice: List[List[float]],
     return structure
 
 class Vasprun:
-    """Object for parsing vasprun.xml data."""
+    """Object for parsing vasprun.xml data.
+
+    Attributes:
+        atom_names (list(str)): List of atom name strings.
+        structures (list(pymatgen.Structure): List of structures as pymatgen Structure objects.
+        frac_coords (np.array): timesteps x atoms x 3 numpy array of fractional coordinates.
+        cart_coords (np.array): timesteps x atoms x 3 numpy array of cartesian coordinates.
+        forces (:obj:`np.array`, optional): timesteps x atoms x 3 numpy array of forces.
+
+    Examples:
+        >>> vasprun = Vasprun('vasprun.xml')
+        >>> cart_coords = vasprun.cart_coords
+        >>> forces = vasprun.forces
+
+    """
 
     def __init__(self,
                  filename: str) -> None: 

@@ -189,8 +189,10 @@ class TestVasprun(unittest.TestCase):
                      "  data"
                      "</modeling>")
         vasprun = vasprun_from_xml_string(dummy_xml)
-        s1 = etree.SubElement(vasprun.doc, "structure")
-        s2 = etree.SubElement(vasprun.doc, "structure") 
+        c1 = etree.SubElement(vasprun.doc, "calculation")
+        c2 = etree.SubElement(vasprun.doc, "calculation")
+        s1 = etree.SubElement(c1, "structure")
+        s2 = etree.SubElement(c2, "structure") 
         expected_lattice = [[10.0, 0.0, 0.0],
                             [0.0, 10.0, 0.0],
                             [0.0, 0.0, 10.0]]

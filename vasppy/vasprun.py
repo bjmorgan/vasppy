@@ -149,7 +149,8 @@ class Vasprun:
 
         """
         structures = []
-        for elem in self.doc.iterfind("structure"):
+        for child in self.doc.iterfind("calculation"):
+            elem = child.find("structure")
             structure_data = parse_structure(elem)
             structures.append(
                 structure_from_structure_data(

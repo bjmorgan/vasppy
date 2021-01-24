@@ -18,8 +18,8 @@ class Vasprun:
         doc = etree.parse(filename)
         self.doc = doc.getroot()
 
-    def species(self) -> List[str]:
-        """Return a list of species strings for the atoms in this calculation.
+    def atom_names(self) -> List[str]:
+        """Return a list of atom names for the atoms in this calculation.
 
         Args:
             None

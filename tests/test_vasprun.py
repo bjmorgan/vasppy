@@ -15,7 +15,7 @@ class TestVasprun(unittest.TestCase):
             self.assertEqual(element.tag, 'root')
             self.assertEqual(element.text, 'data')
 
-    def test_species(self):
+    def test_atom_names(self):
         dummy_xml = ("<root>\n"
                      "  <atominfo>\n"
                      "    <array name='atoms'>\n"
@@ -30,18 +30,18 @@ class TestVasprun(unittest.TestCase):
                      "</root>")
         dummy_xml_file = BytesIO(dummy_xml.encode('ascii'))
         vasprun = Vasprun(dummy_xml_file)
-        self.assertEqual(vasprun.species(), ['Nb', 'O', 'F', 'F'])
+        self.assertEqual(vasprun.atom_names(), ['Nb', 'O', 'F', 'F'])
 
-    def test_species_raises_valueerror_if_no_atominfo_found(self):
+    def test_atom_names_raises_valueerror_if_no_atominfo_found(self):
         dummy_xml = ("<root>\n"
                      "  <foo>bar</foo>\n"
                      "</root>")
         dummy_xml_file = BytesIO(dummy_xml.encode('ascii'))
         vasprun = Vasprun(dummy_xml_file)
         with self.assertRaises(ValueError):
-            vasprun.species()
+            vasprun.atom_names()
    
-    def test_species_raises_valueerror_if_no_atomname(self):
+    def test_atom_names_raises_valueerror_if_no_atomname(self):
         dummy_xml = ("<root>\n"
                      "  <atominfo>\n"
                      "  </atominfo>\n"
@@ -49,7 +49,7 @@ class TestVasprun(unittest.TestCase):
         dummy_xml_file = BytesIO(dummy_xml.encode('ascii'))
         vasprun = Vasprun(dummy_xml_file)
         with self.assertRaises(ValueError):
-            vasprun.species()
+            vasprun.atom_names()
    
 if __name__ == '__main__':
     unittest.main()

@@ -8,3 +8,4 @@ codeclimate-test-reporter
 fortranformat
 scipy>=1.4.1
 tqdm
+lxml

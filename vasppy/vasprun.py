@@ -1,6 +1,6 @@
 from lxml import etree # type: ignore
-from typing import List, Union, TypeVar
-TNum = TypeVar('TNum', int, float)
+from typing import List, Union, Optional, Any, Dict
+from pymatgen import Structure # type: ignore
 
 def parse_varray(varray: etree.Element) -> Union[List[List[float]], 
                                                  List[List[int]],
@@ -25,6 +25,47 @@ def parse_varray(varray: etree.Element) -> Union[List[List[float]],
         m = [[float(number) for number in v] for v in v_list]
     return m
 
+def parse_structure(structure: etree.Element) -> Dict[str, Any]:
+    """Parse <structure> data..
+
+    Args:
+        structure (etree.Element): xml <structure> element.
+
+    Returns:
+        (dict): Dictionary of structure data:
+            `lattice`: cell matrix (list(list(float))..
+            `frac_coords`: atom fractional coordinates (list(list(float)).
+            `selective_dynamics`: selective dynamics (bool|None).
+
+    """
+    latt = parse_varray(structure.find("crystal").find("varray"))
+    pos = parse_varray(structure.find("varray"))
+    sdyn = structure.find("varray/[@name='selective']")
+    structure_dict = {'lattice': latt,
+                      'frac_coords': pos,
+                      'selective_dynamics': sdyn}
+    return structure_dict
+
+def structure_from_structure_data(lattice: List[List[float]],
+                                  atom_names: List[str],
+                                  frac_coords: List[List[float]]) -> Structure:
+    """Generate a pymatgen Structure.
+
+    Args:
+        lattice (list(list(float)): 3x3 cell matrix.
+        atom_names (list(str)): list of atom name strings.
+        frac_coords (list(list(float): Nx3 list of fractional coordinates.
+
+    Returns:
+        (pymatgen.Structure)
+
+    """
+    structure = Structure(lattice=lattice,
+                          species=atom_names,
+                          coords=frac_coords,
+                          coords_are_cartesian=False)
+    return structure
+
 class Vasprun:
     """Object for parsing vasprun.xml data."""
 
@@ -41,8 +82,42 @@ class Vasprun:
         """
         doc = etree.parse(filename)
         self.doc = doc.getroot()
+        self._atom_names = None # type: Optional[List[str]]
+        self._structures = None # type: Optional[List[Structure]]
 
+    @property
+    def structures(self) -> List[Structure]:
+        """Getter for structures attribut.
+
+        Returns:
+            (list(pymatgen.Structure)): A list of pymatgen Structure objects.
+
+        Notes:
+            When first called this parses the vasprun XML data and
+            caches the result.
+
+        """
+        if not self._structures:
+            self._structures = self.parse_structures()
+        return self._structures
+ 
+    @property
     def atom_names(self) -> List[str]:
+        """Getter for atom_names attribute.
+
+        Returns:
+            (list(str)): A list of atom name strings.
+
+        Notes:
+            When first called this parses the vasprun XML data and
+            caches the result.
+
+        """
+        if not self._atom_names:
+            self._atom_names = self.parse_atom_names()
+        return self._atom_names
+
+    def parse_atom_names(self) -> List[str]:
         """Return a list of atom names for the atoms in this calculation.
 
         Args:
@@ -63,3 +138,24 @@ class Vasprun:
             raise ValueError("No atomname found in file")
         return atom_names 
 
+    def parse_structures(self) -> List[Structure]:
+        """Returns a list of pymatgen Structures for this calculation.
+
+        Args:
+            None
+
+        Returns:
+            (list(pymatgen.Structure))
+
+        """
+        structures = []
+        for elem in self.doc.iterfind("structure"):
+            structure_data = parse_structure(elem)
+            structures.append(
+                structure_from_structure_data(
+                    lattice=structure_data['lattice'],
+                    atom_names=self.atom_names,
+                    frac_coords=structure_data['frac_coords']
+                )
+            )
+        return structures

@@ -4,7 +4,7 @@ from vasppy.vasprun import structure_from_structure_data
 from unittest.mock import Mock, patch, call, mock_open, PropertyMock
 from lxml import etree
 from io import BytesIO
-from pymatgen import Lattice, Structure
+from pymatgen.core import Lattice, Structure
 import numpy as np
 
 def vasprun_from_xml_string(xml_string):

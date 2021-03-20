@@ -1,6 +1,6 @@
 import numpy as np  # type: ignore
 from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
-from pymatgen import Structure  # type: ignore
+from pymatgen.core import Structure  # type: ignore
 from typing import List, Optional, TypeVar, Type
 
 """

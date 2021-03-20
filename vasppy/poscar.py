@@ -4,8 +4,8 @@ import re
 import copy
 from vasppy import configuration, atom, cell
 from vasppy.units import angstrom_to_bohr
-from pymatgen import Lattice as pmg_Lattice  # type: ignore
-from pymatgen import Structure as pmg_Structure  # type: ignore
+from pymatgen.core import Lattice as pmg_Lattice  # type: ignore
+from pymatgen.core import Structure as pmg_Structure  # type: ignore
 from pymatgen.io.cif import CifWriter  # type: ignore
 from collections import Counter
 

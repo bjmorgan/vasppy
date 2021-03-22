@@ -3,7 +3,7 @@ vasppy: Python utilities for working with VASP inputs and outputs.
 """
 
 from setuptools import setup, find_packages
-from vasppy import __version__ as VERSION
+from vasppy.version import __version__ as VERSION
 
 readme = 'README.md'
 long_description = open(readme).read()
@@ -47,7 +47,7 @@ setup(
     install_requires=['monty',
                       'numpy>=1.16.2',
                       'pandas',
-                      'pymatgen',
+                      'pymatgen>=2022.0.0',
                       'PyYAML', 
                       'coverage==4.3.4',
                       'codeclimate-test-reporter',

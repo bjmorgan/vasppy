@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import numpy as np  # type: ignore
 from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
 from pymatgen.core import Structure  
 from typing import List, Optional, TypeVar, Type
 
+
 """
 This module provides classes for calculating radial distribution functions
 and Van Hove correlation functions.
 """
-RDF = TypeVar('RDF', bound='RadialDistributionFunction')
+# RDF = TypeVar('RDF', bound='RadialDistributionFunction')
 
 class NeighbourList(object):
     """
@@ -33,8 +36,56 @@ class NeighbourList(object):
             r_cut (float): Neighbour cutoff distance. 
 
         """
-        pass
+        all_dr_ij = dr_ij(structure=structure,
+                          indices_i=indices_i,
+                          indices_j=indices_j,
+                          self_reference=False)
+        self.data = (all_dr_ij <= r_cut).astype(int)
         
+    @property
+    def coordination_numbers(self) -> np.ndarray:
+        """
+        Return the coordination number of each site i.
+        
+        Args:
+            None
+            
+        Returns:
+            None
+            
+        """
+        return np.sum(self.data, axis=1)
+        
+    @classmethod
+    def from_species_strings(cls: Type[NeighbourList],
+                             structure: Structure,
+                             species_i: str,
+                             species_j: str,
+                             r_cut: float) -> NeighbourList:
+        """
+        Initialise a NeighbourList instance by specifying species strings.
+        
+        Args:
+            structure (pymatgen.Structure): A pymatgen Structure.
+            species_i (str): String for species i, e.g., ``"Na"``.
+            species_j (str): String for species j, e.g., ``"Cl"``.
+            r_cut (float): Neighbour cutoff radius.
+         
+        Returns:
+            (NeighbourList)
+            
+        """                   
+        indices_i = [i for i, site in 
+                     enumerate(structure)
+                     if site.species_string is species_i]
+        indices_j = [j for j, site in 
+                     enumerate(structure)
+                     if site.species_string is species_j]
+        return cls(structure=structure,
+                   indices_i=indices_i,
+                   indices_j=indices_j,
+                   r_cut=r_cut)
+
 
 class RadialDistributionFunction(object):
     """
@@ -129,11 +180,11 @@ class RadialDistributionFunction(object):
         return gaussian_filter1d(self.rdf, sigma=sigma_n_bins)
 
     @classmethod
-    def from_species_strings(cls: Type[RDF], 
+    def from_species_strings(cls: Type[RadialDistributionFunction], 
                              structures: List[Structure], 
                              species_i: str, 
                              species_j: Optional[str] = None, 
-                             **kwargs) -> RDF:
+                             **kwargs) -> RadialDistributionFunction:
         """
         Initialise a RadialDistributionFunction instance by specifying species strings.
 
@@ -211,9 +262,6 @@ def dr_ij(structure: Structure,
         else:
             to_return = dr_ij
         return to_return
-
-
-VHA = TypeVar('VHA', bound='VanHoveAnalysis')
 
 
 class VanHoveAnalysis(object):

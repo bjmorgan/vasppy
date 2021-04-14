@@ -1,14 +1,40 @@
 import numpy as np  # type: ignore
 from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
-from pymatgen.core import Structure  # type: ignore
+from pymatgen.core import Structure  
 from typing import List, Optional, TypeVar, Type
 
 """
-This module provides classes for calculating radial disitrbution functions
+This module provides classes for calculating radial distribution functions
 and Van Hove correlation functions.
 """
 RDF = TypeVar('RDF', bound='RadialDistributionFunction')
 
+class NeighbourList(object):
+    """
+    Class for computing a set of neighbour lists.
+    
+    Attributes:
+        TODO
+        
+    """
+
+    def __init__(self,
+                 structure: Structure,
+                 indices_i: List[int],
+                 indices_j: List[int],
+                 r_cut: float) -> None:
+        """
+        Initialise a NeighbourList instance.
+    
+        Args:
+            structure (pymatgen.Structure): Pymatgen Structure object to parse.
+            indices_i (list(int)): List of indices of central atoms.
+            indices_j (list(int)): List of indices of potential neighbour atoms.
+            r_cut (float): Neighbour cutoff distance. 
+
+        """
+        pass
+        
 
 class RadialDistributionFunction(object):
     """
@@ -71,7 +97,11 @@ class RadialDistributionFunction(object):
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
         for structure, weight in zip(structures, weights):
-            hist = np.histogram(self.__dr_ij(structure),
+            all_dr_ij = dr_ij(structure=structure,
+                              indices_i=self.indices_i,
+                              indices_j=self.indices_j,
+                              self_reference=False).flatten()
+            hist = np.histogram(all_dr_ij,
                                 bins=nbins,
                                 range=(r_min, r_max),
                                 density=False)[0]
@@ -135,27 +165,52 @@ class RadialDistributionFunction(object):
                    indices_j=indices_j, 
                    **kwargs)
 
-    def __dr_ij(self, 
-                structure: Structure) -> np.ndarray:
+
+def dr_ij(structure: Structure,
+          indices_i: Optional[List[int]] = None,
+          indices_j: Optional[List[int]] = None,
+          self_reference: bool = False) -> np.ndarray:
         """
         Calculate all i-j interatomic distances for a single pymatgen Structure.
 
         Args:
-            structure (:obj:`pymatgen.Structure`): A pymatgen Structure.
-
+            structure (:obj:`pymatgen.Structure`): A pymatgen Structure
+            indices_i (:obj:`list(int)`, optional): List of indices for species i.
+                Optional, default is `None`.
+                If `indices_i` is not specified, then distances will be calculated between 
+                all pairs of atoms.
+            indices_j (:obj:`list(int)`, optional): List of indices for species j.
+                Optional, default is `None`.
+                If `indices_j` is not specified, then `indices_j` will be set equal
+                to `indices_i`.
+            self_reference (bool, optional): If computing distances for i==j, whether
+                to include the i==j dr=0 terms. Optional, default is `False`.
+                
         Returns:
-            np.array: 1D numpy array of length N_i x N_j of distances.
+            np.array: N_i x N_j numpy array of i-j minimum image distances.
 
         """
+        if not(indices_i):
+            indices_i = list(range(len(structure)))
+        if not(indices_j):
+            indices_j = indices_i
+        # TODO what happens if indices_i and indices_j only partially overlap?
         lattice = structure.lattice
-        i_frac_coords = structure.frac_coords[self.indices_i]
-        j_frac_coords = structure.frac_coords[self.indices_j]
+        i_frac_coords = structure.frac_coords[indices_i]
+        j_frac_coords = structure.frac_coords[indices_j]
         dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
-        # Mask dr_ij 2D array to remove i==j dr=0 terms
-        mask = np.ones(dr_ij.shape, dtype=bool)
-        if self.self_reference:
-            np.fill_diagonal(mask, 0)
-        return np.ndarray.flatten(dr_ij[mask])
+        # if indices_i and indices_j contain common elements AND self_reference == False
+        # then we want to mask dr_ij to remove the i==j dr=0 terms
+        if (np.intersect1d(indices_i, indices_j).size > 0) and not self_reference:
+            mask = np.ones_like(dr_ij, dtype=bool)
+            for i_loc, i in enumerate(indices_i):
+                for j_loc, j in enumerate(indices_j):
+                    if i == j:
+                        mask[i_loc, j_loc] = 0
+            to_return = dr_ij[mask].reshape(len(indices_i), -1)
+        else:
+            to_return = dr_ij
+        return to_return
 
 
 VHA = TypeVar('VHA', bound='VanHoveAnalysis')

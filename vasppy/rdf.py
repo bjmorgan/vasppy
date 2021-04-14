@@ -10,7 +10,6 @@ from typing import List, Optional, TypeVar, Type
 This module provides classes for calculating radial distribution functions
 and Van Hove correlation functions.
 """
-# RDF = TypeVar('RDF', bound='RadialDistributionFunction')
 
 class NeighbourList(object):
     """
@@ -217,53 +216,6 @@ class RadialDistributionFunction(object):
                    **kwargs)
 
 
-def dr_ij(structure: Structure,
-          indices_i: Optional[List[int]] = None,
-          indices_j: Optional[List[int]] = None,
-          self_reference: bool = False) -> np.ndarray:
-        """
-        Calculate all i-j interatomic distances for a single pymatgen Structure.
-
-        Args:
-            structure (:obj:`pymatgen.Structure`): A pymatgen Structure
-            indices_i (:obj:`list(int)`, optional): List of indices for species i.
-                Optional, default is `None`.
-                If `indices_i` is not specified, then distances will be calculated between 
-                all pairs of atoms.
-            indices_j (:obj:`list(int)`, optional): List of indices for species j.
-                Optional, default is `None`.
-                If `indices_j` is not specified, then `indices_j` will be set equal
-                to `indices_i`.
-            self_reference (bool, optional): If computing distances for i==j, whether
-                to include the i==j dr=0 terms. Optional, default is `False`.
-                
-        Returns:
-            np.array: N_i x N_j numpy array of i-j minimum image distances.
-
-        """
-        if not(indices_i):
-            indices_i = list(range(len(structure)))
-        if not(indices_j):
-            indices_j = indices_i
-        # TODO what happens if indices_i and indices_j only partially overlap?
-        lattice = structure.lattice
-        i_frac_coords = structure.frac_coords[indices_i]
-        j_frac_coords = structure.frac_coords[indices_j]
-        dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
-        # if indices_i and indices_j contain common elements AND self_reference == False
-        # then we want to mask dr_ij to remove the i==j dr=0 terms
-        if (np.intersect1d(indices_i, indices_j).size > 0) and not self_reference:
-            mask = np.ones_like(dr_ij, dtype=bool)
-            for i_loc, i in enumerate(indices_i):
-                for j_loc, j in enumerate(indices_j):
-                    if i == j:
-                        mask[i_loc, j_loc] = 0
-            to_return = dr_ij[mask].reshape(len(indices_i), -1)
-        else:
-            to_return = dr_ij
-        return to_return
-
-
 class VanHoveAnalysis(object):
     """
     Class for computing Van Hove correlation functions.
@@ -387,3 +339,49 @@ def shell_volumes(intervals: np.ndarray) -> np.ndarray:
 
     """
     return 4.0 / 3.0 * np.pi * (intervals[1:]**3 - intervals[:-1]**3)
+    
+def dr_ij(structure: Structure,
+      indices_i: Optional[List[int]] = None,
+      indices_j: Optional[List[int]] = None,
+      self_reference: bool = False) -> np.ndarray:
+    """
+    Calculate all i-j interatomic distances for a single pymatgen Structure.
+
+    Args:
+        structure (:obj:`pymatgen.Structure`): A pymatgen Structure
+        indices_i (:obj:`list(int)`, optional): List of indices for species i.
+            Optional, default is `None`.
+            If `indices_i` is not specified, then distances will be calculated between 
+            all pairs of atoms.
+        indices_j (:obj:`list(int)`, optional): List of indices for species j.
+            Optional, default is `None`.
+            If `indices_j` is not specified, then `indices_j` will be set equal
+            to `indices_i`.
+        self_reference (bool, optional): If computing distances for i==j, whether
+            to include the i==j dr=0 terms. Optional, default is `False`.
+            
+    Returns:
+        np.array: N_i x N_j numpy array of i-j minimum image distances.
+
+    """
+    if not(indices_i):
+        indices_i = list(range(len(structure)))
+    if not(indices_j):
+        indices_j = indices_i
+    lattice = structure.lattice
+    i_frac_coords = structure.frac_coords[indices_i]
+    j_frac_coords = structure.frac_coords[indices_j]
+    dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
+    # If indices_i and indices_j contain common elements AND self_reference == False
+    # then we want to mask dr_ij to remove the i==j dr=0 terms
+    if (np.intersect1d(indices_i, indices_j).size > 0) and not self_reference:
+        mask = np.ones_like(dr_ij, dtype=bool)
+        for i_loc, i in enumerate(indices_i):
+            for j_loc, j in enumerate(indices_j):
+                if i == j:
+                    mask[i_loc, j_loc] = 0
+        to_return = dr_ij[mask].reshape(len(indices_i), -1)
+    else:
+        to_return = dr_ij
+    return to_return
+

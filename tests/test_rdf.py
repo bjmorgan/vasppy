@@ -177,7 +177,7 @@ class TestNeighbourList(unittest.TestCase):
                                        indices_i=indices_i,
                                        indices_j=indices_j,
                                        r_cut=r_cut)
-        np.testing.assert_array_equal(neighbour_list.data, np.array([[0]]))
+        np.testing.assert_array_equal(neighbour_list.vectors, np.array([[0]]))
         
     def test_NeighbourList_two(self):
         coords = np.array([[0.5, 0.5, 0.5],
@@ -193,7 +193,7 @@ class TestNeighbourList(unittest.TestCase):
                                        indices_i=indices_i,
                                        indices_j=indices_j,
                                        r_cut=r_cut)
-        np.testing.assert_array_equal(neighbour_list.data, np.array([[1],[1]]))
+        np.testing.assert_array_equal(neighbour_list.vectors, np.array([[1],[1]]))
         
     def test_coordination_numbers(self):
         coords = np.array([[0.5, 0.5, 0.5],

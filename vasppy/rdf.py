@@ -17,7 +17,11 @@ class NeighbourList(object):
     Class for computing a set of neighbour lists.
     
     Attributes:
-        TODO
+        vectors (np.ndarray): An array of M neighbour lists, with each list a 1D
+            vector over N potential neighbours, stored as a M x N numpy array.
+            Each neighbour list is constructed following the scheme in 
+            Rabani et al. J. Chem. Phys. 1997
+            doi: https://doi.org/10.1063/1.474927
         
     """
 
@@ -40,7 +44,7 @@ class NeighbourList(object):
                           indices_i=indices_i,
                           indices_j=indices_j,
                           self_reference=False)
-        self.data = (all_dr_ij <= r_cut).astype(int)
+        self.vectors = (all_dr_ij <= r_cut).astype(int)
         
     @property
     def coordination_numbers(self) -> np.ndarray:
@@ -54,7 +58,7 @@ class NeighbourList(object):
             None
             
         """
-        return np.sum(self.data, axis=1)
+        return np.sum(self.vectors, axis=1)
         
     @classmethod
     def from_species_strings(cls: Type[NeighbourList],

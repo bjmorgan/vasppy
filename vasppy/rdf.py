@@ -4,6 +4,7 @@ import numpy as np  # type: ignore
 from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
 from pymatgen.core import Structure  
 from typing import List, Optional, TypeVar, Type
+from numpy.typing import ArrayLike
 
 
 """
@@ -364,9 +365,9 @@ def dr_ij(structure: Structure,
         np.array: N_i x N_j numpy array of i-j minimum image distances.
 
     """
-    if not(indices_i):
+    if indices_i is None:
         indices_i = list(range(len(structure)))
-    if not(indices_j):
+    if indices_j is None:
         indices_j = indices_i
     lattice = structure.lattice
     i_frac_coords = structure.frac_coords[indices_i]

@@ -58,6 +58,19 @@ class TestRDFFunctions(unittest.TestCase):
         np.testing.assert_array_almost_equal(dr,
             np.array([[3.46410162]]))
             
+    def test_dr_ij_indices_i_indices_j_set_as_numpy_arrays(self):
+        coords = np.array([[0.5, 0.5, 0.5],
+                           [0.0, 0.0, 0.0]])
+        atom_list = ['Na', 'Cl']
+        lattice = Lattice.from_parameters(a=4.0, b=4.0, c=4.0, 
+                                  alpha=90, beta=90, gamma=90)
+        structure = Structure(lattice, atom_list, coords) 
+        dr = dr_ij(structure, 
+                   indices_i=np.array([0]),
+                   indices_j=np.array([1]))
+        np.testing.assert_array_almost_equal(dr,
+            np.array([[3.46410162]]))
+            
     def test_dr_ij_masking_with_unsorted_indices(self):
         coords = np.array([[0.5, 0.5, 0.5],
                            [0.0, 0.0, 0.0]])

@@ -90,6 +90,33 @@ class NeighbourList(object):
                    indices_j=indices_j,
                    r_cut=r_cut)
 
+def neighbour_list_correlation(nlist_i: NeighbourList,
+                               nlist_j: NeighbourList) -> np.ndarray:
+    """
+    Compute the normalised correlation between two NeighbourList object.
+    
+    Args:
+        nlist_i (NeighbourList): A NeighbourList object.
+        nlist_j (NeighbourList): A NeighbourList object.
+        
+    Returns:
+        (np.ndarray(float)): A 1D array of normalised correlation terms.
+        
+    Raises:
+        ValueError: If the two NeighbourList objects have different numbers
+            of lengths of neighbour list vectors.
+        
+    Note:
+        For each neighbour list vector, computes (l_i.l_j)/(l_i.l_i).
+        See Rabani et al. J. Chem. Phys. 1997 doi:https://doi.org/10.1063/1.474927
+        for details.
+
+    """
+    if nlist_i.vectors.shape != nlist_j.vectors.shape:
+        raise ValueError(f'NeighbourList vector shapes are not equal: {nlist_i.vectors.shape} != {nlist_j.vectors.shape}')
+    return (np.einsum('ij,ij->i', nlist_i.vectors, nlist_j.vectors) / 
+            np.einsum('ij,ij->i', nlist_i.vectors, nlist_i.vectors))
+
 
 class RadialDistributionFunction(object):
     """

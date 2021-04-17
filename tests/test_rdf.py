@@ -2,6 +2,7 @@ import unittest
 from vasppy.rdf import RadialDistributionFunction
 from vasppy.rdf import NeighbourList
 from vasppy.rdf import dr_ij
+from vasppy.rdf import neighbour_list_correlation
 import numpy as np
 from unittest.mock import Mock, patch, call, create_autospec
 from pymatgen.core import Structure, Lattice
@@ -230,7 +231,46 @@ class TestNeighbourList(unittest.TestCase):
                                          indices_j=[1],
                                          r_cut=r_cut)
             self.assertTrue(isinstance(nlist, NeighbourList))
-        
-        
+            
+    def test_neighbour_list_correlation_single_lists(self):
+        nlist_i = Mock(spec=NeighbourList)
+        nlist_j = Mock(spec=NeighbourList)
+        nlist_i.vectors = np.array([[1, 1, 0, 0]])
+        nlist_j.vectors = np.array([[1, 0, 0, 1]])
+        np.testing.assert_array_equal(neighbour_list_correlation(nlist_i, nlist_j),
+                                      np.array([0.5]))
+        np.testing.assert_array_equal(neighbour_list_correlation(nlist_i, nlist_i),
+                                      np.array([1.0]))
+
+            
+    def test_neighbour_list_correlation_multiple_lists(self):
+        nlist_i = Mock(spec=NeighbourList)
+        nlist_j = Mock(spec=NeighbourList)
+        nlist_i.vectors = np.array([[1, 1, 0, 0],
+                                    [1, 1, 0, 0]])
+        nlist_j.vectors = np.array([[1, 0, 1, 0],
+                                    [1, 1, 0, 0]])
+        np.testing.assert_array_equal(neighbour_list_correlation(nlist_i, nlist_j),
+                                      np.array([0.5, 1.0]))
+        np.testing.assert_array_equal(neighbour_list_correlation(nlist_i, nlist_i),
+                                      np.array([1.0, 1.0]))
+                                      
+    def test_neighbour_list_correlation_different_lengths_raises_valueerror(self):
+        nlist_i = Mock(spec=NeighbourList)
+        nlist_j = Mock(spec=NeighbourList)
+        nlist_i.vectors = np.array([[1, 1, 0, 0, 1]])
+        nlist_j.vectors = np.array([[1, 0, 0, 1]])
+        with self.assertRaises(ValueError):
+            neighbour_list_correlation(nlist_i, nlist_j)                                      
+                                      
+    def test_neighbour_list_correlation_different_vector_numbers_raises_valueerror(self):
+        nlist_i = Mock(spec=NeighbourList)
+        nlist_j = Mock(spec=NeighbourList)
+        nlist_i.vectors = np.array([[1, 1, 0, 0],
+                                    [1, 1, 0, 0]])
+        nlist_j.vectors = np.array([[1, 0, 1, 0]])
+        with self.assertRaises(ValueError):
+            neighbour_list_correlation(nlist_i, nlist_j)
+
 if __name__ == '__main__':
     unittest.main()

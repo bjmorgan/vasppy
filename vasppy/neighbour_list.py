@@ -57,7 +57,12 @@ class NeighbourList(object):
             
         """
         return np.sum(self.vectors, axis=1)
-        
+	
+    def __eq__(self,
+               other: NeighbourList) -> bool:
+        """Test whether two NeighbourList objects have equal vectors."""
+        return (self.vectors == other.vectors).all()
+
     @classmethod
     def from_species_strings(cls: Type[NeighbourList],
                              structure: Structure,

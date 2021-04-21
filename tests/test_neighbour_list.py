@@ -6,6 +6,7 @@ from vasppy.neighbour_list import neighbour_list_n_in
 import numpy as np
 from unittest.mock import Mock, patch, call, create_autospec
 from pymatgen.core import Structure, Lattice
+from copy import deepcopy
         
 
 class TestNeighbourList(unittest.TestCase):
@@ -194,7 +195,51 @@ class TestNeighbourList(unittest.TestCase):
         nlist_i.vectors = np.array([[1, 1, 0, 0, 1]])
         nlist_j.vectors = np.array([[1, 0, 0, 1]])
         with self.assertRaises(ValueError):
-            neighbour_list_n_in(nlist_i, nlist_j)   
+            neighbour_list_n_in(nlist_i, nlist_j)
+
+    def test_neighbour_lists_are_equal_returns_true(self):
+        coords = np.array([[0.5, 0.5, 0.5],
+                           [0.0, 0.0, 0.0]])
+        atom_list = ['Na', 'Cl']
+        lattice = Lattice.from_parameters(a=4.0, b=4.0, c=4.0, 
+                                  alpha=90, beta=90, gamma=90)
+        structure = Structure(lattice, atom_list, coords)
+        indices_i = [0]
+        indices_j = [1]
+        r_cut = 3.0
+        neighbour_list = NeighbourList(structure=structure,
+                                       indices_i=indices_i,
+                                       indices_j=indices_j,
+                                       r_cut=r_cut)
+        nlist_i = neighbour_list
+        nlist_j = deepcopy(neighbour_list)
+        nlist_i.vectors = np.array([[1, 1, 0, 0],
+                                    [1, 0, 1, 1]])
+        nlist_j.vectors = np.array([[1, 1, 0, 0],
+                                    [1, 0, 1, 1]])
+        self.assertTrue(nlist_i == nlist_j)
+        
+    def test_neighbour_lists_are_not_equal_returns_false(self):
+        coords = np.array([[0.5, 0.5, 0.5],
+                           [0.0, 0.0, 0.0]])
+        atom_list = ['Na', 'Cl']
+        lattice = Lattice.from_parameters(a=4.0, b=4.0, c=4.0, 
+                                  alpha=90, beta=90, gamma=90)
+        structure = Structure(lattice, atom_list, coords)
+        indices_i = [0]
+        indices_j = [1]
+        r_cut = 3.0
+        neighbour_list = NeighbourList(structure=structure,
+                                       indices_i=indices_i,
+                                       indices_j=indices_j,
+                                       r_cut=r_cut)
+        nlist_i = neighbour_list
+        nlist_j = deepcopy(neighbour_list)
+        nlist_i.vectors = np.array([[1, 1, 0, 0],
+                                    [1, 0, 1, 1]])
+        nlist_j.vectors = np.array([[1, 1, 1, 0],
+                                    [1, 0, 1, 1]])   
+        self.assertFalse(nlist_i == nlist_j)
                                       
 if __name__ == '__main__':
     unittest.main()

@@ -1,14 +1,11 @@
+from __future__ import annotations
+
 import numpy as np  # type: ignore
 from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
-from pymatgen.core import Structure  # type: ignore
-from typing import List, Optional, TypeVar, Type
-
-"""
-This module provides classes for calculating radial disitrbution functions
-and Van Hove correlation functions.
-"""
-RDF = TypeVar('RDF', bound='RadialDistributionFunction')
-
+from pymatgen.core import Structure  
+from typing import List, Optional, Type
+from numpy.typing import ArrayLike
+from vasppy.utils import dr_ij
 
 class RadialDistributionFunction(object):
     """
@@ -71,7 +68,11 @@ class RadialDistributionFunction(object):
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
         for structure, weight in zip(structures, weights):
-            hist = np.histogram(self.__dr_ij(structure),
+            all_dr_ij = dr_ij(structure=structure,
+                              indices_i=self.indices_i,
+                              indices_j=self.indices_j,
+                              self_reference=False).flatten()
+            hist = np.histogram(all_dr_ij,
                                 bins=nbins,
                                 range=(r_min, r_max),
                                 density=False)[0]
@@ -99,11 +100,11 @@ class RadialDistributionFunction(object):
         return gaussian_filter1d(self.rdf, sigma=sigma_n_bins)
 
     @classmethod
-    def from_species_strings(cls: Type[RDF], 
+    def from_species_strings(cls: Type[RadialDistributionFunction], 
                              structures: List[Structure], 
                              species_i: str, 
                              species_j: Optional[str] = None, 
-                             **kwargs) -> RDF:
+                             **kwargs) -> RadialDistributionFunction:
         """
         Initialise a RadialDistributionFunction instance by specifying species strings.
 
@@ -134,31 +135,6 @@ class RadialDistributionFunction(object):
                    indices_i=indices_i, 
                    indices_j=indices_j, 
                    **kwargs)
-
-    def __dr_ij(self, 
-                structure: Structure) -> np.ndarray:
-        """
-        Calculate all i-j interatomic distances for a single pymatgen Structure.
-
-        Args:
-            structure (:obj:`pymatgen.Structure`): A pymatgen Structure.
-
-        Returns:
-            np.array: 1D numpy array of length N_i x N_j of distances.
-
-        """
-        lattice = structure.lattice
-        i_frac_coords = structure.frac_coords[self.indices_i]
-        j_frac_coords = structure.frac_coords[self.indices_j]
-        dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
-        # Mask dr_ij 2D array to remove i==j dr=0 terms
-        mask = np.ones(dr_ij.shape, dtype=bool)
-        if self.self_reference:
-            np.fill_diagonal(mask, 0)
-        return np.ndarray.flatten(dr_ij[mask])
-
-
-VHA = TypeVar('VHA', bound='VanHoveAnalysis')
 
 
 class VanHoveAnalysis(object):
@@ -284,3 +260,4 @@ def shell_volumes(intervals: np.ndarray) -> np.ndarray:
 
     """
     return 4.0 / 3.0 * np.pi * (intervals[1:]**3 - intervals[:-1]**3)
+

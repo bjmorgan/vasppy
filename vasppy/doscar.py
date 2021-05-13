@@ -72,7 +72,7 @@ class Doscar:
             raise NotImplementedError(
                 'Spin-orbit coupling is not yet implemented')
         self.lorbit = lorbit
-        self.pdos: Optional[np.array] = None
+        self.pdos: Optional[np.ndarray] = None
         self.species = species
         self.read_header()
         self.read_total_dos()
@@ -165,7 +165,7 @@ class Doscar:
             The array dimensions are [ atom_no, energy_value, lm-projection, spin ]
 
         """
-        assert isinstance(self.pdos, np.ndarry)
+        assert isinstance(self.pdos, np.ndarray)
         valid_m_values: Dict[str, List[str]] = {'s': [],
                           'p': ['x', 'y', 'z'],
                           'd': ['xy', 'yz', 'z2-r2', 'xz', 'x2-y2'],
@@ -216,7 +216,7 @@ class Doscar:
                  spin: Optional[str] = None,
                  l: Optional[str] = None,
                  m: Optional[List[str]] = None) -> np.ndarray: 
-        return np.sum(self.pdos_select(atoms=atoms, spin=spin, l=l, m=m), axis=(0, 2, 3))
+        return np.array(np.sum(self.pdos_select(atoms=atoms, spin=spin, l=l, m=m), axis=(0, 2, 3)))
 
     def plot_pdos(self, 
                   ax: Optional[Axes] = None,

@@ -1,7 +1,7 @@
 numpy>=1.16.2
 monty
 pandas
-pymatgen>=2022.0.0
+pymatgen
 PyYAML 
 coverage==4.3.4
 codeclimate-test-reporter

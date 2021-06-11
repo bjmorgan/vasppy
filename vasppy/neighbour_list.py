@@ -60,8 +60,10 @@ class NeighbourList(object):
         return np.sum(self.vectors, axis=1)
 	
     def __eq__(self,
-               other: NeighbourList) -> bool:
+               other: object) -> bool:
         """Test whether two NeighbourList objects have equal vectors."""
+        if not isinstance(other, NeighbourList):
+            return NotImplemented
         return (self.vectors == other.vectors).all()
 
     @classmethod

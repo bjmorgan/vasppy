@@ -178,11 +178,11 @@ class Doscar:
         to_return = self.pdos[atom_idx, :, :, :]
         if not spin:
             spin_idx = list(range(self.ispin))
-        elif spin is 'up':
+        elif spin == 'up':
             spin_idx = [0]
-        elif spin is 'down':
+        elif spin == 'down':
             spin_idx = [1]
-        elif spin is 'both':
+        elif spin == 'both':
             spin_idx = [0, 1]
         else:
             raise ValueError(
@@ -261,7 +261,7 @@ class Doscar:
 
         for species in to_plot.keys():
             assert isinstance(self.species, Iterable)
-            index = [i for i, s in enumerate(self.species) if s is species]
+            index = [i for i, s in enumerate(self.species) if s == species]
             for state in to_plot[species]:
                 assert state in ['s', 'p', 'd', 'f']
                 color = next(color_iterator)

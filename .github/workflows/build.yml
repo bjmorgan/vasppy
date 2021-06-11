@@ -35,4 +35,7 @@ jobs:
           uses: paambaati/codeclimate-action@v2.7.5
           env:
             CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPO_TOKEN }}
+        - name: Static type checking
+          run: |
+            mypy vasppy
 

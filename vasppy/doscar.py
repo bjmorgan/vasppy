@@ -261,7 +261,7 @@ class Doscar:
 
         for species in to_plot.keys():
             assert isinstance(self.species, Iterable)
-            index = [i for i, s in enumerate(self.species) if s is species]
+            index = [i for i, s in enumerate(self.species) if s == species]
             for state in to_plot[species]:
                 assert state in ['s', 'p', 'd', 'f']
                 color = next(color_iterator)

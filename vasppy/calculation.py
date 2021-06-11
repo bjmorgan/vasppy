@@ -113,7 +113,7 @@ def energy_string_to_float( string ):
     Return
         (float) 
     """
-    energy_re = re.compile( "(-?\d+\.\d+)" )
+    energy_re = re.compile(r"(-?\d+\.\d+)")
     return float( energy_re.match( string ).group(0) )
     
 def import_calculations_from_file(filename, skip_incomplete_records=False):

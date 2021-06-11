@@ -35,7 +35,7 @@ def final_energy_from_outcar( filename='OUTCAR' ):
     """
     with open( filename ) as f:
         outcar = f.read()
-    energy_re = re.compile( "energy\(sigma->0\) =\s+([-\d\.]+)" )
+    energy_re = re.compile(r"energy\(sigma->0\) =\s+([-\d\.]+)")
     energy = float( energy_re.findall( outcar )[-1] )
     return energy
 
@@ -65,7 +65,7 @@ def potcar_eatom_list_from_outcar( filename='OUTCAR' ):
     """
     with open( filename ) as f:
         outcar = f.read()
-    eatom_re = re.compile( "energy of atom\s+\d+\s+EATOM=\s*([-\d\.]+)" )
+    eatom_re = re.compile(r"energy of atom\s+\d+\s+EATOM=\s*([-\d\.]+)")
     eatom = [ float( e ) for e in eatom_re.findall( outcar ) ]
     return eatom
 

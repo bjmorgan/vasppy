@@ -69,7 +69,7 @@ def parse_dielectric_data( data ):
     """ 
     return np.array( [ matrix_eigvals( to_matrix( *e ) ) for e in data ] )
 
-def absorption_coefficient( dielectric ):
+def absorption_coefficient(dielectric):
     """
     Calculate the optical absorption coefficient from an input set of
     pymatgen vasprun dielectric constant data.

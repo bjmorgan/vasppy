@@ -6,8 +6,9 @@ from typing import List, Type
 import numpy as np
 
 """
-This module provides classes for calculating radial distribution functions
-and Van Hove correlation functions.
+This module provides a NeighbourList class following the scheme in
+Rabani et al. J. Chem. Phys. 1997
+doi: https://doi.org/10.1063/1.474927
 """
 
 class NeighbourList(object):

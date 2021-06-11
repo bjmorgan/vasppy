@@ -22,12 +22,15 @@ jobs:
             pip install --upgrade pip
             pip install -r requirements.txt
             pip install -U numpy
+            pip install pytest
+            pip install pytest-cov
             pip install mypy
             pip install types-PyYAML
             pip list
         - name: Run tests
           run: |
-            coverage run --rcfile=.coveragerc -m unittest discover
+            pytest tests
+            pytest --cov-report xml --cov=tests
             mypy vasppy
         - name: Publish code coverage
           uses: paambaati/codeclimate-action@v2.7.5

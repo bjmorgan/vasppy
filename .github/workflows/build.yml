@@ -24,11 +24,15 @@ jobs:
             pip install -U numpy
             pip install mypy
             pip install types-PyYAML
+            pip install pytest
+            pip install pytest-cov
             pip list
         - name: Run tests
           run: |
-            coverage run --rcfile=.coveragerc -m unittest discover
+            pytest --cov-report xml --cov==vasppy
             mypy vasppy
         - name: Publish code coverage
-          run: |
-            codeclimate-test-reporter --token ${{secrets.CODECLIMATE_REPO_TOKEN}}
+          uses: paambaati/codeclimate-action@v2.7.5
+          env:
+            CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPO_TOKEN }}
+

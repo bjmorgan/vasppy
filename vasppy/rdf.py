@@ -125,12 +125,18 @@ class RadialDistributionFunction(object):
         indices_j: Optional[List[int]]
 
         indices_i = [i for i, site in 
-                     enumerate(structures[0]) if site.species_string is species_i]
+                     enumerate(structures[0]) if site.species_string == species_i]
         if species_j:
             indices_j = [j for j, site in 
-                         enumerate(structures[0]) if site.species_string is species_j]
+                         enumerate(structures[0]) if site.species_string == species_j]
         else:
             indices_j = None
+  
+        if not indices_i:
+            raise ValueError('Species i not found.')
+        if not indices_j:
+            raise ValueError('Species j not found.')
+
         return cls(structures=structures, 
                    indices_i=indices_i, 
                    indices_j=indices_j, 

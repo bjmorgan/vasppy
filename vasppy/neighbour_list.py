@@ -87,10 +87,10 @@ class NeighbourList(object):
         """                   
         indices_i = [i for i, site in 
                      enumerate(structure)
-                     if site.species_string is species_i]
+                     if site.species_string == species_i]
         indices_j = [j for j, site in 
                      enumerate(structure)
-                     if site.species_string is species_j]
+                     if site.species_string == species_j]
         return cls(structure=structure,
                    indices_i=indices_i,
                    indices_j=indices_j,

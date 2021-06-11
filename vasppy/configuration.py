@@ -41,7 +41,7 @@ class Configuration:
         atoms_j = list( self.atoms_with_label( spec_j ) )
         for atom_i in atoms_i:
             for atom_j in atoms_j:
-                if atom_i is atom_j:
+                if atom_i == atom_j:
                     continue
                 dr = self.minimum_image_dr( atom_i, atom_j )
                 if dr <= max_r:
@@ -55,7 +55,7 @@ class Configuration:
         for atom_i in atoms_i:
             this_rdf = rdf.Rdf( max_r, number_of_bins )
             for atom_j in atoms_j:
-                if atom_i is atom_j:
+                if atom_i == atom_j:
                     continue
                 dr = self.minimum_image_dr( atom_i, atom_j )
                 try:

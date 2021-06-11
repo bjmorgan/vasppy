@@ -178,11 +178,11 @@ class Doscar:
         to_return = self.pdos[atom_idx, :, :, :]
         if not spin:
             spin_idx = list(range(self.ispin))
-        elif spin is 'up':
+        elif spin == 'up':
             spin_idx = [0]
-        elif spin is 'down':
+        elif spin == 'down':
             spin_idx = [1]
-        elif spin is 'both':
+        elif spin == 'both':
             spin_idx = [0, 1]
         else:
             raise ValueError(

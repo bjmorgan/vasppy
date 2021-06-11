@@ -10,3 +10,4 @@ MANIFEST
 /build
 /vasppy.egg-info
 /docs/build
+.nova/

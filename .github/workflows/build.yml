@@ -30,7 +30,6 @@ jobs:
         - name: Run tests
           run: |
             pytest --cov-report xml --cov==vasppy
-            mypy vasppy
         - name: Publish code coverage
           uses: paambaati/codeclimate-action@v2.7.5
           env:

@@ -23,6 +23,7 @@ jobs:
             pip install -r requirements.txt
             pip install -U numpy
             pip install mypy
+            pip install types-PyYAML
             pip list
         - name: Run tests
           run: |

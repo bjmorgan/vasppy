@@ -22,17 +22,17 @@ jobs:
             pip install --upgrade pip
             pip install -r requirements.txt
             pip install -U numpy
-            pip install pytest
-            pip install pytest-cov
             pip install mypy
             pip install types-PyYAML
+            pip install pytest
+            pip install pytest-cov
             pip list
         - name: Run tests
           run: |
-            pytest tests
-            pytest --cov-report xml --cov=tests
+            pytest --cov-report xml --cov==vasppy
             mypy vasppy
         - name: Publish code coverage
           uses: paambaati/codeclimate-action@v2.7.5
           env:
             CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPO_TOKEN }}
+

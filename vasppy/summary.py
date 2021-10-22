@@ -241,7 +241,14 @@ class Summary:
                 except: # meta-GGA
                     meta_gga_list = {'SCAN' : 'SCAN', 
                                      'RSCAN' : 'rSCAN', 
-                                     'R2SCAN' : 'r2SCAN'}
+                                     'R2SCAN' : 'r2SCAN', 
+                                     'TPSS' : 'TPSS', 
+                                     'RTPSS' : 'RTPSS', 
+                                     'M06L' : 'M06-L', 
+                                     'MBJ' : 'MBJ', 
+                                     'MS0' : 'MS0', 
+                                     'MS1' : 'MS1', 
+                                     'MS2' : 'MS2'}
                     f = meta_gga_list[ self.vasprun.incar['METAGGA'].upper() ]
         else:
             f = 'not recognised'    

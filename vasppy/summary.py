@@ -236,7 +236,13 @@ class Summary:
                              '91': 'PW91',
                              'RP': 'rPBE',
                              'AM': 'AM05' }
-                f = pbe_list[ self.vasprun.parameters['GGA'].upper() ]
+                try:
+                    f = pbe_list[ self.vasprun.parameters['GGA'].upper() ]
+                except: # meta-GGA
+                    meta_gga_list = {'SCAN' : 'SCAN', 
+                                     'RSCAN' : 'rSCAN', 
+                                     'R2SCAN' : 'r2SCAN'}
+                    f = meta_gga_list[ self.vasprun.incar['METAGGA'].upper() ]
         else:
             f = 'not recognised'    
         return f

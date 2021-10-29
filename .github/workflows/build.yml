@@ -31,14 +31,10 @@ jobs:
         - name: Run tests
           run: |
             pytest --cov-config=.coveragerc --cov=vasppy --cov-report xml
-        - name: Debug
-          env:
-            CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPO_TOKEN }}
-          run: echo $CC_TEST_REPORTER_ID
         - name: Publish code coverage
-          uses: paambaati/codeclimate-action@v2.7.5
           env:
             CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_REPO_TOKEN }}
+          uses: paambaati/codeclimate-action@v2.7.5
         - name: Static type checking
           run: |
             mypy vasppy

@@ -20,7 +20,7 @@ def main():
         if args.hash:
             print(p, ps, hashes[p])
         else:
-            print(p, ps, hashes[p])
+            print(p, ps)
 
 if __name__ == '__main__':
     main()

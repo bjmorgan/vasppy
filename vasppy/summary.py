@@ -196,50 +196,12 @@ class Summary:
     def functional( self ):
         """
         String description of the calculation functional.
-       
-        Recognises:
-            - PBE
-            - PBEsol
-            - PBE-based hybrids:
-                - PBE0 (alpha=0.25, no screening)
-                - HSE06 (alpha=0.25, mu=0.2)
-                - generic hybrids (alpha=?, no screening)
-                - generic screened hybrids (alpha=?, mu=?)
         
         Returns:
             (Str): String describing the calculation functional.
 
         """
-        if self.potcars_are_pbe(): # PBE base funtional
-            if 'LHFCALC' in self.vasprun.parameters:
-                alpha = float( self.vasprun.parameters['AEXX'] )
-            else:
-                alpha = 0.0
-            if 'HFSCREEN' in self.vasprun.parameters:
-                mu = float( self.vasprun.parameters['HFSCREEN'] )
-            else:
-                mu = 0
-            if alpha > 0:
-                if mu > 0: # screened hybrid
-                    if ( mu == 0.2 ) and ( alpha == 0.25 ):
-                        f = 'HSE06'
-                    else:
-                        f = "screened hybrid. alpha={}, mu={}".format( alpha, mu )
-                else: # unscreened hybrid
-                    if alpha == 0.25:
-                        f = 'PBE0'
-                    else: 
-                        f = "hybrid. alpha={}".format( alpha )
-            else: # not hybrid. Plain PBE or some variant.
-                pbe_list = { 'PS': 'PBEsol',
-                             'PE': 'PBE',
-                             '91': 'PW91',
-                             'RP': 'rPBE',
-                             'AM': 'AM05' }
-                f = pbe_list[ self.vasprun.parameters['GGA'].upper() ]
-        else:
-            f = 'not recognised'    
-        return f
+        return self.vasprun.run_type
 
     def potcars_are_pbe( self ):
         return all( 'PBE' in s for s in self.vasprun.potcar_symbols )

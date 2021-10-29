@@ -72,60 +72,9 @@ class SummaryTestCase( unittest.TestCase ):
         self.summary.meta = Mock( spec=VASPMeta )
         self.summary.meta.notes = None
 
-    def test_functional_not_PBE( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=False )
-        self.assertEqual( self.summary.functional, 'not recognised' )
-       
-    def test_functional_is_PBE( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'PE' }
-        self.assertEqual( self.summary.functional, 'PBE' )
- 
-    def test_functional_is_PBEsol( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'PS' }
-        self.assertEqual( self.summary.functional, 'PBEsol' )
- 
-    def test_functional_is_PW91( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': '91' }
-        self.assertEqual( self.summary.functional, 'PW91' )
-
-    def test_functional_is_rPBE( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'RP' }
-        self.assertEqual( self.summary.functional, 'rPBE' )
-
-    def test_functional_is_AM05( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'AM' }
-        self.assertEqual( self.summary.functional, 'AM05' )
-
-    def test_functional_is_PBE0( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'AM', 'LHFCALC': 'True', 'AEXX': '0.25' }
-        self.assertEqual( self.summary.functional, 'PBE0' )
-   
-    def test_functional_is_HSE06( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'AM', 'LHFCALC': 'True', 'AEXX': '0.25', 'HFSCREEN': '0.2' }
-        self.assertEqual( self.summary.functional, 'HSE06' )
-  
-    def test_functional_is_a_PBE_hybrid( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'AM', 'LHFCALC': 'True', 'AEXX': '0.19' }
-        self.assertEqual( self.summary.functional, 'hybrid. alpha=0.19' )
-
-    def test_functional_is_a_screened_PBE_hybrid( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'AM', 'LHFCALC': 'True', 'AEXX': '0.19', 'HFSCREEN': '0.34' }
-        self.assertEqual( self.summary.functional, 'screened hybrid. alpha=0.19, mu=0.34' )
- 
-    def test_functional_raises_KeyError_if_PBE_tag_is_invalid( self ):
-        self.summary.potcars_are_pbe = Mock( return_value=True )
-        self.summary.vasprun.parameters = { 'GGA': 'foo' }
-        with self.assertRaises( KeyError ):
-            self.summary.functional
+    def test_functional(self):
+        self.summary.vasprun.run_type = 'foo'
+        self.assertEqual(self.summary.functional, 'foo')
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_print_cbm( self, mock_stdout ):

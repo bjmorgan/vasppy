@@ -167,7 +167,7 @@ def neighbour_list_n_in(nlist_i: NeighbourList,
             of lengths of neighbour list vectors.    
     
     Note:
-        For each neighbour list vector, computes (l_i.l_i) - (l_i.l_j).
+        For each neighbour list vector, computes (l_j.l_j) - (l_i.l_j).
         See Rabani et al. J. Chem. Phys. 1997 doi:https://doi.org/10.1063/1.474927
         Eqn. 9 for details.
     

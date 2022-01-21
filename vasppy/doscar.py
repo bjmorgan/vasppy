@@ -1,7 +1,7 @@
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
-from matplotlib.axis import Axes  # type: ignore
+from matplotlib.axes import Axes  # type: ignore
 from matplotlib.figure import Figure  # type: ignore
 import matplotlib._color_data as mcd  # type: ignore
 from typing import Optional, List, Union, Dict, Tuple

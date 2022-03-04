@@ -9,6 +9,7 @@ readme = 'README.md'
 long_description = open(readme).read()
 
 scripts = ['check_species',
+           'checkforce',
            'murnfit', 
            'vasp_summary', 
            'poscar_to_cif', 

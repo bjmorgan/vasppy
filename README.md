@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/17946870.svg)](https://zenodo.org/badge/latestdoi/17946870)
 [![PyPI version](https://badge.fury.io/py/vasppy.svg)](https://badge.fury.io/py/vasppy)
-[![Build Status](https://travis-ci.org/bjmorgan/vasppy.svg?branch=master)](https://travis-ci.org/bjmorgan/vasppy)
+[![Build Status](https://github.com/bjmorgan/vasppy/actions/workflows/build.yml/badge.svg)](https://github.com/bjmorgan/vasppy/actions/workflows/build.yml)
 [![Test Coverage](https://codeclimate.com/github/bjmorgan/vasppy/badges/coverage.svg)](https://codeclimate.com/github/bjmorgan/vasppy/coverage)
 [![Documentation Status](https://readthedocs.org/projects/vasppy/badge/?version=latest)](http://vasppy.readthedocs.io/en/latest/?badge=latest)
 

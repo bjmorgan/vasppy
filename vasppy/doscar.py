@@ -10,8 +10,35 @@ import linecache
 
 TABLEAU_GREY: str = '#bab0ac'
 
+def ispin_from_doscar(filename: str) -> int:
+    """Parses a DOSCAR file and returns the ISPIN value used
+    in the corresponding calculation.
 
-def pdos_column_names(lmax: int, ispin: int) -> List[str]:
+    Args:
+        filename (str): The DOSCAR filename to parse.
+
+    Returns:
+        int: 1 if non-spin-polarised; 2 if spin-polarised.
+
+    Raises:
+        ValueError: if the file cannot be parsed.
+
+    """
+    with open(filename, 'r') as f:
+        for i in range(7):
+            line = f.readline()
+            print(line)
+    if len(line.split()) == 5:
+        ispin = 2
+    elif len(line.split()) == 3:
+        ispin = 1
+    else:
+        raise ValueError("Could not determing ISPIN from DOSCAR")
+    return ispin  
+
+def pdos_column_names(
+        lmax: int,
+        ispin: int) -> List[str]:
     if lmax == 2:
         names = ['s', 'p_y', 'p_z', 'p_x', 'd_xy',
                  'd_yz', 'd_z2-r2', 'd_xz', 'd_x2-y2']
@@ -68,15 +95,7 @@ class Doscar:
         if ispin:
             self.ispin = ispin
         else:
-            with open(self.filename, 'r') as f:
-                for i in range(7):
-                    line = f.readline()
-            if len(line.split()) == 5:
-                self.ispin = 2
-            elif len(line.split()) == 3:
-                self.ispin = 1
-            else:
-                raise ValueError("Could not determing ISPIN from DOSCAR")
+            self.ispin = ispin_from_doscar(filename=self.filename)
         self.lmax = lmax
         self.spin_orbit_coupling = spin_orbit_coupling
         if self.spin_orbit_coupling:
@@ -113,19 +132,23 @@ class Doscar:
         self.number_of_data_points = int(self.header[5].split()[2])
         self.efermi = float(self.header[5].split()[3])
 
-    def read_total_dos(self) -> pd.DataFrame:  # assumes spin_polarised
+    def read_total_dos(self) -> pd.DataFrame:
         start_to_read: int = Doscar.number_of_header_lines
+        if self.ispin == 1:
+            df_names = ['energy', 'dos', 'int_dos']
+        else: # self.ispin == 2
+            df_names = ['energy', 'up', 'down', 'int_up', 'int_down']
         df: pd.DataFrame = pd.read_csv(self.filename,
                                        skiprows=start_to_read,
                                        nrows=self.number_of_data_points,
                                        delim_whitespace=True,
-                                       names=['energy', 'up', 'down', 'int_up', 'int_down'],
+                                       names=df_names,
                                        index_col=False)
         self.energy: np.ndarray = df.energy.values
         df.drop('energy', axis=1)
         self.tdos = df
 
-    # currently assume spin-polarised, no-SO-coupling, no f-states
+    # currently assume no-SO-coupling, no f-states
     def read_atomic_dos_as_df(self, atom_number: int) -> pd.DataFrame:
         assert atom_number > 0 & atom_number <= self.number_of_atoms
         start_to_read = Doscar.number_of_header_lines + \
@@ -135,8 +158,9 @@ class Doscar:
                          nrows=self.number_of_data_points,
                          delim_whitespace=True,
                          names=pdos_column_names(
-                             lmax=self.lmax, ispin=self.ispin),
-                         index_col=False)
+                             lmax=self.lmax,
+                             ispin=self.ispin),
+                             index_col=False)
         return df.drop('energy', axis=1)
 
     def read_projected_dos(self) -> None:

@@ -27,7 +27,6 @@ def ispin_from_doscar(filename: str) -> int:
     with open(filename, 'r') as f:
         for i in range(7):
             line = f.readline()
-            print(line)
     if len(line.split()) == 5:
         ispin = 2
     elif len(line.split()) == 3:

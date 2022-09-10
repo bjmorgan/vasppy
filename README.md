@@ -10,7 +10,7 @@
 
 ## Tests
 
-Automated testing of the latest build happens [here](https://travis-ci.org/bjmorgan/vasppy).
+Automated testing of the latest build happens [here](https://github.com/bjmorgan/vasppy/actions/workflows/build.yml)
 
 Manual tests can be run using
 ```

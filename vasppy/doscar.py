@@ -6,7 +6,7 @@ from matplotlib.figure import Figure  # type: ignore
 import matplotlib._color_data as mcd  # type: ignore
 from typing import Optional, List, Union, Dict, Tuple
 from collections.abc import Iterable 
-
+import linecache
 
 TABLEAU_GREY: str = '#bab0ac'
 
@@ -42,7 +42,7 @@ class Doscar:
 
     def __init__(self,
                  filename: str,
-                 ispin: int = 2,
+                 ispin: Optional[int] = None,
                  lmax: int = 2,
                  lorbit: int = 11,
                  spin_orbit_coupling: bool = False,
@@ -56,7 +56,7 @@ class Doscar:
             ispin (optional:int): ISPIN flag.
                 Set to 1 for non-spin-polarised 
                 or to 2 for spin-polarised calculations.
-                Default = 2.
+                If not set, this will be determined automatically.
             lmax (optional:int): Maximum l angular momentum. (d=2, f=3). Default is 2.
             lorbit (optional:int): The VASP LORBIT flag. (Default=11).
             spin_orbit_coupling (optional:bool): Spin-orbit coupling (Default=False).
@@ -65,7 +65,18 @@ class Doscar:
                 Default=None.
         '''
         self.filename = filename
-        self.ispin = ispin
+        if ispin:
+            self.ispin = ispin
+        else:
+            with open(self.filename, 'r') as f:
+                for i in range(7):
+                    line = f.readline()
+            if len(line.split()) == 5:
+                self.ispin = 2
+            elif len(line.split()) == 3:
+                self.ispin = 1
+            else:
+                raise ValueError("Could not determing ISPIN from DOSCAR")
         self.lmax = lmax
         self.spin_orbit_coupling = spin_orbit_coupling
         if self.spin_orbit_coupling:

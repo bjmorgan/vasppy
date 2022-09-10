@@ -74,9 +74,8 @@ def get_forces_data(outcar_filename="OUTCAR", convergence=None, warn=False):
         raise ValueError("Unable to read NIONS.")
     except:
         raise
-
     if not convergence:
-        convergence_re = re.compile(r"EDIFFG = -([\d\.]+)")
+        convergence_re = re.compile(r"EDIFFG = -([\d\.E-]+)")
         try:
             convergence = float(convergence_re.findall(outcar)[0])
         except IndexError:
@@ -115,8 +114,10 @@ def forces_block_is_well_formed(forces_lines):
     
 def main():
     args = parse_args()
-
-    forces_data = get_forces_data(outcar_filename=args.outcar, warn=args.warn)
+    forces_data = get_forces_data(
+            outcar_filename=args.outcar, 
+            convergence=args.convergence,
+            warn=args.warn)
     if args.verbose:
         forces_data.print_forces()
         print()

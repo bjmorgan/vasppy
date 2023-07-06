@@ -59,8 +59,8 @@ def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray, ksp
 
     Args:
         reciprocal_lattice_vectors (np.ndarray): The reciprocal lattice vectors. These can be retrieved from ASE as atoms.cell.reciprocal() or from Pymatgen as structure.lattice.reciprocal_lattice_crystallographic.matrix.
-        kspacing_range (tuple[float, float]): The minimum and maximum KSPACING values.
-        step (float): The interval between KSPACING values to be tested.
+        kspacing_range (tuple[float, float]): The minimum and maximum KSPACING values. Defaults to (0.1, 0.8).
+        step (float): The interval between KSPACING values to be tested. Defaults to 0.02.
 
     Returns:
         list[float]: A range of KSPACING values which all correspond to distinct k-point grids.

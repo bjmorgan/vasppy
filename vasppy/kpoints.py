@@ -62,7 +62,7 @@ def get_subdivisions_from_kspacing(kspacing: float, reciprocal_lattice_vectors: 
 
     return tuple(subdivisions)
 
-def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray, kspacing_range: tuple[float, float]=(0.1, 0.8), step: float=0.02) -> list[float]:
+def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray, kspacing_range: tuple[float, float]=(0.1, 0.8), step: float=0.02) -> tuple[float, ...]:
     """
     Generate a range of minimum allowed distances between k-points (KSPACING) for convergence testing. This function ensures that no two values of KSPACING
     are generated that correspond to the same k-point mesh.
@@ -86,4 +86,4 @@ def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray, ksp
             allowed_kspacing.append(round(kspacing, 3))
             highest_total = total
 
-    return allowed_kspacing
+    return tuple(allowed_kspacing)

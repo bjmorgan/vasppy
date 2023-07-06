@@ -38,7 +38,7 @@ def get_subdivisions_from_kspacing(kspacing: float, reciprocal_lattice_vectors: 
 
     Args:
         kspacing (float): The minimum allowed distance between k-points.
-        reciprocal_lattice_vectors (np.ndarray): The reciprocal lattice vectors.
+        reciprocal_lattice_vectors (np.ndarray): The reciprocal lattice vectors. These can be retrieved from ASE as atoms.cell.reciprocal() or from Pymatgen as structure.lattice.reciprocal_lattice_crystallographic.matrix.
 
     Returns:
         tuple[int, int, int]: The subdivisions along each reciprocal lattice vector.
@@ -48,7 +48,7 @@ def get_subdivisions_from_kspacing(kspacing: float, reciprocal_lattice_vectors: 
         magnitude = np.linalg.norm(row)
         subdivision = np.max([1, np.ceil((magnitude * 2 * np.pi) / kspacing)])
 
-        subdivisions.append(subdivision)
+        subdivisions.append(int(subdivision))
 
     return tuple(subdivisions)
 
@@ -58,7 +58,7 @@ def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray, ksp
     are generated that correspond to the same k-point mesh.
 
     Args:
-        reciprocal_lattice_vectors (np.ndarray): The reciprocal lattice vectors.
+        reciprocal_lattice_vectors (np.ndarray): The reciprocal lattice vectors. These can be retrieved from ASE as atoms.cell.reciprocal() or from Pymatgen as structure.lattice.reciprocal_lattice_crystallographic.matrix.
         kspacing_range (tuple[float, float]): The minimum and maximum KSPACING values.
         step (float): The interval between KSPACING values to be tested.
 

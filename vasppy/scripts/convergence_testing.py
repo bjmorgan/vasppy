@@ -6,7 +6,7 @@ from pymatgen.io.vasp import Incar, Potcar
 from vasppy.kpoints import get_convergence_testing_kspacing
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description='Generate a series of VASP inputs for convergence testing.')
+    parser = argparse.ArgumentParser(description='Generate a series of VASP inputs for convergence testing. At minimum, this requires a template INCAR and the geometry of the system (a POSCAR).')
     parser.add_argument('-i', '--incar', required=True, help='Specify the template INCAR.')
     parser.add_argument('-p', '--poscar', required=True, help='Specify the geometry of the system (POSCAR).')
     parser.add_argument('-e', '--encut', nargs=3, default=(100, 700, 50), help='Set the upper/lower bounds and step size for the basis set size (ENCUT). Defaults to 100 700 50.')

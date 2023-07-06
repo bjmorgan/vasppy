@@ -1,7 +1,6 @@
 import argparse
 import os
 import numpy as np
-from pymatgen.cli.pmg_potcar import gen_potcar
 from pymatgen.core import Structure
 from pymatgen.io.vasp import Incar, Potcar
 from vasppy.kpoints import get_convergence_testing_kspacing

@@ -43,10 +43,22 @@ class KspacingTestCase(unittest.TestCase):
         subdivisions = get_subdivisions_from_kspacing(kspacing, reciprocal_lattice_vectors)
         self.assertEqual(subdivisions, (6, 6, 7))
 
-    def test_convergence_testing_kspacing(self):
+    def test_convergence_testing_kspacing_default(self):
         reciprocal_lattice_vectors = np.array([[0.16, 0, 0], [0, 0.19, 0], [0, 0, 0.20]])
         allowed_kspacing = get_convergence_testing_kspacing(reciprocal_lattice_vectors)
         self.assertEqual(allowed_kspacing, [0.1, 0.12, 0.14, 0.16, 0.18, 0.2, 0.22, 0.24, 0.26, 0.3, 0.32, 0.34, 0.4, 0.42, 0.52, 0.6, 0.64])
+
+    def test_convergence_testing_kspacing_custom_range(self):
+        reciprocal_lattice_vectors = np.array([[0.16, 0, 0], [0, 0.19, 0], [0, 0, 0.20]])
+        kspacing_range = (0.4, 0.6)
+        allowed_kspacing = get_convergence_testing_kspacing(reciprocal_lattice_vectors, kspacing_range=kspacing_range)
+        self.assertEqual(allowed_kspacing, [0.4, 0.42, 0.52, 0.6])
+
+    def test_convergence_testing_kspacing_custom_step(self):
+        reciprocal_lattice_vectors = np.array([[0.16, 0, 0], [0, 0.19, 0], [0, 0, 0.20]])
+        step = 0.05
+        allowed_kspacing = get_convergence_testing_kspacing(reciprocal_lattice_vectors, step=step)
+        self.assertEqual(allowed_kspacing, [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.55, 0.6, 0.65])
 
 if __name__ == '__main__':
     unittest.main()

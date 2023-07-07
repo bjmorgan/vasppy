@@ -30,7 +30,7 @@ jobs:
             pip list
         - name: Run tests
           run: |
-            pytest --cov-config=.coveragerc --cov=vasppy --cov-report xml
+            pytest --cov-config=.coveragerc --cov=vasppy --cov-report lcov
         - name: Coveralls GitHub Action
           uses: coverallsapp/github-action@1.1.3
           with:

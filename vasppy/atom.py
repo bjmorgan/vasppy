@@ -1,9 +1,13 @@
+import numpy as np
+
 class Atom:
     """
     Class for individual atoms
     """
 
-    def __init__( self, label, r ): # currently assume fractional coordinates
+    def __init__(self,
+                 label: str,
+                 r: np.ndarray) -> None: # currently assume fractional coordinates
         """
         Initialise an Atom instance
     

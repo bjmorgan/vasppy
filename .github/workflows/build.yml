@@ -26,6 +26,7 @@ jobs:
             pip install types-PyYAML
             pip install pytest
             pip install pytest-cov
+            pip install pylint
             pip install .
             pip list
         - name: Run tests
@@ -39,4 +40,7 @@ jobs:
         - name: Static type checking
           run: |
             mypy vasppy
+        - name: PyLint
+          run: |
+              pylint --errors-only vasppy
 

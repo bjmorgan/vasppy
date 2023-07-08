@@ -67,7 +67,7 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
         titles = [ 'A', 'B', 'C' ]
         energies = [ -50.5, -23.2, -10.1 ]
         stoichiometries = [ { 'B': 1, 'C': 2 }, { 'D': 1, 'C': 1 }, { 'C': 1 } ]
-        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries, zip=True) ]
+        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries, strict=True) ]
         self.assertEqual( delta_stoichiometry( reactants=[ calculations[0] ], products=calculations[1:3] ), { 'B': -1, 'D': 1 } )
 
     def test_energy_string_to_float( self ):

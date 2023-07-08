@@ -285,7 +285,7 @@ class Procar:
             self._spin_channels = 1  # non-magnetic, non-spin-polarised
             self._k_point_blocks = 1
             self.calculation["non_spin_polarised"] = True
-        except:
+        except Exception:
             if self._number_of_bands * self._number_of_k_points * 4 == len(
                 self.projection_data
             ):

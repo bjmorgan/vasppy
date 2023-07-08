@@ -46,7 +46,7 @@ def read_data( verbose=True ):
                         converged = False
                     else:
                         print( warning.message )
-        except:
+        except Exception:
             continue 
         poscar = Poscar.from_file( d + 'POSCAR' )
         data.append( [ poscar.scaling, 

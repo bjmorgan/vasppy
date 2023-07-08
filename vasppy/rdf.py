@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 import numpy as np  # type: ignore
 from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
 from pymatgen.core import Structure  
-from typing import List, Optional, Type
+from typing import Optional, Type
 from numpy.typing import ArrayLike
 from vasppy.utils import dr_ij
 
@@ -23,13 +21,13 @@ class RadialDistributionFunction(object):
     """
 
     def __init__(self,
-                 structures: List[Structure],
-                 indices_i: List[int],
-                 indices_j: Optional[List[int]] = None,
+                 structures: list[Structure],
+                 indices_i: list[int],
+                 indices_j: Optional[list[int]] = None,
                  nbins: int = 500,
                  r_min: float = 0.0,
                  r_max: float = 10.0,
-                 weights: Optional[List[float]] = None) -> None:
+                 weights: Optional[list[float]] = None) -> None:
         """
         Initialise a RadialDistributionFunction instance.
 
@@ -101,7 +99,7 @@ class RadialDistributionFunction(object):
 
     @classmethod
     def from_species_strings(cls: Type[RadialDistributionFunction], 
-                             structures: List[Structure], 
+                             structures: list[Structure], 
                              species_i: str, 
                              species_j: Optional[str] = None, 
                              **kwargs) -> RadialDistributionFunction:
@@ -121,8 +119,8 @@ class RadialDistributionFunction(object):
             (RadialDistributionFunction)
 
         """
-        indices_i: List[int]
-        indices_j: Optional[List[int]]
+        indices_i: list[int]
+        indices_j: Optional[list[int]]
 
         indices_i = [i for i, site in 
                      enumerate(structures[0]) if site.species_string == species_i]
@@ -159,8 +157,8 @@ class VanHoveAnalysis(object):
     """
 
     def __init__(self,
-                 structures: List[Structure],
-                 indices: List[int],
+                 structures: list[Structure],
+                 indices: list[int],
                  d_steps: int,
                  nbins: int = 500,
                  r_min: float = 0.0,

@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 from pymatgen.core import Structure
 from vasppy.utils import dr_ij
-from typing import List, Type
+from typing import Type
 import numpy as np
 
 """
@@ -26,8 +24,8 @@ class NeighbourList(object):
 
     def __init__(self,
                  structure: Structure,
-                 indices_i: List[int],
-                 indices_j: List[int],
+                 indices_i: list[int],
+                 indices_j: list[int],
                  r_cut: float) -> None:
         """
         Initialise a NeighbourList instance.

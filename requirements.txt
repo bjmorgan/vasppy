@@ -1,4 +1,4 @@
-numpy>=1.16.2
+numpy>=1.20
 monty
 pandas
 pymatgen

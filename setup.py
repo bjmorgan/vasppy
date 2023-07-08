@@ -46,7 +46,7 @@ setup(
                       '{} = vasppy.scripts.{}:main'.format(s, s) for s in scripts]},
     license='MIT',
     install_requires=['monty',
-                      'numpy>=1.16.2',
+                      'numpy>=1.20',
                       'pandas',
                       'pymatgen>=2022.0.0',
                       'PyYAML', 

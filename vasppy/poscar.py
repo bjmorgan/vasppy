@@ -47,14 +47,14 @@ class Poscar:
     def range_by_species(self, species):
         i = 0
         atom_range = {}
-        for a, n in zip(self.atoms, self.atom_numbers, strict=None):
+        for a, n in zip(self.atoms, self.atom_numbers):
             atom_range[a] = range(i, i + n)
             i += n
         return atom_range[species]
 
     def atom_number_by_species(self, species):
         atom_numbers = {
-            a: n for a, n in zip(self.atoms, self.atom_numbers, strict=None)
+            a: n for a, n in zip(self.atoms, self.atom_numbers)
         }
         return atom_numbers[species]
 
@@ -163,7 +163,7 @@ class Poscar:
             prefix.append(prefix_string)
             suffix.append(suffix_string)
         for pref, coord, suff in zip(
-            prefix, self.select_coordinates(coordinate_type), suffix, strict=None
+            prefix, self.select_coordinates(coordinate_type), suffix
         ):
             print(
                 pref
@@ -233,7 +233,7 @@ class Poscar:
         return [
             atom_name
             for (atom_name, atom_number) in zip(
-                self.atoms, self.atom_numbers, strict=None
+                self.atoms, self.atom_numbers
             )
             for __ in range(atom_number)
         ]
@@ -323,6 +323,6 @@ class Poscar:
         return Counter(
             {
                 label: number
-                for label, number in zip(self.atoms, self.atom_numbers, strict=None)
+                for label, number in zip(self.atoms, self.atom_numbers)
             }
         )

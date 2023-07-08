@@ -65,7 +65,7 @@ class CalculationSupportFunctionsTestCase(unittest.TestCase):
         stoichiometries = [{"B": 1, "C": 2}, {"B": 1, "C": 1}, {"C": 1}]
         calculations = [
             Calculation(title=t, energy=e, stoichiometry=s)
-            for t, e, s in zip(titles, energies, stoichiometries, strict=True)
+            for t, e, s in zip(titles, energies, stoichiometries)
         ]
         self.assertAlmostEqual(
             delta_E(reactants=[calculations[0]], products=calculations[1:3]), +17.2
@@ -78,7 +78,7 @@ class CalculationSupportFunctionsTestCase(unittest.TestCase):
         stoichiometries = [{"B": 1, "C": 2}, {"B": 1, "C": 1}, {"C": 2}]
         calculations = [
             Calculation(title=t, energy=e, stoichiometry=s)
-            for t, e, s in zip(titles, energies, stoichiometries, strict=True)
+            for t, e, s in zip(titles, energies, stoichiometries)
         ]
         with self.assertRaises(ValueError):
             delta_E(reactants=[calculations[0]], products=calculations[1:3])
@@ -92,7 +92,7 @@ class CalculationSupportFunctionsTestCase(unittest.TestCase):
         stoichiometries = [{"B": 1, "C": 2}, {"D": 1, "C": 1}, {"C": 1}]
         calculations = [
             Calculation(title=t, energy=e, stoichiometry=s)
-            for t, e, s in zip(titles, energies, stoichiometries, strict=True)
+            for t, e, s in zip(titles, energies, stoichiometries)
         ]
         self.assertEqual(
             delta_stoichiometry(

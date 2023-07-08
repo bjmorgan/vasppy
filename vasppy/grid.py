@@ -129,7 +129,7 @@ class Grid:
             int(f) for f in point
         ]  # origin contains the 3D index of the lowest-index point in the cube surrounding point (i,j,k)
         delta = [
-            p - o for p, o in zip(point, origin, strict=True)
+            p - o for p, o in zip(point, origin)
         ]  # delta contains the *fractional* offset of "point" from "origin"
         cube = self.cube_slice(
             *origin

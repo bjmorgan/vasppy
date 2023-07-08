@@ -69,7 +69,7 @@ class RadialDistributionFunction:
         ff = shell_volumes(self.intervals)
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
-        for structure, weight in zip(structures, weights, strict=True):
+        for structure, weight in zip(structures, weights):
             all_dr_ij = dr_ij(
                 structure=structure,
                 indices_i=self.indices_i,
@@ -200,7 +200,7 @@ class VanHoveAnalysis:
         ff = shell_volumes(self.intervals)
         rho = len(indices) / lattice.volume
         for struc_i, struc_j in zip(
-            structures[: len(structures) - d_steps], structures[d_steps:], strict=True
+            structures[: len(structures) - d_steps], structures[d_steps:]
         ):
             i_frac_coords = struc_i.frac_coords[indices]
             j_frac_coords = struc_j.frac_coords[indices]

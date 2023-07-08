@@ -85,7 +85,7 @@ def potcar_spec(filename, return_hashes=False):
         potcars = [s for s in re.split("(End of Dataset\n)", f.read()) if s]
     potcar_md5sums = [
         md5sum("".join(pair))
-        for pair in zip(potcars[::2], potcars[1::2], strict=True)
+        for pair in zip(potcars[::2], potcars[1::2])
     ]
     for this_md5sum in potcar_md5sums:
         for ps in potcar_sets:
@@ -277,7 +277,7 @@ class Summary:
 
     def print_potcar(self):
         print("potcar:")
-        for e, p in zip(self.stoich, self.vasprun.potcar_symbols, strict=True):
+        for e, p in zip(self.stoich, self.vasprun.potcar_symbols):
             print("    - {}: {}".format(e, p))
 
     def print_energy(self):
@@ -311,8 +311,7 @@ class Summary:
         print("eatom:")
         for e, eatom in zip(
             self.stoich,
-            potcar_eatom_list_from_outcar("{}/OUTCAR".format(self.directory)),
-            strict=True,
+            potcar_eatom_list_from_outcar("{}/OUTCAR".format(self.directory))
         ):
             print("    - {}: {} eV".format(e, eatom))
 
@@ -376,7 +375,7 @@ class Summary:
             ldaul = self.vasprun.incar["LDAUL"]
             if any(v != 0 for v in ldauu):
                 print("ldau:")
-                for e, u, j, l in zip(self.stoich, ldauu, ldauj, ldaul, strict=True):
+                for e, u, j, l in zip(self.stoich, ldauu, ldauj, ldaul):
                     if u != 0:
                         print("    - {}: {} {} {}".format(e, lqn[l], u, j))
 

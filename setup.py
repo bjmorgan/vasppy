@@ -51,11 +51,9 @@ setup(
                       'pandas',
                       'pymatgen>=2022.0.0',
                       'PyYAML', 
-                      'coverage==4.3.4',
-                      'codeclimate-test-reporter',
                       'fortranformat',
                       'scipy>=1.4.1', 
                       'tqdm',
                       'lxml'],
-    python_requires='>=3.7'
+    python_requires='>=3.8'
     )

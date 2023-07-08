@@ -221,11 +221,29 @@ class VanHoveAnalysis:
         self.gsrt = self.gsrt / (len(structures) - d_steps) / float(len(indices))
 
     def self(self, sigma: Optional[float] = None) -> np.ndarray:
+        """Returns the self part of the Van Hove correlation function.
+
+        Args:
+            sigma (:obj:`float`, optional): Optional smearing width.
+
+        Returns:
+            (np.ndarray)
+
+        """
         if sigma:
             return self.smeared_gsrt(sigma=sigma)
         return self.gsrt
 
     def distinct(self, sigma: Optional[float] = None) -> np.ndarray:
+        """Returns the distinct part of the Van Hove correlation function.
+
+        Args:
+            sigma (:obj:`float`, optional): Optional smearing width.
+
+        Returns:
+            (np.ndarray)
+
+        """
         if sigma:
             return self.smeared_gdrt(sigma=sigma)
         return self.gdrt

@@ -3,19 +3,20 @@ from typing import Optional
 
 
 class AutoKPoints:
-    """Class for automatic k-point generation data in KPOINTS.
-    """
+    """Class for automatic k-point generation data in KPOINTS."""
 
-    def __init__(self,
-                 title: str,
-                 subdivisions: np.ndarray,
-                 grid_centering: Optional[str] = 'G',
-                 shift: Optional[np.ndarray] = np.array([0., 0., 0.])) -> None:
+    def __init__(
+        self,
+        title: str,
+        subdivisions: np.ndarray,
+        grid_centering: Optional[str] = "G",
+        shift: Optional[np.ndarray] = np.array([0.0, 0.0, 0.0]),
+    ) -> None:
         """Initialise an AutoKPoints object.
 
         Args:
             title (str): The first line of the file, treated as a comment by VASP.
-            subdivisions: (np.ndarray(int, int, int)): 
+            subdivisions: (np.ndarray(int, int, int)):
                 Numbers of subdivisions along each reciprocal lattice vector.
             grid_centering (str, optional):
                 Specify gamma-centered (G) or the original Monkhorst-Pack scheme (MP).
@@ -30,7 +31,7 @@ class AutoKPoints:
             ValueError: If an unrecognised grid-centering option is passed in.
 
         """
-        accepted_grid_centerings = ['G', 'MP']
+        accepted_grid_centerings = ["G", "MP"]
         if grid_centering not in accepted_grid_centerings:
             raise ValueError
         self.title = title

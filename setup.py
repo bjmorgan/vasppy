@@ -48,7 +48,7 @@ setup(
     install_requires=['monty',
                       'numpy>=1.20',
                       'pandas',
-                      'pymatgen>=2022.0.0',
+                      'pymatgen>=2023.0.0',
                       'PyYAML', 
                       'fortranformat',
                       'scipy>=1.4.1', 

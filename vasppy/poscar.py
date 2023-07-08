@@ -6,7 +6,7 @@ from vasppy import configuration, atom, cell
 from vasppy.units import angstrom_to_bohr
 from pymatgen.core import Lattice as pmg_Lattice
 from pymatgen.core import Structure as pmg_Structure
-from pymatgen.io.cif import CifWriter
+from pymatgen.io.cif import CifWriter # type: ignore
 from collections import Counter
 
 # Ignore SIG_PIPE and don't throw exceptions on it... 

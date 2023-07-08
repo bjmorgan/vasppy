@@ -340,41 +340,55 @@ class Procar:
         self.sanity_check()
         self.read_in = None # clear memory
         if self.calculation[ 'spin_polarised' ]:
-            self._data = self.projection_data.reshape( self._spin_channels, self._number_of_k_points, self._number_of_bands, self._number_of_ions+1, self._number_of_projections+1 )[:,:,:,:,1:].swapaxes( 0, 1).swapaxes( 1, 2 )
+            self._data = self.projection_data.reshape((self._spin_channels,
+                                                       self._number_of_k_points,
+                                                       self._number_of_bands,
+                                                       self._number_of_ions+1,
+                                                       self._number_of_projections+1))[:,:,:,:,1:].swapaxes(0, 1).swapaxes(1, 2)
         else:
-            self._data = self.projection_data.reshape( self._number_of_k_points, self._number_of_bands, self._spin_channels, self._number_of_ions+1, self._number_of_projections+1 )[:,:,:,:,1:]
+            self._data = self.projection_data.reshape((self._number_of_k_points,
+                                                       self._number_of_bands,
+                                                       self._spin_channels,
+                                                       self._number_of_ions+1,
+                                                       self._number_of_projections+1))[:,:,:,:,1:]
 
     @property
-    def number_of_k_points( self ):
+    def number_of_k_points(self):
         """The number of k-points described by this :obj:`Procar` object."""
         assert( self._number_of_k_points == self._data.shape[0] ), "Number of k-points in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_k_points, self._data.shape[0] )
         return self._number_of_k_points
 
     @property
-    def number_of_bands( self ):
+    def number_of_bands(self):
         """The number of bands described by this :obj:`Procar` object."""
         assert( self._number_of_bands == self._data.shape[1] ), "Number of bands in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_bands, self._data.shape[1] )
         return self._number_of_bands
 
     @property
-    def spin_channels( self ):
+    def spin_channels(self):
         """The number of spin-channels described by this :obj:`Procar` object."""
         assert( self._spin_channels == self._data.shape[2] ), "Number of spin channels in metadata ({}) not equal to number in PROCAR data ({})".format( self._spin_channels, self._data.shape[2] )
         return self._spin_channels
 
     @property
-    def number_of_ions( self ):
+    def number_of_ions(self):
         """The number of ions described by thie :obj:`Procar` object."""
         assert( self._number_of_ions == self._data.shape[3]-1 ), "Number of ions in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_ions, self._data.shape[3]-1 )
         return self._number_of_ions
 
     @property
-    def number_of_projections( self ):
+    def number_of_projections(self):
         """The number of lm-projections described by this :obj:`Procar` object."""
         assert (self._number_of_projections == self._data.shape[4]), "Number of projections in metadata ({}) not equal to number in PROCAR data ({})".format( self._number_of_projections, self._data.shape[4] ) 
         return self._number_of_projections
 
-    def print_weighted_band_structure( self, spins=None, ions=None, orbitals=None, scaling=1.0, e_fermi=0.0, reciprocal_lattice=None ):
+    def print_weighted_band_structure(self,
+                                      spins=None,
+                                      ions=None,
+                                      orbitals=None,
+                                      scaling=1.0,
+                                      e_fermi=0.0,
+                                      reciprocal_lattice=None):
         band_structure_data = self.weighted_band_structure( spins=spins, ions=ions, orbitals=orbitals, scaling=scaling, e_fermi=e_fermi, reciprocal_lattice=reciprocal_lattice ) 
         for i, band_data in enumerate( band_structure_data, 1 ):
             print( '# band: {}'.format( i ) )
@@ -382,7 +396,13 @@ class Procar:
                 print( ' '.join( [ str(f) for f in k_point_data ] ) )
             print()
 
-    def weighted_band_structure( self, spins=None, ions=None, orbitals=None, scaling=1.0, e_fermi=0.0, reciprocal_lattice=None ):
+    def weighted_band_structure(self,
+                                spins=None,
+                                ions=None,
+                                orbitals=None,
+                                scaling=1.0,
+                                e_fermi=0.0,
+                                reciprocal_lattice=None):
         if spins:
             spins = [ s - 1 for s in spins ]
         else:
@@ -392,18 +412,18 @@ class Procar:
         if not orbitals:
             orbitals = list( range( self.number_of_projections ) )
         if self.calculation[ 'spin_polarised' ]:
-            band_energies = np.array( [ band.energy for band in self._bands ] ).reshape( self.spin_channels, self.number_of_k_points, self.number_of_bands )[ spins[0] ].T
+            band_energies = np.array([band.energy for band in self._bands]).reshape((self.spin_channels, self.number_of_k_points, self.number_of_bands))[spins[0]].T
         else:
-            band_energies = np.array( [ band.energy for band in self._bands ] ).reshape( self.number_of_k_points, self.number_of_bands ).T
-        orbital_projection = np.sum( self._data[ :, :, :, :, orbitals ], axis = 4 )
-        ion_projection = np.sum( orbital_projection[ :, :, :, ions ], axis = 3 )
-        spin_projection = np.sum( ion_projection[ :, :, spins ], axis = 2 )
-        x_axis = self.x_axis( reciprocal_lattice )
+            band_energies = np.array([band.energy for band in self._bands]).reshape((self.number_of_k_points, self.number_of_bands)).T
+        orbital_projection = np.sum(self._data[:, :, :, :, orbitals ], axis = 4)
+        ion_projection = np.sum(orbital_projection[ :, :, :, ions ], axis = 3)
+        spin_projection = np.sum(ion_projection[ :, :, spins ], axis = 2)
+        x_axis = self.x_axis(reciprocal_lattice)
         to_return = []
-        for i in range( self.number_of_bands ):
-            for k, ( e, p ) in enumerate( zip( band_energies[i], spin_projection.T[i] ) ):
-                to_return.append( [ x_axis[ k ], e - e_fermi, p * scaling ] )
-        to_return = np.array( to_return ).reshape( self.number_of_bands, -1, 3 )
+        for i in range(self.number_of_bands):
+            for k, (e, p) in enumerate(zip(band_energies[i], spin_projection.T[i])):
+                to_return.append([x_axis[ k ], e - e_fermi, p * scaling])
+        to_return = np.array(to_return).reshape((self.number_of_bands, -1, 3))
         return to_return
 
     def effective_mass_calc(self,
@@ -412,9 +432,11 @@ class Procar:
                             reciprocal_lattice,
                             spin=1,
                             printing=False):
-        assert spin <= self.k_point_blocks
+        assert spin <= self._k_point_blocks
         assert len(k_point_indices) > 1 # we need at least 2 k-points
-        band_energies = self._bands[:,1:].reshape( self.k_point_blocks, self.number_of_k_points, self.number_of_bands )
+        band_energies = self._bands[:,1:].reshape(self._k_point_blocks,
+                                                  self.number_of_k_points,
+                                                  self.number_of_bands)
         frac_k_point_coords = np.array([self._k_points[k - 1].frac_coords for k in k_point_indices])
         eigenvalues = np.array([band_energies[spin - 1][k - 1][band_index - 1] for k in k_point_indices])
         if printing:
@@ -447,22 +469,22 @@ class Procar:
  
         """
         if reciprocal_lattice is not None:
-            cartesian_k_points = np.array( [ k.cart_coords( reciprocal_lattice ) for k in k_points ] )
-            x_axis = [ 0.0 ]
-            for i in range( 1, len( cartesian_k_points ) ):
-                dk = cartesian_k_points[ i - 1 ] - cartesian_k_points[ i ]
-                mod_dk = np.sqrt( np.dot( dk, dk ) )
-                x_axis.append( mod_dk + x_axis[-1] )
-            x_axis = np.array( x_axis )
+            cartesian_k_points = np.array([k.cart_coords(reciprocal_lattice) for k in self._k_points])
+            x_axis = [0.0]
+            for i in range(1, len(cartesian_k_points)):
+                dk = cartesian_k_points[i - 1] - cartesian_k_points[i]
+                mod_dk = np.sqrt(np.dot(dk, dk))
+                x_axis.append(mod_dk + x_axis[-1])
+            x_axis_array = np.array(x_axis)
         else:
-            x_axis = np.arange( len( self._k_points ) )
-        return x_axis
+            x_axis_array = np.arange(len(self._k_points))
+        return x_axis_array
 
     @property
-    def bands( self ):
-        return self._bands.reshape( self._k_point_blocks, 
-                                    self._number_of_k_points, 
-                                    self.number_of_bands )
+    def bands(self):
+        return self._bands.reshape(self._k_point_blocks, 
+                                   self._number_of_k_points, 
+                                   self.number_of_bands)
        
     @property
     def k_points( self ):

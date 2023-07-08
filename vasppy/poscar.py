@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import re
 import copy
-from vasppy import configuration, atom, cell
+from vasppy import atom, cell
 from vasppy.units import angstrom_to_bohr
 from pymatgen.core import Lattice as pmg_Lattice
 from pymatgen.core import Structure as pmg_Structure
@@ -241,11 +241,6 @@ class Poscar:
         return( self.cell.angles() )
         # ( a, b, c ) = [ row for row in self.cell.matrix ]
         # return [ angle( b, c ), angle( a, c ), angle( a, b ) ]
-
-    def to_configuration( self ):
-        atoms = [ atom.Atom( label, coordinates ) for ( label, coordinates ) in zip( self.labels(), self.fractional_coordinates() ) ]
-        config = configuration.Configuration( cell.Cell( matrix = self.cell.matrix * self.scaling ), atoms )
-        return( config )
 
     def swap_axes( self, axes ):
         new_poscar = copy.deepcopy( self )

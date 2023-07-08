@@ -28,17 +28,16 @@ def read_restart_file( filename, number_of_atoms ):
     cell_lengths = lines_to_numpy_array( file_data[ -3: ] ) * angstrom_to_bohr
     full_cell_matrix = cell_matrix * cell_lengths
     
-    return( coordinates, velocities, dipoles, full_cell_matrix, cell_lengths )
+    return coordinates, velocities, dipoles, full_cell_matrix, cell_lengths
 
-def get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix, cell_lengths):
-
-    return(np.dot(coordinates, np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)])
-))
+def get_cart_coords_from_pimaim_restart(coordinates,
+                                        full_cell_matrix,
+                                        cell_lengths):
+    return np.dot(coordinates, np.array([full_cell_matrix[i]/cell_lengths[i] for i in range(3)]))
 
 def poscar_from_pimaim_restart( filename, atom_numbers, atom_labels ):
     number_of_atoms = sum( atom_numbers )
-    coordinates, velocities, dipoles, full_cell_matrix, cell_lengths = read_restart_file( filename, number_of_atoms, cell_lengths )
-
+    coordinates, velocities, dipoles, full_cell_matrix, cell_lengths = read_restart_file(filename, number_of_atoms)
     poscar = Poscar()
     full_cell_matrix = full_cell_matrix.transpose()
     coordinates = get_cart_coords_from_pimaim_restart(coordinates, full_cell_matrix,cell_lengths)
@@ -47,5 +46,4 @@ def poscar_from_pimaim_restart( filename, atom_numbers, atom_labels ):
     poscar.atom_numbers = atom_numbers
     poscar.coordinate_type = 'Direct'
     poscar.coordinates = poscar.cell.cartesian_to_fractional_coordinates( coordinates )
- 
     return poscar

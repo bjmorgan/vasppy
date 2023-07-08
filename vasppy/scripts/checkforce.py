@@ -102,7 +102,7 @@ def get_forces_data(outcar_filename="OUTCAR", convergence=None, warn=False):
         forces_lines = outcar.split('\n')[next_most_recent_block_start:next_most_recent_block_start+number_of_ions]
         if not forces_block_is_well_formed(forces_lines):
             # If the last two forces blocks are ill-formed, we assume the input file is mis-formatted.
-            raise("The last two FORCES blocks are not well-formed. Your input might be mis-formatted.")
+            raise Exception("The last two FORCES blocks are not well-formed. Your input might be mis-formatted.")
     forces = []
     for line in forces_lines:
         forces.append([float(s) for s in line.split()[-3:]])

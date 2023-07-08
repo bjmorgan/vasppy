@@ -96,7 +96,7 @@ class Grid:
                            self.grid[ x1, y0, z0 ],
                            self.grid[ x1, y0, z1 ],
                            self.grid[ x1, y1, z0 ],
-                           self.grid[ x1, y1, z1 ] ] ).reshape( 2, 2, 2 )
+                           self.grid[ x1, y1, z1 ] ] ).reshape((2, 2, 2))
         return( cube )
 
     def interpolated_value_at_fractional_coordinate( self, coord ):

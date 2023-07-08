@@ -288,6 +288,7 @@ class Doscar:
 
         if not ymax:
             ymax = 1.1 * auto_ymax
+        ymax = float(ymax)
         ax.set_ylim(-ymax * 1.1, ymax * 1.1)
         if legend_pos == 'outside':
             ax.legend(bbox_to_anchor=(1.01, 1.04), loc='upper left')

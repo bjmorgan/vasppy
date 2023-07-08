@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pymatgen.core import Structure
 from vasppy.utils import dr_ij
 from typing import Type

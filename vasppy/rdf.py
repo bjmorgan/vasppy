@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import numpy as np  # type: ignore
-from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
+from scipy.ndimage import gaussian_filter1d
 from pymatgen.core import Structure  
 from typing import Optional, Type
 from numpy.typing import ArrayLike

@@ -1,4 +1,4 @@
-Sphinx>=1.6.3
+Sphinx~=6.2.1
 nbsphinx
 jupyter
 -r ../requirements.txt

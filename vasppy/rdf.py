@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import numpy as np  # type: ignore
-from scipy.ndimage.filters import gaussian_filter1d  # type: ignore
-from pymatgen.core import Structure  
-from typing import List, Optional, Type
-from numpy.typing import ArrayLike
+from typing import Optional, Type
+import numpy as np
+from scipy.ndimage import gaussian_filter1d  # type: ignore
+from pymatgen.core import Structure
 from vasppy.utils import dr_ij
 
-class RadialDistributionFunction(object):
-    """
-    Class for computing radial distribution functions.
+
+class RadialDistributionFunction:
+    """Class for computing radial distribution functions.
 
     Attributes:
         nbins (int): Number of bins.
@@ -22,16 +21,17 @@ class RadialDistributionFunction(object):
 
     """
 
-    def __init__(self,
-                 structures: List[Structure],
-                 indices_i: List[int],
-                 indices_j: Optional[List[int]] = None,
-                 nbins: int = 500,
-                 r_min: float = 0.0,
-                 r_max: float = 10.0,
-                 weights: Optional[List[float]] = None) -> None:
-        """
-        Initialise a RadialDistributionFunction instance.
+    def __init__(
+        self,
+        structures: list[Structure],
+        indices_i: list[int],
+        indices_j: Optional[list[int]] = None,
+        nbins: int = 500,
+        r_min: float = 0.0,
+        r_max: float = 10.0,
+        weights: Optional[list[float]] = None,
+    ) -> None:
+        """Initialise a RadialDistributionFunction instance.
 
         Args:
             structures (list(pymatgen.Structure)): List of pymatgen Structure objects.
@@ -50,8 +50,10 @@ class RadialDistributionFunction(object):
         """
         if weights:
             if len(weights) != len(structures):
-                raise ValueError('List of structure weights needs to be the same length'
-                                 ' as the list of structures.')
+                raise ValueError(
+                    "List of structure weights needs to be the same length"
+                    " as the list of structures."
+                )
         else:
             weights = [1.0] * len(structures)
         self.self_reference = (not indices_j) or (indices_j == indices_i)
@@ -68,28 +70,28 @@ class RadialDistributionFunction(object):
         self.coordination_number = np.zeros(nbins)
         self.rdf = np.zeros((nbins), dtype=np.double)
         for structure, weight in zip(structures, weights):
-            all_dr_ij = dr_ij(structure=structure,
-                              indices_i=self.indices_i,
-                              indices_j=self.indices_j,
-                              self_reference=False).flatten()
-            hist = np.histogram(all_dr_ij,
-                                bins=nbins,
-                                range=(r_min, r_max),
-                                density=False)[0]
+            all_dr_ij = dr_ij(
+                structure=structure,
+                indices_i=self.indices_i,
+                indices_j=self.indices_j,
+                self_reference=False,
+            ).flatten()
+            hist = np.histogram(
+                all_dr_ij, bins=nbins, range=(r_min, r_max), density=False
+            )[0]
             rho = float(len(self.indices_i)) / structure.lattice.volume
             self.rdf += hist * weight / rho
             self.coordination_number += np.cumsum(hist)
         self.rdf = self.rdf / ff / sum(weights) / float(len(indices_j))
-        self.coordination_number = self.coordination_number / \
-            sum(weights) / float(len(self.indices_j))
+        self.coordination_number = (
+            self.coordination_number / sum(weights) / float(len(self.indices_j))
+        )
 
-    def smeared_rdf(self, 
-                    sigma: float = 0.1) -> np.ndarray:
-        """
-        Smear the RDF with a Gaussian kernel.
+    def smeared_rdf(self, sigma: float = 0.1) -> np.ndarray:
+        """Smear the RDF with a Gaussian kernel.
 
         Args:
-            sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel. 
+            sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel.
                 Optional, default is 0.1.
 
         Returns:
@@ -100,20 +102,21 @@ class RadialDistributionFunction(object):
         return gaussian_filter1d(self.rdf, sigma=sigma_n_bins)
 
     @classmethod
-    def from_species_strings(cls: Type[RadialDistributionFunction], 
-                             structures: List[Structure], 
-                             species_i: str, 
-                             species_j: Optional[str] = None, 
-                             **kwargs) -> RadialDistributionFunction:
-        """
-        Initialise a RadialDistributionFunction instance by specifying species strings.
+    def from_species_strings(
+        cls: Type[RadialDistributionFunction],
+        structures: list[Structure],
+        species_i: str,
+        species_j: Optional[str] = None,
+        **kwargs,
+    ) -> RadialDistributionFunction:
+        """Initialise a RadialDistributionFunction instance by specifying species strings.
 
         Args:
             structures (list(pymatgen.Structure)): List of pymatgen Structure objects.
             species_i (str): String for species i, e.g. ``"Na"``.
-            species_j (:obj:`str`, optional): String for species j, e.g. ``"Cl"``. Optional,
-                default is `None`. 
-            **kwargs: Variable length keyword argument list. 
+            species_j (:obj:`str`, optional): String for species j, e.g. ``"Cl"``. Optional
+                default is `None`.
+            **kwargs: Variable length keyword argument list.
                 See :func:`vasppy.rdf.RadialDistributionFunction`
                 for the full list of accepted arguments.
 
@@ -121,31 +124,35 @@ class RadialDistributionFunction(object):
             (RadialDistributionFunction)
 
         """
-        indices_i: List[int]
-        indices_j: Optional[List[int]]
+        indices_i: list[int]
+        indices_j: Optional[list[int]]
 
-        indices_i = [i for i, site in 
-                     enumerate(structures[0]) if site.species_string == species_i]
+        indices_i = [
+            i
+            for i, site in enumerate(structures[0])
+            if site.species_string == species_i
+        ]
         if species_j:
-            indices_j = [j for j, site in 
-                         enumerate(structures[0]) if site.species_string == species_j]
+            indices_j = [
+                j
+                for j, site in enumerate(structures[0])
+                if site.species_string == species_j
+            ]
         else:
             indices_j = None
-  
+
         if not indices_i:
-            raise ValueError('Species i not found.')
+            raise ValueError("Species i not found.")
         if not indices_j:
-            raise ValueError('Species j not found.')
+            raise ValueError("Species j not found.")
 
-        return cls(structures=structures, 
-                   indices_i=indices_i, 
-                   indices_j=indices_j, 
-                   **kwargs)
+        return cls(
+            structures=structures, indices_i=indices_i, indices_j=indices_j, **kwargs
+        )
 
 
-class VanHoveAnalysis(object):
-    """
-    Class for computing Van Hove correlation functions.
+class VanHoveAnalysis:
+    """Class for computing Van Hove correlation functions.
 
     Attributes:
         nbins (int): Number of bins.
@@ -158,15 +165,16 @@ class VanHoveAnalysis(object):
 
     """
 
-    def __init__(self,
-                 structures: List[Structure],
-                 indices: List[int],
-                 d_steps: int,
-                 nbins: int = 500,
-                 r_min: float = 0.0,
-                 r_max: float = 10.0):
-        """
-        Initialise a VanHoveCorrelationFunction instance.
+    def __init__(
+        self,
+        structures: list[Structure],
+        indices: list[int],
+        d_steps: int,
+        nbins: int = 500,
+        r_min: float = 0.0,
+        r_max: float = 10.0,
+    ):
+        """Initialise a VanHoveCorrelationFunction instance.
 
         Args:
             structures (list(pymatgen.Structure)): List of pymatgen Structure objects.
@@ -191,46 +199,61 @@ class VanHoveAnalysis(object):
         lattice = structures[0].lattice
         ff = shell_volumes(self.intervals)
         rho = len(indices) / lattice.volume
-        for struc_i, struc_j in zip(structures[:len(structures) - d_steps], structures[d_steps:]):
+        for struc_i, struc_j in zip(
+            structures[: len(structures) - d_steps], structures[d_steps:]
+        ):
             i_frac_coords = struc_i.frac_coords[indices]
             j_frac_coords = struc_j.frac_coords[indices]
-            dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
-            mask = np.ones(dr_ij.shape, dtype=bool)
+            all_dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
+            mask = np.ones(all_dr_ij.shape, dtype=bool)
             np.fill_diagonal(mask, 0)
-            distinct_dr_ij = np.ndarray.flatten(dr_ij[mask])
-            hist = np.histogram(distinct_dr_ij, bins=nbins,
-                                range=(0.0, r_max), density=False)[0]
+            distinct_dr_ij = np.ndarray.flatten(all_dr_ij[mask])
+            hist = np.histogram(
+                distinct_dr_ij, bins=nbins, range=(0.0, r_max), density=False
+            )[0]
             self.gdrt += hist / rho
-            self_dr_ij = np.ndarray.flatten(dr_ij[np.invert(mask)])
-            hist = np.histogram(self_dr_ij, bins=nbins,
-                                range=(0.0, r_max), density=False)[0]
+            self_dr_ij = np.ndarray.flatten(all_dr_ij[np.invert(mask)])
+            hist = np.histogram(
+                self_dr_ij, bins=nbins, range=(0.0, r_max), density=False
+            )[0]
             self.gsrt += hist / rho
-        self.gdrt = self.gdrt / ff / \
-            (len(structures) - d_steps) / float(len(indices))
-        self.gsrt = self.gsrt / \
-            (len(structures) - d_steps) / float(len(indices))
+        self.gdrt = self.gdrt / ff / (len(structures) - d_steps) / float(len(indices))
+        self.gsrt = self.gsrt / (len(structures) - d_steps) / float(len(indices))
 
-    def self(self, 
-             sigma: Optional[float] = None) -> np.ndarray:
-        if sigma:
-            return self.smeared_gsrt(sigma=sigma)
-        else:
-            return self.gsrt
-
-    def distinct(self,
-                 sigma: Optional[float] = None) -> np.ndarray:
-        if sigma:
-            return self.smeared_gdrt(sigma=sigma)
-        else:
-            return self.gdrt
-
-    def smeared_gsrt(self, 
-                     sigma: float = 0.1) -> np.ndarray:
-        """
-        Smear the self part of the Van Hove correlation function with a Gaussian kernel.
+    def self(self, sigma: Optional[float] = None) -> np.ndarray:
+        """Returns the self part of the Van Hove correlation function.
 
         Args:
-            sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel. Optional, default is 0.1.
+            sigma (:obj:`float`, optional): Optional smearing width.
+
+        Returns:
+            (np.ndarray)
+
+        """
+        if sigma:
+            return self.smeared_gsrt(sigma=sigma)
+        return self.gsrt
+
+    def distinct(self, sigma: Optional[float] = None) -> np.ndarray:
+        """Returns the distinct part of the Van Hove correlation function.
+
+        Args:
+            sigma (:obj:`float`, optional): Optional smearing width.
+
+        Returns:
+            (np.ndarray)
+
+        """
+        if sigma:
+            return self.smeared_gdrt(sigma=sigma)
+        return self.gdrt
+
+    def smeared_gsrt(self, sigma: float = 0.1) -> np.ndarray:
+        """Smear the self part of the Van Hove correlation function with a Gaussian kernel.
+
+        Args:
+            sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel.
+                Optional, default is 0.1.
 
         Returns:
             (np.array): Smeared data.
@@ -239,13 +262,12 @@ class VanHoveAnalysis(object):
         sigma_n_bins = sigma / self.dr
         return gaussian_filter1d(self.gsrt, sigma=sigma_n_bins)
 
-    def smeared_gdrt(self,
-                     sigma: float = 0.1) -> np.ndarray:
-        """
-        Smear the distinct part of the Van Hove correlation function with a Gaussian kernel.
+    def smeared_gdrt(self, sigma: float = 0.1) -> np.ndarray:
+        """Smear the distinct part of the Van Hove correlation function with a Gaussian kernel.
 
         Args:
-            sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel. Optional, default is 0.1.
+            sigma (:obj:`float`, optional): Standard deviation for Gaussian kernel.
+                Optional, default is 0.1.
 
         Returns:
             (np.array): Smeared data.
@@ -265,5 +287,4 @@ def shell_volumes(intervals: np.ndarray) -> np.ndarray:
         np.array: Volumes of each shell.
 
     """
-    return 4.0 / 3.0 * np.pi * (intervals[1:]**3 - intervals[:-1]**3)
-
+    return 4.0 / 3.0 * np.pi * (intervals[1:] ** 3 - intervals[:-1] ** 3)

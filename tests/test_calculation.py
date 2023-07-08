@@ -4,7 +4,6 @@ from collections import Counter
 
 from vasppy.calculation import Calculation, delta_E, delta_stoichiometry, energy_string_to_float, import_calculations_from_file
 
-import numpy as np
 
 class CalculationTestCase( unittest.TestCase ):
 
@@ -35,7 +34,7 @@ class CalculationTestCase( unittest.TestCase ):
         stoichiometry = { 'B': 4, 'C': 2 }
         calculation = Calculation( title=title, energy=energy, stoichiometry=stoichiometry )        
         with patch( 'vasppy.calculation.Calculation.__mul__' ) as mock_mul:
-            new_calculation = calculation / 2
+            calculation / 2
             mock_mul.assert_called_with( 0.5 )
 
     def test_scale_stoichiometry( self ):
@@ -51,7 +50,7 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
         titles = [ 'A', 'B', 'C' ]
         energies = [ -50.5, -23.2, -10.1 ]
         stoichiometries = [ { 'B': 1, 'C': 2 }, { 'B': 1, 'C': 1 }, { 'C': 1 } ]
-        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries ) ]
+        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries, strict=True) ]
         self.assertAlmostEqual( delta_E( reactants=[ calculations[0] ], products=calculations[1:3] ), +17.2 ) 
 
     @patch( 'vasppy.calculation.delta_stoichiometry' )
@@ -59,7 +58,7 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
         titles = [ 'A', 'B', 'C' ]
         energies = [ -50.5, -23.2, -10.1 ]
         stoichiometries = [ { 'B': 1, 'C': 2 }, { 'B': 1, 'C': 1 }, { 'C': 2 } ]
-        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries ) ]
+        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries, strict=True) ]
         with self.assertRaises( ValueError ):
             delta_E( reactants=[ calculations[0] ], products=calculations[1:3] )
         mock_delta_stoichiometry.assert_called_with( [ calculations[0] ], calculations[1:3] )
@@ -68,7 +67,7 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
         titles = [ 'A', 'B', 'C' ]
         energies = [ -50.5, -23.2, -10.1 ]
         stoichiometries = [ { 'B': 1, 'C': 2 }, { 'D': 1, 'C': 1 }, { 'C': 1 } ]
-        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries ) ]
+        calculations = [ Calculation( title=t, energy=e, stoichiometry=s ) for t, e, s in zip( titles, energies, stoichiometries, zip=True) ]
         self.assertEqual( delta_stoichiometry( reactants=[ calculations[0] ], products=calculations[1:3] ), { 'B': -1, 'D': 1 } )
 
     def test_energy_string_to_float( self ):
@@ -88,7 +87,7 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
             - B: 4
         energy: -0.2414 eV
         """
-        with patch( 'builtins.open', mock_open( read_data=example_yaml ), create=True ) as m:
+        with patch( 'builtins.open', mock_open( read_data=example_yaml ), create=True ):
             import_calculations_from_file( 'example_file' )
             mock_Calculation.assert_called_with( energy=-0.2414, stoichiometry=Counter({'B': 4, 'A': 2}), title='this_calculation' )
             mock_energy_converter.assert_called_with( '-0.2414 eV' )
@@ -98,7 +97,7 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
         title: this_calculation
         energy: -0.2414 eV
         """
-        with patch('builtins.open', mock_open(read_data=example_yaml), create=True) as m:
+        with patch('builtins.open', mock_open(read_data=example_yaml), create=True):
             with self.assertRaises(ValueError):
                 import_calculations_from_file('example_file')
 
@@ -107,7 +106,7 @@ class CalculationSupportFunctionsTestCase( unittest.TestCase ):
         title: this_calculation
         energy: -0.2414 eV
         """
-        with patch('builtins.open', mock_open(read_data=example_yaml), create=True) as m:
+        with patch('builtins.open', mock_open(read_data=example_yaml), create=True):
             calcs = import_calculations_from_file('example_file', 
                                                   skip_incomplete_records=True)
             self.assertEqual(calcs, {})

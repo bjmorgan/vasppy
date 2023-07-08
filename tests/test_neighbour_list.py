@@ -4,7 +4,7 @@ from vasppy.neighbour_list import neighbour_list_correlation
 from vasppy.neighbour_list import neighbour_list_n_out
 from vasppy.neighbour_list import neighbour_list_n_in
 import numpy as np
-from unittest.mock import Mock, patch, call, create_autospec
+from unittest.mock import Mock, patch
 from pymatgen.core import Structure, Lattice
 from copy import deepcopy
         

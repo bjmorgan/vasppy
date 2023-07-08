@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import patch, mock_open
 
 from vasppy.vaspmeta import VASPMeta
 
@@ -79,7 +79,7 @@ status: finished\
 """
         with patch( 'vasppy.vaspmeta.VASPMeta' ) as mock_VASPMeta:
             mock_VASPMeta.return_value = 'my VASP metadata'
-            with patch( 'builtins.open', mock_open( read_data=example_file ), create=True ) as m:
+            with patch( 'builtins.open', mock_open( read_data=example_file ), create=True ):
                 vaspmeta = VASPMeta.from_file( example_file )
         mock_VASPMeta.assert_called_with( 'title', 'description', 'finished', notes='notes', type=None )
         self.assertEqual( vaspmeta, mock_VASPMeta.return_value )
@@ -92,7 +92,7 @@ status: finished\
 """
         with patch( 'vasppy.vaspmeta.VASPMeta' ) as mock_VASPMeta:
             mock_VASPMeta.return_value = 'my VASP metadata'
-            with patch( 'builtins.open', mock_open( read_data=example_file ), create=True ) as m:
+            with patch( 'builtins.open', mock_open( read_data=example_file ), create=True ):
                 vaspmeta = VASPMeta.from_file( example_file )
         mock_VASPMeta.assert_called_with( 'title', 'description', 'finished', notes=None, type=None )
         self.assertEqual( vaspmeta, mock_VASPMeta.return_value )
@@ -105,7 +105,7 @@ status: finished
 type: single-point\
 """
         with patch( 'vasppy.vaspmeta.VASPMeta' ) as mock_VASPMeta:
-            with patch( 'builtins.open', mock_open( read_data=example_file ), create=True ) as m:
+            with patch( 'builtins.open', mock_open( read_data=example_file ), create=True ):
                 vaspmeta = VASPMeta.from_file( example_file )
         mock_VASPMeta.assert_called_with( 'title', 'description', 'finished', notes=None, type='single-point' )
         self.assertEqual( vaspmeta, mock_VASPMeta.return_value )

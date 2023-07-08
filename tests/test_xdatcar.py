@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import Mock, patch
 
 from vasppy import xdatcar
 from vasppy.poscar import Poscar

@@ -2,7 +2,7 @@ import unittest
 import os
 from vasppy import procar
 import numpy as np
-from unittest.mock import patch, call
+from unittest.mock import patch
 import warnings
 from copy import deepcopy
 
@@ -117,7 +117,7 @@ class ProcarTestCase( unittest.TestCase ):
         expected_bands = np.ravel( np.concatenate( [ pcar1.bands,
                                                      pcar2.bands ], axis=1 ) )
         np.testing.assert_equal( combined_pcar._bands, expected_bands )
-        for k1, k2 in zip( combined_pcar.k_points, pcar1.k_points + pcar2.k_points ):
+        for k1, k2 in zip( combined_pcar.k_points, pcar1.k_points + pcar2.k_points, strict=True):
             np.testing.assert_equal( k1.frac_coords, k2.frac_coords )
             self.assertEqual( k1.weight, k2.weight )
         self.assertEqual( [ k.index for k in combined_pcar.k_points ], [ 1, 2, 3, 4 ] )

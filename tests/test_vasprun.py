@@ -1,7 +1,7 @@
 import unittest
 from vasppy.vasprun import Vasprun, parse_varray, parse_structure
 from vasppy.vasprun import structure_from_structure_data
-from unittest.mock import Mock, patch, call, mock_open, PropertyMock
+from unittest.mock import Mock, patch, call, PropertyMock
 from lxml import etree
 from io import BytesIO
 from pymatgen.core import Lattice, Structure
@@ -286,7 +286,7 @@ class TestVasprun(unittest.TestCase):
                      "  </calculation>\n"
                      "</modeling>")
         vasprun = vasprun_from_xml_string(dummy_xml)            
-        with patch('vasppy.vasprun.parse_varray') as mock_parse_varray:
+        with patch('vasppy.vasprun.parse_varray'):
             forces = vasprun.forces
         self.assertIsNone(forces)
 

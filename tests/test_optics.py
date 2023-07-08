@@ -1,7 +1,7 @@
 import unittest
 from vasppy.optics import matrix_eigvals, to_matrix, parse_dielectric_data
 import numpy as np
-from unittest.mock import Mock, patch, call
+from unittest.mock import patch, call
 
 class Test_Optics(unittest.TestCase):
 

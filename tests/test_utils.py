@@ -22,7 +22,7 @@ class UtilsTestCase( unittest.TestCase ):
                 mock_md5sum.assert_called_with( example_file )
 
     def test_validate_checksum( self ):
-        with patch( 'vasppy.utils.match_filename' ) as mock_match_filename:
+        with patch( 'vasppy.utils.match_filename' ):
             with patch( 'vasppy.utils.file_md5' ) as mock_file_md5:
                 mock_file_md5.return_value='abcdef'
                 validate_checksum( filename='foo', md5sum='abcdef' )                

@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import Mock, patch, mock_open
 
 from vasppy.kpoints import AutoKPoints
 import numpy as np

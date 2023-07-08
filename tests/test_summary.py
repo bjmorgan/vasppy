@@ -1,5 +1,4 @@
 import unittest
-import numpy as np
 import io
 import inspect
 from unittest.mock import Mock, patch, call
@@ -59,7 +58,7 @@ class SummaryInitTestCase( unittest.TestCase ):
     def test_summary_init_raises_filenotfounderror_if_file_is_not_found( self, mock_parse_vasprun, MockVASPMeta ):
         MockVASPMeta.from_file = Mock( side_effect=FileNotFoundError )
         with self.assertRaises( FileNotFoundError ):
-            summary = Summary()
+            Summary()
 
 class SummaryTestCase( unittest.TestCase ):
 
@@ -166,15 +165,15 @@ class SummaryHelperFunctionsTestCase( unittest.TestCase ):
     def test_potcar_spec_raises_valueerror_if_md5sum_not_matched( self ):
         mock_potcar_filename = 'POTCAR'
         md5sum_return_values = ( '12', '56', '90' )
-        with patch('builtins.open', return_value=io.StringIO(mock_potcar_string)) as mock_open:
-            with patch('vasppy.summary.md5sum', side_effect=md5sum_return_values ) as mock_md5sum:
+        with patch('builtins.open', return_value=io.StringIO(mock_potcar_string)):
+            with patch('vasppy.summary.md5sum', side_effect=md5sum_return_values ):
                 with patch.dict('vasppy.data.potcar_data.potcar_md5sum_data', mock_potcar_data, clear=True ):
                     with self.assertRaises( ValueError ):
                         potcar_spec( mock_potcar_filename )
 
     def test_find_vasp_calculations( self ):
         mock_glob_output = [ 'dir_A/vasprun.xml', 'dir_B/dir_C/vasprun.xml' ]
-        with patch('glob.iglob', side_effect=[mock_glob_output, []]) as mock_glob:
+        with patch('glob.iglob', side_effect=[mock_glob_output, []]):
             v = find_vasp_calculations()
         self.assertEqual( v, [ './dir_A/', './dir_B/dir_C/' ] )
 

@@ -2,7 +2,6 @@
 
 # Adapted from http://kitchingroup.cheme.cmu.edu/blog/2013/02/18/Nonlinear-curve-fitting/
 
-import glob
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 from scipy.optimize import leastsq  # type: ignore

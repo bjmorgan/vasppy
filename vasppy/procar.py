@@ -169,7 +169,7 @@ def least_squares_effective_mass(
         raise ValueError("k-points are not collinear")
     dk = cartesian_k_points - cartesian_k_points[0]
     mod_dk = np.linalg.norm(dk, axis=1)
-    delta_e = eigenvalues - eigenvalues[0]
+    eigenvalues - eigenvalues[0]
     effective_mass = 1.0 / (np.polyfit(mod_dk, eigenvalues, 2)[0] * ev_to_hartree * 2.0)
     return effective_mass
 

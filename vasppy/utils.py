@@ -2,7 +2,6 @@ import hashlib
 from monty.io import zopen  # type: ignore
 from pathlib import Path
 import os
-import yaml
 from contextlib import contextmanager
 from pymatgen.core import Structure
 from typing import Optional, List

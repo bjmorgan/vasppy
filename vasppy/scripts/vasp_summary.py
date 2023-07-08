@@ -79,7 +79,7 @@ def main():
                     matching_path.append( p )
             path = matching_path
         if args.maxjobs:
-            n = len(path)
+            len(path)
             with Pool(args.maxjobs) as p:
                 if args.progress_bar:
                     summaries = list(tqdm.tqdm(p.imap(get_summary, path), total=len(path)))

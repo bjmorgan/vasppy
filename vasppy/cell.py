@@ -78,7 +78,7 @@ class Cell:
         """
         delta_r_cartesian = (r1 - r2).dot(self.matrix)
         delta_r_squared = sum(delta_r_cartesian**2)
-        if cutoff != None:
+        if cutoff is not None:
             cutoff_squared = cutoff**2
             if delta_r_squared > cutoff_squared:
                 return None

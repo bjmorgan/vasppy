@@ -1,9 +1,6 @@
 #! /usr/bin/env python3
 
-import numpy as np  # type: ignore
 import argparse
-from vasppy.poscar import Poscar
-from vasppy.cell import Cell
 import vasppy.pimaim
 
 def parse_command_line_arguments():

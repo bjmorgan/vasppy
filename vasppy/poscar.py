@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import re
 import copy
-from vasppy import atom, cell
+from vasppy import cell
 from vasppy.units import angstrom_to_bohr
 from pymatgen.core import Lattice as pmg_Lattice
 from pymatgen.core import Structure as pmg_Structure

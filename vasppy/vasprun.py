@@ -225,7 +225,7 @@ class Vasprun:
         forces = []
         for child in self.doc.iterfind("calculation"):
             elem = child.find("varray/[@name='forces']")
-            if elem != None:
+            if elem is not None:
                 forces.append(parse_varray(elem))
         if forces:
             return np.array(forces)

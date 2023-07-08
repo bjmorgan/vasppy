@@ -9,10 +9,9 @@ from vasppy.outcar import (
     vasp_version_from_outcar,
     potcar_eatom_list_from_outcar,
 )
-from vasppy.data.potcar_data import potcar_md5sum_data, potcar_nelect
+from vasppy.data.potcar_data import potcar_md5sum_data
 from vasppy.utils import file_md5, md5sum, match_filename, cd
 from xml.etree import ElementTree as ET
-import sys
 import yaml
 import glob
 import re
@@ -159,7 +158,7 @@ class Summary:
         with cd(directory):
             try:
                 self.meta = VASPMeta.from_file("vaspmeta.yaml")
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 raise FileNotFoundError(f"vaspmeta.yaml not found in {directory}")
             self.parse_vasprun()
         self.print_methods = {

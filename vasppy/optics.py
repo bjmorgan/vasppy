@@ -2,7 +2,7 @@
 functions for working with optical properties from vasprun.xml
 """
 
-from math import pi, sqrt
+from math import pi
 import numpy as np
 from scipy.constants import physical_constants, speed_of_light  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore

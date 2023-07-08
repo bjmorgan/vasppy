@@ -40,7 +40,6 @@ def read_pimaim_restart( filename ):
 
 def main():
     filename = 'testout.rst'
-    restart_file = True
     args = parse_command_line_arguments()
     coordinates, velocities, dipoles, full_cell_matrix, cell_lengths = read_pimaim_restart( filename )
     assert( sum( args.atom_numbers ) == len( coordinates ) )

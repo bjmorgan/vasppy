@@ -3,7 +3,6 @@
 from vasppy.poscar import Poscar
 from vasppy.summary import potcar_spec, potcar_sets
 import argparse
-import re
 
 """
 A command line utility for testing species consistency between a VASP POSCAR and POTCAR pair of files. Species are considered consistent if the species labels used in the POSCAR file match the start of the pseudopotential labels in the POTCAR file, in order. e.g. a POSCAR that contains `Ti O` will match a POTCAR that contains `Ti_pv O`. If any species labels do not match the script raises an AttributeError.

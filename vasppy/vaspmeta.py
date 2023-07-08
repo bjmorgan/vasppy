@@ -1,5 +1,4 @@
 import yaml
-from vasppy.utils import file_md5
 
 
 class VASPMeta:

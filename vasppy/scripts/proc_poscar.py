@@ -1,7 +1,6 @@
 #! /usr/bin/env python3 
 
 from vasppy.poscar import Poscar
-import string
 import argparse      
 
 def parse_command_line_arguments():

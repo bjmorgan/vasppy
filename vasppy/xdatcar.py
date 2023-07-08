@@ -1,7 +1,7 @@
 from vasppy.poscar import Poscar
 import re
 import copy
-import numpy as np  # type: ignore
+import numpy as np
 
 class Xdatcar:
 

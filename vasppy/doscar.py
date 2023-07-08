@@ -1,4 +1,4 @@
-import numpy as np  # type: ignore
+import numpy as np 
 import pandas as pd  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 from matplotlib.axes import Axes  # type: ignore

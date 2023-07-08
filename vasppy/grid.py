@@ -1,12 +1,12 @@
-import numpy as np  # type: ignore
+import numpy as np
 import sys
 import math
 from vasppy import poscar, cell
 
-def interpolate( i, j, x ):
-    return( ( i * ( 1.0 - x ) ) + ( j * x) )
+def interpolate(i, j, x):
+    return((i * (1.0 - x)) + (j * x))
 
-def trilinear_interpolation( cube, r ):
+def trilinear_interpolation(cube, r):
     return( interpolate ( 
                 interpolate( 
                     interpolate( cube[ 0, 0, 0 ], cube[ 1, 0, 0 ], r[ 0 ] ), # trilinear interpolation => http://en.wikipedia.org/wiki/Trilinear_interpolation

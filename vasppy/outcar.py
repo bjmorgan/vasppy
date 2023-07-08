@@ -1,8 +1,8 @@
-import numpy as np  # type: ignore
+import numpy as np
 import re
-from pymatgen.io.vasp.outputs import Outcar  # type: ignore
+from pymatgen.io.vasp.outputs import Outcar
 
-def reciprocal_lattice_from_outcar( filename ): # from https://github.com/MaterialsDiscovery/PyChemia
+def reciprocal_lattice_from_outcar(filename): # from https://github.com/MaterialsDiscovery/PyChemia
     """
     Finds and returns the reciprocal lattice vectors, if more than
     one set present, it just returns the last one.
@@ -23,7 +23,7 @@ def reciprocal_lattice_from_outcar( filename ): # from https://github.com/Materi
     recLat = recLat[:, 3:]
     return recLat
 
-def final_energy_from_outcar( filename='OUTCAR' ):
+def final_energy_from_outcar(filename='OUTCAR'):
     """
     Finds and returns the energy from a VASP OUTCAR file, by searching for the last `energy(sigma->0)` entry.
 

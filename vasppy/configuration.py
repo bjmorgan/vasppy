@@ -1,5 +1,5 @@
 from vasppy import atom, cell, rdf
-import numpy as np  # type: ignore
+import numpy as np
 
 class Configuration:
     """

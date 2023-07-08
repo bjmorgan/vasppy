@@ -3,7 +3,7 @@ functions for working with optical properties from vasprun.xml
 """
 
 from math import pi, sqrt
-import numpy as np  # type: ignore
+import numpy as np
 from scipy.constants import physical_constants, speed_of_light  # type: ignore
 
 eV_to_recip_cm = 1.0/(physical_constants['Planck constant in eV s'][0]*speed_of_light*1e2)

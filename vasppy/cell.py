@@ -1,7 +1,7 @@
 import math
-import numpy as np  # type: ignore
+import numpy as np
 
-def angle( x, y ):
+def angle(x, y):
     """
     Calculate the angle between two vectors, in degrees.
 
@@ -12,11 +12,11 @@ def angle( x, y ):
     Returns:
         (float):      the angle between x and y in degrees.
     """
-    dot = np.dot( x, y )
-    x_mod = np.linalg.norm( x )
-    y_mod = np.linalg.norm( y )
-    cos_angle = dot / ( x_mod * y_mod )
-    return np.degrees( np.arccos( cos_angle ) )
+    dot = np.dot(x, y)
+    x_mod = np.linalg.norm(x)
+    y_mod = np.linalg.norm(y)
+    cos_angle = dot / (x_mod * y_mod)
+    return np.degrees(np.arccos(cos_angle))
 
 def rotation_matrix(axis, theta):
     """
@@ -30,20 +30,20 @@ def rotation_matrix(axis, theta):
     Returns:
         (np.array):      the corredponding rotation matrix.
     """
-    axis = np.asarray( axis )
-    theta = np.asarray( theta )
-    axis = axis / math.sqrt( np.dot( axis, axis ) )
-    a = math.cos( theta / 2 )
-    b, c, d = -axis * math.sin( theta / 2 )
+    axis = np.asarray(axis)
+    theta = np.asarray(theta)
+    axis = axis / math.sqrt(np.dot(axis, axis))
+    a = math.cos(theta / 2)
+    b, c, d = -axis * math.sin(theta / 2)
     aa, bb, cc, dd = a*a, b*b, c*c, d*d
     bc, ad, ac, ab, bd, cd = b*c, a*d, a*c, a*b, b*d, c*d
-    return np.array( [ [ aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac) ],
-                       [ 2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab) ],
-                       [ 2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc ] ] )
+    return np.array([[aa+bb-cc-dd, 2*(bc+ad),   2*(bd-ac)],
+                     [2*(bc-ad),   aa+cc-bb-dd, 2*(cd+ab)],
+                     [2*(bd+ac),   2*(cd-ab),   aa+dd-bb-cc]])
 
 class Cell:
 
-    def __init__( self, matrix ):
+    def __init__(self, matrix):
         """
         Initialise a Cell object.
 

@@ -1,6 +1,6 @@
 # routines for interacting with PIMAIM data / filetypes
 
-import numpy as np  # type: ignore
+import numpy as np
 from vasppy.poscar import Poscar
 from vasppy.cell import Cell
 from vasppy.units import angstrom_to_bohr

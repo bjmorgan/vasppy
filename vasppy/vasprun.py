@@ -1,7 +1,7 @@
 from lxml import etree # type: ignore
 from typing import List, Union, Optional, Any, Dict
-from pymatgen.core import Structure # type: ignore
-import numpy as np # type: ignore
+from pymatgen.core import Structure
+import numpy as np
 
 def parse_varray(varray: etree.Element) -> Union[List[List[float]], 
                                                  List[List[int]],

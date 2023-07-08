@@ -10,7 +10,7 @@ class AutoKPoints:
         title: str,
         subdivisions: np.ndarray,
         grid_centering: Optional[str] = "G",
-        shift: Optional[np.ndarray] = np.array([0.0, 0.0, 0.0]),
+        shift: Optional[np.ndarray] = None,
     ) -> None:
         """Initialise an AutoKPoints object.
 
@@ -37,4 +37,7 @@ class AutoKPoints:
         self.title = title
         self.grid_centering = grid_centering
         self.subdivisions = subdivisions
-        self.shift = shift
+        if shift is None:
+            self.shift = np.array([0.0, 0.0, 0.0])
+        else:
+            self.shift = shift

@@ -1,5 +1,3 @@
-
-
 class Polyhedron:
     def __init__(self, vertices, cell, inside_point, cutoff):
         self.vertices = vertices

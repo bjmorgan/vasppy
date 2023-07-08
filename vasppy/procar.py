@@ -392,7 +392,8 @@ class Procar:
 
     def read_from_file(self, filename):
         warnings.warn(
-            "read_from_file() is deprecated as a part of the public API.\nPlease use Procar.from_file() or Procar.from_files() instead"
+            "read_from_file() is deprecated as a part of the public API.\nPlease use Procar.from_file() or Procar.from_files() instead",
+            stacklevel=2,
         )
         return self._read_from_file(filename=filename)
 
@@ -552,7 +553,9 @@ class Procar:
         x_axis = self.x_axis(reciprocal_lattice)
         to_return = []
         for i in range(self.number_of_bands):
-            for k, (e, p) in enumerate(zip(band_energies[i], spin_projection.T[i])):
+            for k, (e, p) in enumerate(
+                zip(band_energies[i], spin_projection.T[i], strict=None)
+            ):
                 to_return.append([x_axis[k], e - e_fermi, p * scaling])
         to_return = np.array(to_return).reshape((self.number_of_bands, -1, 3))
         return to_return

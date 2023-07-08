@@ -11,7 +11,10 @@ def handle_occupancy(occupancy, negative_occupancies="warn"):
         )
     if occupancy < 0:
         if negative_occupancies == "warn":
-            warnings.warn("One or more occupancies in your PROCAR file are negative.")
+            warnings.warn(
+                "One or more occupancies in your PROCAR file are negative.",
+                stacklevel=2,
+            )
         elif negative_occupancies == "raise":
             raise ValueError(
                 "One or more occupancies in your PROCAR file are negative."

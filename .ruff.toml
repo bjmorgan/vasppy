@@ -1,5 +1,5 @@
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F"]
+select = ["E", "F", "B"]
 ignore = ["E501", "E741"]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.

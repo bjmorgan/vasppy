@@ -29,11 +29,11 @@ def trilinear_interpolation(cube, r):
 class Grid:
     projections = {"x": 0, "y": 1, "z": 2}
 
-    def __init__(self, dimensions=[1, 1, 1]):
+    def __init__(self, dimensions=(1, 1, 1)):
         self.filename = None
         self.poscar = poscar.Poscar()
         self.number_of_header_lines = 0
-        self.dimensions = dimensions
+        self.dimensions = list(dimensions)
         self.spacing = np.array(
             [1.0 / number_of_points for number_of_points in self.dimensions]
         )
@@ -129,7 +129,7 @@ class Grid:
             int(f) for f in point
         ]  # origin contains the 3D index of the lowest-index point in the cube surrounding point (i,j,k)
         delta = [
-            p - o for p, o in zip(point, origin)
+            p - o for p, o in zip(point, origin, strict=True)
         ]  # delta contains the *fractional* offset of "point" from "origin"
         cube = self.cube_slice(
             *origin

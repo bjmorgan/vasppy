@@ -84,7 +84,8 @@ def potcar_spec(filename, return_hashes=False):
     with open(filename, "r") as f:
         potcars = re.split("(End of Dataset\n)", f.read())
     potcar_md5sums = [
-        md5sum("".join(pair)) for pair in zip(potcars[::2], potcars[1:-1:2])
+        md5sum("".join(pair))
+        for pair in zip(potcars[::2], potcars[1:-1:2], strict=True)
     ]
     for this_md5sum in potcar_md5sums:
         for ps in potcar_sets:
@@ -158,8 +159,10 @@ class Summary:
         with cd(directory):
             try:
                 self.meta = VASPMeta.from_file("vaspmeta.yaml")
-            except FileNotFoundError:
-                raise FileNotFoundError(f"vaspmeta.yaml not found in {directory}")
+            except FileNotFoundError as exc:
+                raise FileNotFoundError(
+                    f"vaspmeta.yaml not found in {directory}"
+                ) from exc
             self.parse_vasprun()
         self.print_methods = {
             "title": self.print_title,
@@ -274,7 +277,7 @@ class Summary:
 
     def print_potcar(self):
         print("potcar:")
-        for e, p in zip(self.stoich, self.vasprun.potcar_symbols):
+        for e, p in zip(self.stoich, self.vasprun.potcar_symbols, strict=True):
             print("    - {}: {}".format(e, p))
 
     def print_energy(self):
@@ -309,6 +312,7 @@ class Summary:
         for e, eatom in zip(
             self.stoich,
             potcar_eatom_list_from_outcar("{}/OUTCAR".format(self.directory)),
+            strict=True,
         ):
             print("    - {}: {} eV".format(e, eatom))
 
@@ -372,7 +376,7 @@ class Summary:
             ldaul = self.vasprun.incar["LDAUL"]
             if any(v != 0 for v in ldauu):
                 print("ldau:")
-                for e, u, j, l in zip(self.stoich, ldauu, ldauj, ldaul):
+                for e, u, j, l in zip(self.stoich, ldauu, ldauj, ldaul, strict=True):
                     if u != 0:
                         print("    - {}: {} {} {}".format(e, lqn[l], u, j))
 

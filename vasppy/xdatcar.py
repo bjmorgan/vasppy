@@ -28,7 +28,7 @@ class Xdatcar:
         frame_coordinates = [
             frame.split("\n") for frame in frame_header.split(lines)[2:]
         ]
-        for f, frame in enumerate(frame_coordinates):
+        for frame in frame_coordinates:
             self.poscar.append(copy.deepcopy(self.poscar[0]))
             self.poscar[-1].coordinates = np.array(
                 [

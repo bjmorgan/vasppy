@@ -106,7 +106,7 @@ class Doscar:
     def read_header(self) -> None:
         self.header = []
         with open(self.filename, "r") as file_in:
-            for i in range(Doscar.number_of_header_lines):
+            for _i in range(Doscar.number_of_header_lines):
                 self.header.append(file_in.readline())
         self.process_header()
 

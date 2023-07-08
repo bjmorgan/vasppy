@@ -9,8 +9,7 @@ from scipy.constants import physical_constants, speed_of_light  # type: ignore
 eV_to_recip_cm = 1.0/(physical_constants['Planck constant in eV s'][0]*speed_of_light*1e2)
 
 def matrix_eigvals(matrix):
-    """
-    Calculate the eigenvalues of a matrix.
+    """Calculate the eigenvalues of a matrix.
 
     Args:
         matrix (np.array): The matrix to diagonalise.
@@ -22,8 +21,8 @@ def matrix_eigvals(matrix):
     return eigvals
        
 def to_matrix( xx, yy, zz, xy, yz, xz ):
-    """
-    Convert a list of matrix components to a symmetric 3x3 matrix.
+    """Convert a list of matrix components to a symmetric 3x3 matrix.
+
     Inputs should be in the order xx, yy, zz, xy, yz, xz.
 
     Args:
@@ -54,8 +53,7 @@ def plot_dielectric_functions( dielectric, ax=None ):
     return fig
 
 def parse_dielectric_data( data ):
-    """
-    Convert a set of 2D vasprun formatted dielectric data to
+    """Convert a set of 2D vasprun formatted dielectric data to
     the eigenvalues of each corresponding 3x3 symmetric numpy matrices.
 
     Args:
@@ -67,11 +65,10 @@ def parse_dielectric_data( data ):
         (np.array):  a Nx3 numpy array. Each row contains the eigenvalues
                      for the corresponding row in `data`.
     """ 
-    return np.array( [ matrix_eigvals( to_matrix( *e ) ) for e in data ] )
+    return np.array([matrix_eigvals(to_matrix(*e)) for e in data ])
 
 def absorption_coefficient(dielectric):
-    """
-    Calculate the optical absorption coefficient from an input set of
+    """Calculate the optical absorption coefficient from an input set of
     pymatgen vasprun dielectric constant data.
 
     Args:
@@ -88,7 +85,7 @@ def absorption_coefficient(dielectric):
     Notes:
         The absorption coefficient is calculated as
 
-        .. math:: \\alpha = \\frac{2\sqrt{2} \pi}{\lambda} \sqrt{-\epsilon_1+\sqrt{\epsilon_1^2+\epsilon_2^2}}
+        .. math:: \\alpha = \\frac{2\\sqrt{2} \\pi}{\\lambda} \\sqrt{-\\epsilon_1+\\sqrt{\\epsilon_1^2+\\epsilon_2^2}}
 
     """
     energies_in_eV = np.array( dielectric[0] )

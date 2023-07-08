@@ -1,21 +1,27 @@
-import numpy as np
-import re
-import math
+from functools import reduce
+from copy import deepcopy
+from typing import Optional
 import warnings
+import math
+import re
+
+import numpy as np
 from .units import angstrom_to_bohr, ev_to_hartree
 from .band import Band
-from copy import deepcopy
-import fortranformat as ff  # type: ignore
-from functools import reduce
+
 
 class KPoint():
 
-    def __init__( self, index, frac_coords, weight ):
+    def __init__(self,
+                 index,
+                 frac_coords,
+                 weight):
         self.index = index
         self.frac_coords = frac_coords
         self.weight = weight
 
-    def cart_coords( self, reciprocal_lattice ):
+    def cart_coords(self,
+                    reciprocal_lattice):
         """Convert the reciprocal fractional coordinates for this k-point to \
         reciprocal Cartesian coordinates.
 
@@ -24,24 +30,25 @@ class KPoint():
                 Cartesian reciprocal lattice.
 
         Returns:
-            (np.array): The reciprocal Cartesian coordinates of this k-point.
+            np.array: The reciprocal Cartesian coordinates of this k-point.
 
         """
         return np.dot( self.frac_coords, reciprocal_lattice )
 
-    def __eq__( self, other ):
-        return ( ( self.index == other.index ) &
-                 ( self.frac_coords == other.frac_coords ).all() &
-                 ( self.weight == other.weight ) )
+    def __eq__(self,
+               other):
+        return ((self.index == other.index) &
+                (self.frac_coords == other.frac_coords).all() &
+                (self.weight == other.weight))
 
-    def __repr__( self ):
+    def __repr__(self) -> str:
         return "k-point {}: {} weight = {}".format( self.index, ' '.join( [ str(c) for c in self.frac_coords ] ), self.weight )
 
-def get_numbers_from_string( string ):
-    p = re.compile('-?\d+[.\d]*')
-    return [ float( s ) for s in p.findall( string ) ]
+def get_numbers_from_string(string: str) -> list[float]:
+    p = re.compile(r'-?\d+[.\d]*')
+    return [float(s) for s in p.findall(string)]
 
-def k_point_parser( string ):
+def k_point_parser(string: str) -> list[KPoint]:
     """Parse k-point data from a PROCAR string.
 
     Finds all lines of the form::
@@ -55,29 +62,30 @@ def k_point_parser( string ):
         string (str): String containing a full PROCAR file.
 
     Returns:
-        (list(:obj:`procar.KPoint`)): A list of :obj:`procar.KPoint` objects.
+        list(:obj:`procar.KPoint`): A list of :obj:`procar.KPoint` objects.
 
     """
-    regex = re.compile( 'k-point\s+(\d+)\s*:\s+([- ][01].\d{8})([- ][01].\d{8})([- ][01].\d{8})\s+weight = ([01].\d+)' )
-    captured = regex.findall( string ) 
+    regex = re.compile(r'k-point\s+(\d+)\s*:\s+([- ][01].\d{8})([- ][01].\d{8})([- ][01].\d{8})\s+weight = ([01].\d+)')
+    captured = regex.findall(string) 
     k_points = []
     for kp in captured:
         index = int(kp[0])
-        frac_coords = np.array( [ float(s) for s in kp[1:4] ] )
+        frac_coords = np.array([float(s) for s in kp[1:4]])
         weight = float(kp[4])
-        k_points.append( KPoint( index=index, frac_coords=frac_coords, weight=weight ) )
+        k_points.append(KPoint(index=index, frac_coords=frac_coords, weight=weight))
     return k_points
 
-def projections_parser( string ):
-    regex = re.compile( '([-.\d\se]+tot.+)\n' )
-    data = regex.findall( string )
-    data = [ x.replace( 'tot', '0' ) for x in data ]
-    data = np.array( [ x.split() for x in data ], dtype = float )
+def projections_parser(string):
+    regex = re.compile(r'([-.\d\se]+tot.+)\n')
+    data = regex.findall(string)
+    data = [x.replace('tot', '0') for x in data]
+    data = np.array([x.split() for x in data], dtype = float)
     return data
 
-def area_of_a_triangle_in_cartesian_space( a, b, c ):
-    """
-    Returns the area of a triangle defined by three points in Cartesian space.
+def area_of_a_triangle_in_cartesian_space(a: np.ndarray,
+                                          b: np.ndarray,
+                                          c: np.ndarray) -> float:
+    """Returns the area of a triangle defined by three points in Cartesian space.
 
     Args:
         a (np.array): Cartesian coordinates of point A.
@@ -85,9 +93,10 @@ def area_of_a_triangle_in_cartesian_space( a, b, c ):
         c (np.array): Cartesian coordinates of point C.
 
     Returns:
-        (float): the area of the triangle.
+        float: the area of the triangle.
+
     """
-    return 0.5 * np.linalg.norm( np.cross( b-a, c-a ) )
+    return float(0.5 * np.linalg.norm(np.cross(b-a, c-a)))
 
 def points_are_in_a_straight_line( points, tolerance=1e-7 ):
     """
@@ -109,39 +118,43 @@ def points_are_in_a_straight_line( points, tolerance=1e-7 ):
             return False
     return True
 
-def two_point_effective_mass( cartesian_k_points, eigenvalues ):
-    """
-    Calculate the effective mass given eigenvalues at two k-points.
+def two_point_effective_mass(cartesian_k_points: np.ndarray,
+                             eigenvalues: np.ndarray) -> float:
+    """Calculate the effective mass given eigenvalues at two k-points.
+
     Reimplemented from Aron Walsh's original effective mass Fortran code.
 
     Args:
-        cartesian_k_points (np.array): 2D numpy array containing the k-points in (reciprocal) Cartesian coordinates.
+        cartesian_k_points (np.array): 2D numpy array containing the k-points in (reciprocal)
+            Cartesian coordinates.
         eigenvalues (np.array):        numpy array containing the eigenvalues at each k-point.
 
     Returns:
-        (float): The effective mass
+        float: The effective mass.
+
     """
-    assert( cartesian_k_points.shape[0] == 2 )
-    assert( eigenvalues.size == 2 )
+    assert cartesian_k_points.shape[0] == 2
+    assert eigenvalues.size == 2
     dk = cartesian_k_points[ 1 ] - cartesian_k_points[ 0 ]
     mod_dk = np.sqrt( np.dot( dk, dk ) )
     delta_e = ( eigenvalues[ 1 ] - eigenvalues[ 0 ] ) * ev_to_hartree * 2.0
     effective_mass = mod_dk * mod_dk / delta_e
     return effective_mass
 
-def least_squares_effective_mass( cartesian_k_points, eigenvalues ):
-    """
-    Calculate the effective mass using a least squares quadratic fit.
+def least_squares_effective_mass(cartesian_k_points: np.ndarray,
+                                 eigenvalues: np.ndarray) -> float:
+    """Calculate the effective mass using a least squares quadratic fit.
 
     Args:
-        cartesian_k_points (np.array): Cartesian reciprocal coordinates for the k-points
+        cartesian_k_points (np.array): Cartesian reciprocal coordinates for the k-points.
         eigenvalues (np.array):        Energy eigenvalues at each k-point to be used in the fit.
 
     Returns:
-        (float): The fitted effective mass
+        float: The fitted effective mass.
 
-    Notes:
-        If the k-points do not sit on a straight line a ValueError will be raised.
+    Raises:
+        ValueError: If the k-points do not sit on a straight line.
+
     """
     if not points_are_in_a_straight_line( cartesian_k_points ):
         raise ValueError( 'k-points are not collinear' )
@@ -393,24 +406,32 @@ class Procar:
         to_return = np.array( to_return ).reshape( self.number_of_bands, -1, 3 )
         return to_return
 
-    def effective_mass_calc( self, k_point_indices, band_index, reciprocal_lattice, spin=1, printing=False ):
-        assert( spin <= self.k_point_blocks )
-        assert( len( k_point_indices ) > 1 ) # we need at least 2 k-points
+    def effective_mass_calc(self,
+                            k_point_indices,
+                            band_index,
+                            reciprocal_lattice,
+                            spin=1,
+                            printing=False):
+        assert spin <= self.k_point_blocks
+        assert len(k_point_indices) > 1 # we need at least 2 k-points
         band_energies = self._bands[:,1:].reshape( self.k_point_blocks, self.number_of_k_points, self.number_of_bands )
-        frac_k_point_coords = np.array( [ self._k_points[ k - 1 ].frac_coords for k in k_point_indices ] )
-        eigenvalues = np.array( [ band_energies[ spin - 1 ][ k - 1 ][ band_index - 1 ] for k in k_point_indices ] )
+        frac_k_point_coords = np.array([self._k_points[k - 1].frac_coords for k in k_point_indices])
+        eigenvalues = np.array([band_energies[spin - 1][k - 1][band_index - 1] for k in k_point_indices])
         if printing:
-            print( '# h k l e' )
-            [ print( ' '.join( [ str( f ) for f in row ] ) ) for row in np.concatenate( ( frac_k_point_coords, np.array( [ eigenvalues ] ).T ), axis = 1 ) ]
+            print('# h k l e')
+            for row in np.concatenate((frac_k_point_coords, np.array([eigenvalues]).T), axis=1):
+                print(' '.join([str(f) for f in row]))
         reciprocal_lattice = reciprocal_lattice * 2 * math.pi * angstrom_to_bohr
-        cart_k_point_coords = np.array( [ k.cart_coords( reciprocal_lattice ) for k in k_points ] ) # convert k-points to cartesian
-        if len( k_point_indices ) == 2:
+        cart_k_point_coords = np.array([k.cart_coords(reciprocal_lattice) for k in self._k_points]) # convert k-points to cartesian
+        if len(k_point_indices) == 2:
             effective_mass_function = two_point_effective_mass
         else:
             effective_mass_function = least_squares_effective_mass
-        return effective_mass_function( cart_k_point_coords, eigenvalues )
+        return effective_mass_function(cart_k_point_coords,
+                                       eigenvalues)
 
-    def x_axis( self, reciprocal_lattice=None ):
+    def x_axis(self,
+               reciprocal_lattice: Optional[np.ndarray]=None) -> np.ndarray:
         """Generate the x-axis values for a band-structure plot.
 
         Returns an array of cumulative distances in reciprocal space between sequential k-points.
@@ -422,7 +443,7 @@ class Procar:
                 k-points.
         
         Returns:
-            (np.array): An array of x-axis values.
+            np.array: An array of x-axis values.
  
         """
         if reciprocal_lattice is not None:

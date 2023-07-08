@@ -82,10 +82,10 @@ def potcar_spec(filename, return_hashes=False):
     """
     p_spec = {}
     with open(filename, "r") as f:
-        potcars = re.split("(End of Dataset\n)", f.read())
+        potcars = [s for s in re.split("(End of Dataset\n)", f.read()) if s]
     potcar_md5sums = [
         md5sum("".join(pair))
-        for pair in zip(potcars[::2], potcars[1:-1:2], strict=True)
+        for pair in zip(potcars[::2], potcars[1::2], strict=True)
     ]
     for this_md5sum in potcar_md5sums:
         for ps in potcar_sets:

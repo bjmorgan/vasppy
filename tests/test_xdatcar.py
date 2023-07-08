@@ -3,11 +3,12 @@ import unittest
 from vasppy import xdatcar
 from vasppy.poscar import Poscar
 
-class TestXdatcar( unittest.TestCase ):
 
-    def test_xdatcar_is_initialised( self ):
+class TestXdatcar(unittest.TestCase):
+    def test_xdatcar_is_initialised(self):
         xd = xdatcar.Xdatcar()
-        self.assertEqual( type( xd.poscar[0] ), Poscar )
+        self.assertEqual(type(xd.poscar[0]), Poscar)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

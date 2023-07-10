@@ -78,7 +78,7 @@ def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray,
         list[float]: A range of KSPACING values which all correspond to distinct k-point grids.
     """
     allowed_kspacing = []
-    highest_total = 0
+    highest_total = 0.0
     kspacing_min, kspacing_max = kspacing_range
     for kspacing in np.arange(kspacing_min, kspacing_max + step, step):
         subdivisions = get_subdivisions_from_kspacing(kspacing, reciprocal_lattice_vectors)

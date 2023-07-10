@@ -75,7 +75,7 @@ def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray,
         step (float): The interval between KSPACING values to be tested. Defaults to 0.02.
 
     Returns:
-        list[float]: A range of KSPACING values which all correspond to distinct k-point grids.
+        tuple[float, ...]: A range of KSPACING values which all correspond to distinct k-point grids.
     """
     allowed_kspacing = []
     highest_total = 0.0

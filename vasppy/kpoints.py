@@ -42,7 +42,7 @@ class AutoKPoints:
             self.shift = shift
 
 def get_subdivisions_from_kspacing(kspacing: float,
-                                             reciprocal_lattice_vectors: np.ndarray) -> tuple[int, int, int]:
+                                             reciprocal_lattice_vectors: np.ndarray) -> tuple[int, ...]:
     """Calculate subdivisions along reciprocal lattice vectors from the miniumum allowed distance between k-points (KSPACING).
 
     Args:
@@ -51,7 +51,7 @@ def get_subdivisions_from_kspacing(kspacing: float,
         structure.lattice.reciprocal_lattice_crystallographic.matrix.
 
     Returns:
-        tuple[int, int, int]: The subdivisions along each reciprocal lattice vector.
+        tuple[int, ...]: The subdivisions along each reciprocal lattice vector.
     """
     subdivisions = []
     for row in reciprocal_lattice_vectors:

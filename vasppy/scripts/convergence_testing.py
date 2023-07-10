@@ -2,7 +2,7 @@ import argparse
 import os
 import numpy as np
 from pymatgen.core import Structure
-from pymatgen.io.vasp import Incar, Potcar
+from pymatgen.io.vasp import Incar, Potcar # type: ignore
 from vasppy.kpoints import get_convergence_testing_kspacing
 
 def parse_args() -> argparse.Namespace:

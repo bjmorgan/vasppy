@@ -1,7 +1,6 @@
 import numpy as np  # type: ignore
 from typing import Optional
 
-
 class AutoKPoints:
     """Class for automatic k-point generation data in KPOINTS."""
 

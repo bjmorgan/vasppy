@@ -3,7 +3,6 @@ import unittest
 from vasppy.kpoints import AutoKPoints, get_convergence_testing_kspacing, get_subdivisions_from_kspacing
 import numpy as np
 
-
 class AutoKPointsTestCase(unittest.TestCase):
     def test_init_auto_kpoints(self):
         title = "title"

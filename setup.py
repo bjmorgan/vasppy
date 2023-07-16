@@ -10,6 +10,7 @@ long_description = open(readme).read()
 
 scripts = ['check_species',
            'checkforce',
+           'convergence_testing',
            'murnfit', 
            'vasp_summary', 
            'poscar_to_cif', 

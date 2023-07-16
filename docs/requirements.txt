@@ -1,5 +1,5 @@
 Sphinx~=6.2.1
 nbsphinx
 jupyter
-git+git://github.com/bjmorgan/figure_formatting.git
+git+https://github.com/bjmorgan/figure_formatting.git
 -r ../requirements.txt

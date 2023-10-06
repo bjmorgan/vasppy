@@ -269,7 +269,7 @@ class Doscar:
         labels: bool = True,
         title_fontsize: int = 16,
         legend_pos: str = "outside",
-    ) -> Figure | None:
+    ) -> Union[Figure, None]:
         if not ax:
             fig, ax = plt.subplots(1, 1, figsize=(8.0, 3.0))
         else:

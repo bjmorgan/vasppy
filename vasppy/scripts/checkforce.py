@@ -54,13 +54,6 @@ class ForcesData:
 
 
 def parse_args():
-<<<<<<< HEAD
-    parser = argparse.ArgumentParser(description='Checks for convergence of geometry optimisations in VASP')
-    parser.add_argument('-o', '--outcar', type=str, default="OUTCAR", help="The filepath of the OUTCAR file to be parsed. Default is \"OUTCAR\")")
-    parser.add_argument('-c', '--convergence', type=float, help="Set force convergence. Default is to read the convergence from the OUTCAR file.")
-    parser.add_argument('-v', '--verbose', action='store_true', help="Verbose output. Show convergence status for all atoms.")
-    parser.add_argument('-w', '--warn', action='store_true', help="Print warnings.")
-=======
     parser = argparse.ArgumentParser(
         description="Checks for convergence of geometry optimisations in VASP"
     )
@@ -84,7 +77,6 @@ def parse_args():
         help="Verbose output. Show convergence status for all atoms.",
     )
     parser.add_argument("-w", "--warn", action="store_true", help="Print warnings.")
->>>>>>> 3cfe319f1c94784f8d24b0f336c5bab36d195ee9
     args = parser.parse_args()
     return args
 

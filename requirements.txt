@@ -1,7 +1,7 @@
-numpy>=1.16.2
+numpy>=1.20
 monty
 pandas
-pymatgen
+pymatgen>=2023.6.28
 PyYAML 
 fortranformat
 scipy>=1.4.1

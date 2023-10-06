@@ -3,12 +3,25 @@
 from vasppy.summary import potcar_spec
 import argparse
 
+
 def parse_command_line_arguments():
-    parser = argparse.ArgumentParser( description='Generate POTCAR specification based on hashing individual pseudopotential strings' )
-    parser.add_argument('potcar', help="filename of the VASP POTCAR to be processed", nargs='?', default='POTCAR' )
-    parser.add_argument('--hash', help="return the md5 hashes of the individual pseudopotential strings", action='store_true') 
+    parser = argparse.ArgumentParser(
+        description="Generate POTCAR specification based on hashing individual pseudopotential strings"
+    )
+    parser.add_argument(
+        "potcar",
+        help="filename of the VASP POTCAR to be processed",
+        nargs="?",
+        default="POTCAR",
+    )
+    parser.add_argument(
+        "--hash",
+        help="return the md5 hashes of the individual pseudopotential strings",
+        action="store_true",
+    )
     args = parser.parse_args()
     return args
+
 
 def main():
     args = parse_command_line_arguments()
@@ -22,5 +35,6 @@ def main():
         else:
             print(p, ps)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

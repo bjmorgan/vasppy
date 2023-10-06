@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt  # type: ignore
 from matplotlib.axes import Axes  # type: ignore
 from matplotlib.figure import Figure  # type: ignore
 import matplotlib._color_data as mcd  # type: ignore
-from typing import Optional, List, Union, Dict, Tuple
+from typing import Optional, List, Union, Dict, Tuple, Literal
 from collections.abc import Iterable
 
 
@@ -265,16 +265,16 @@ class Doscar:
         scaling: Optional[Dict[str, Dict[str, float]]] = None,
         split: bool = False,
         title: Optional[str] = None,
-        title_loc: str = "center",
+        title_loc: Literal['left', 'center', 'right'] = "center",
         labels: bool = True,
         title_fontsize: int = 16,
         legend_pos: str = "outside",
-    ) -> Figure:
+    ) -> Figure | None:
         if not ax:
             fig, ax = plt.subplots(1, 1, figsize=(8.0, 3.0))
-            assert(isinstance(ax, Axes))
         else:
             fig = None
+        assert(isinstance(ax, Axes))
         if not colors:
             colors = mcd.TABLEAU_COLORS
         assert isinstance(colors, Iterable)
@@ -347,7 +347,7 @@ class Doscar:
         if labels:
             ax.set_xlabel("Energy [eV]")
         ax.axhline(y=0, c="lightgrey")
-        ax.axes.grid(False, axis="y")
+        ax.axes.grid(False, axis="y") # type: ignore
 
         ax.tick_params(
             axis="y",  # changes apply to the y-axis

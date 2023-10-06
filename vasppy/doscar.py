@@ -272,6 +272,7 @@ class Doscar:
     ) -> Figure:
         if not ax:
             fig, ax = plt.subplots(1, 1, figsize=(8.0, 3.0))
+            assert(isinstance(ax, Axes))
         else:
             fig = None
         if not colors:

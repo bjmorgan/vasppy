@@ -1,4 +1,4 @@
-import yaml
+import yaml # type: ignore
 
 
 class VASPMeta:

@@ -66,7 +66,7 @@ class VASPMeta:
             track = data.get("track")
             xargs = {}
             if track:
-                if type(track) is str:
+                if isinstance(track, str):
                     track = [track]
                 xargs["track"] = track
             vaspmeta = VASPMeta(

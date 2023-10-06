@@ -63,7 +63,7 @@ class TestVasprun(unittest.TestCase):
         expected_data = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
         self.assertEqual(parse_varray(elem), expected_data)
 
-    def test_parse_varray_parses_type_equals_float(self):
+    def test_parse_varray_parses_type_equals_int(self):
         elem = etree.Element("varray")
         elem.set("type", "int")
         v1 = etree.SubElement(elem, "v")

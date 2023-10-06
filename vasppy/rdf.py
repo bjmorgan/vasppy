@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional, Type
 import numpy as np
 from scipy.ndimage import gaussian_filter1d  # type: ignore
-from pymatgen.core import Structure
+from pymatgen.core import Structure # type: ignore
 from vasppy.utils import dr_ij
 
 

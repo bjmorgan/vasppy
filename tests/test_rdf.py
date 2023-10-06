@@ -2,7 +2,7 @@ import unittest
 from vasppy.rdf import RadialDistributionFunction
 import numpy as np
 from unittest.mock import Mock, patch, call, create_autospec
-from pymatgen.core import Structure, Lattice
+from pymatgen.core import Structure, Lattice, Site
     
 class TestRadialDistributionFunction(unittest.TestCase):
 

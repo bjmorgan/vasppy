@@ -347,7 +347,7 @@ class Doscar:
         if labels:
             ax.set_xlabel("Energy [eV]")
         ax.axhline(y=0, c="lightgrey")
-        ax.axes.grid(False, axis="y")
+        ax.axes.grid(False, axis="y") # type: ignore
 
         ax.tick_params(
             axis="y",  # changes apply to the y-axis

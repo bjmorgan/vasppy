@@ -265,11 +265,11 @@ class Doscar:
         scaling: Optional[Dict[str, Dict[str, float]]] = None,
         split: bool = False,
         title: Optional[str] = None,
-        title_loc: str = "center",
+        title_loc: Literal['left', 'center', 'right'] = "center",
         labels: bool = True,
         title_fontsize: int = 16,
         legend_pos: str = "outside",
-    ) -> Figure:
+    ) -> Union[Figure, None]:
         if not ax:
             fig, ax = plt.subplots(1, 1, figsize=(8.0, 3.0))
         else:

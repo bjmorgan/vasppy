@@ -2,7 +2,6 @@
 
 from vasppy.poscar import Poscar
 import argparse
-import numpy as np
 
 def parse_command_line_arguments():
     # command line arguments

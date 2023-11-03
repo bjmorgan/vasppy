@@ -175,7 +175,7 @@ class Poscar:
         if opts is None:
             opts = {}
         if not opts.get("coordinates_only"):
-            self.output_header(coordinate_type=coordinate_type)
+            self.output_header(coordinate_type=coordinate_type, opts=opts)
         self.output_coordinates_only(coordinate_type=coordinate_type, opts=opts)
 
     def output_header(self, coordinate_type="Direct", opts=None):
@@ -183,7 +183,11 @@ class Poscar:
             opts = {}
         print(self.title)
         print(self.scaling)
-        for row in self.cell.matrix:
+        if opts.get("orthorhombic"):
+            matrix = self.cell.matrix * np.eye(3)
+        else:
+            matrix = self.cell.matrix
+        for row in matrix:
             print("".join(["   {: .10f}".format(element) for element in row]))
         print(" ".join(self.atoms))
         print(" ".join([str(n) for n in self.atom_numbers]))

@@ -274,6 +274,7 @@ class Doscar:
             fig, ax = plt.subplots(1, 1, figsize=(8.0, 3.0))
         else:
             fig = None
+        assert isinstance(ax, Axes)
         if not colors:
             colors = mcd.TABLEAU_COLORS
         assert isinstance(colors, Iterable)

@@ -4,7 +4,7 @@ from pathlib import Path
 import os
 from contextlib import contextmanager
 from pymatgen.core import Structure # type: ignore
-from typing import Optional, List # type: ignore
+from typing import Optional, List
 import numpy as np
 
 

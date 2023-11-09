@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-import yaml
+import yaml # type: ignore
 import tqdm  # type: ignore
 from multiprocessing import Pool
 import argparse

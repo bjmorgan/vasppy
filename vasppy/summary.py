@@ -12,7 +12,7 @@ from vasppy.outcar import (
 from vasppy.data.potcar_data import potcar_md5sum_data
 from vasppy.utils import file_md5, md5sum, match_filename, cd
 from xml.etree import ElementTree as ET
-import yaml
+import yaml # type: ignore
 import glob
 import re
 

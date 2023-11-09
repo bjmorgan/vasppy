@@ -1,8 +1,8 @@
 import unittest
 from vasppy.rdf import RadialDistributionFunction
 import numpy as np
-from unittest.mock import Mock, patch, call
 from pymatgen.core import Structure, Lattice
+from unittest.mock import Mock, patch, call
 
 
 class TestRadialDistributionFunction(unittest.TestCase):

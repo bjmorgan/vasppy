@@ -1,11 +1,11 @@
-import yaml
+import yaml # type: ignore
 import re
 from collections import Counter
 
 
 class Calculation:
     """
-    class describing a single VASP calculation
+    Class describing a single VASP calculation
     """
 
     def __init__(self, title, energy, stoichiometry):

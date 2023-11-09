@@ -1,7 +1,7 @@
 import argparse
 import os
 import numpy as np
-from pymatgen.core import Structure
+from pymatgen.core import Structure # type: ignore
 from pymatgen.io.vasp import Incar, Potcar # type: ignore
 from vasppy.kpoints import get_convergence_testing_kspacing
 

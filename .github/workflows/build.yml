@@ -33,7 +33,7 @@ jobs:
           run: |
             pytest --cov-config=.coveragerc --cov=vasppy --cov-report lcov
         - name: Coveralls GitHub Action
-          uses: coverallsapp/github-action@2.2.3
+          uses: coverallsapp/github-action@v2
           with:
             file: ./coverage.lcov
             github-token: ${{ secrets.GITHUB_TOKEN }}

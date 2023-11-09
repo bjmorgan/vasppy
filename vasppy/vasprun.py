@@ -1,6 +1,6 @@
 from lxml import etree  # type: ignore
 from typing import List, Union, Optional, Any, Dict
-from pymatgen.core import Structure
+from pymatgen.core import Structure # type: ignore
 import numpy as np
 
 

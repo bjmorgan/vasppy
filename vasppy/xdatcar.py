@@ -5,6 +5,8 @@ import numpy as np
 
 
 class Xdatcar:
+    """Class for parsing and working with VASP XDATCAR files."""
+
     lines_offset = 9
 
     def __init__(self):
@@ -20,7 +22,16 @@ class Xdatcar:
         self.poscar = []
         self.poscar.append(Poscar())
 
-    def read_from(self, filename):
+    def read_from(self, filename: str) -> None:
+        """Read XDATCAR data from a VASP XDATCAR file.
+
+        Args:
+            filename (str): The XDATCAR file to read.
+
+        Returns:
+            None
+
+        """
         self.poscar[0].read_from(filename)
         with open(filename) as f:
             lines = f.read()

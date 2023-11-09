@@ -3,8 +3,8 @@ from monty.io import zopen  # type: ignore
 from pathlib import Path
 import os
 from contextlib import contextmanager
-from pymatgen.core import Structure
-from typing import Optional, List
+from pymatgen.core import Structure # type: ignore
+from typing import Optional, List # type: ignore
 import numpy as np
 
 

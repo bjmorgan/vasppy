@@ -3,7 +3,6 @@
 from vasppy.poscar import Poscar
 import argparse
 
-
 def parse_command_line_arguments():
     # command line arguments
     parser = argparse.ArgumentParser(description="Manipulates VASP POSCAR files")
@@ -48,6 +47,12 @@ def parse_command_line_arguments():
         "--number-atoms",
         action="store_true",
         help="label coordinates with atom number",
+    )
+    parser.add_argument(
+        "-o",
+        "--orthorhombic",
+        action="store_true",
+        help="force orthorhombic cell matrix (set off-diagonal elements to zero)",
     )
     parser.add_argument(
         "--scale",
@@ -96,6 +101,7 @@ def main():
         "numbered": args.number_atoms,
         "coordinates_only": args.coordinates_only,
         "selective": args.selective,
+        "orthorhombic": args.orthorhombic,
     }
     poscar.output(coordinate_type=coordinate_type, opts=output_opts)
 

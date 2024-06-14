@@ -166,7 +166,9 @@ def import_calculations_from_file(filename, skip_incomplete_records=False):
                 for s in d["stoichiometry"]:
                     stoichiometry.update(s)
             else:
-                raise ValueError('stoichiometry not found for "{d["title"]}"')
+                raise ValueError(f'stoichiometry not found for "{d["title"]}"')
+            if d["title"] in calcs:
+                raise ValueError(f'More than one calculation has the same title: {d["title"]}')
             calcs[d["title"]] = Calculation(
                 title=d["title"],
                 stoichiometry=stoichiometry,

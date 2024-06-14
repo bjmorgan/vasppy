@@ -27,7 +27,8 @@ scripts = ['check_species',
            'vasp_grid',
            'xdatcar_to_disp',
            'xdatcar_to_poscart',
-           'xdatcar_to_rdf']
+           'xdatcar_to_rdf',
+           'r2r2_expansion']
 
 setup(
     name='vasppy',

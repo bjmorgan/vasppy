@@ -1,4 +1,5 @@
 import unittest
+import textwrap
 from unittest.mock import Mock, patch, mock_open
 from collections import Counter
 
@@ -151,5 +152,28 @@ class CalculationSupportFunctionsTestCase(unittest.TestCase):
             self.assertEqual(calcs, {})
 
 
+    def test_import_calculation_from_file_raises_ValueError_if_calculations_have_repeated_titles(
+        self
+    ):
+        example_yaml = textwrap.dedent("""
+        --- 
+        title: this_calculation
+        stoichiometry:
+            - A: 2
+            - B: 4
+        energy: -0.2414 eV
+        
+        ---
+        title: this_calculation
+        stoichiometry:
+            - A: 2
+            - B: 4
+        energy: -0.2414 eV
+        """)
+        with patch("builtins.open", mock_open(read_data=example_yaml), create=True):
+            with self.assertRaises(ValueError):
+                import_calculations_from_file("example_file")
+
+                
 if __name__ == "__main__":
     unittest.main()

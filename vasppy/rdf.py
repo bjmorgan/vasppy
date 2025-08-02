@@ -215,9 +215,9 @@ class VanHoveAnalysis:
                 self_dr_ij, bins=nbins, range=(0.0, r_max), density=False
             )[0]
             self.gsrt += hist / rho
-        self.gdrt = self.gdrt / ff / (len(structures) - d_steps) / float(len(indices))
-        self.gsrt = self.gsrt / (len(structures) - d_steps) / float(len(indices))
-
+        self.gdrt /= ff * (len(structures) - d_steps) * float(len(indices))
+        self.gsrt /= (len(structures) - d_steps) * float(len(indices))
+        
     def self(self, sigma: Optional[float] = None) -> np.ndarray:
         """Returns the self part of the Van Hove correlation function.
 

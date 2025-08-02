@@ -68,7 +68,7 @@ class RadialDistributionFunction:
         self.r = self.intervals[:-1] + self.dr / 2.0
         ff = shell_volumes(self.intervals)
         self.coordination_number = np.zeros(nbins)
-        self.rdf = np.zeros((nbins), dtype=np.double)
+        self.rdf = np.zeros((nbins,), dtype=np.double)
         for structure, weight in zip(structures, weights):
             all_dr_ij = dr_ij(
                 structure=structure,
@@ -82,10 +82,8 @@ class RadialDistributionFunction:
             rho = float(len(self.indices_i)) / structure.lattice.volume
             self.rdf += hist * weight / rho
             self.coordination_number += np.cumsum(hist)
-        self.rdf = self.rdf / ff / sum(weights) / float(len(indices_j))
-        self.coordination_number = (
-            self.coordination_number / sum(weights) / float(len(self.indices_j))
-        )
+        self.rdf /= ff * sum(weights) * float(len(indices_j))
+        self.coordination_number /= sum(weights) * float(len(self.indices_j))
 
     def smeared_rdf(self, sigma: float = 0.1) -> np.ndarray:
         """Smear the RDF with a Gaussian kernel.

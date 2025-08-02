@@ -115,7 +115,7 @@ def get_forces_data(outcar_filename="OUTCAR", convergence=None, warn=False):
 
     # find force output block positions
     forces_block_start = []
-    forces_header_re = re.compile("\sPOSITION\s+TOTAL-FORCE \(eV/Angst\)")
+    forces_header_re = re.compile(r"\sPOSITION\s+TOTAL-FORCE \(eV/Angst\)")
     for i, line in enumerate(outcar.split("\n")):
         if forces_header_re.search(line):
             forces_block_start.append(i)

@@ -49,10 +49,10 @@ def file_md5(filename: str) -> str:
     """
     with zopen(filename, "r") as f:
         file_string = f.read()
-    try:  # attempt to decode byte object
+    
+    if isinstance(file_string, bytes):
         file_string = file_string.decode()
-    except AttributeError:
-        pass
+    
     return md5sum(file_string)
 
 

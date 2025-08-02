@@ -42,7 +42,7 @@ class AutoKPoints:
             self.shift = shift
 
 def get_subdivisions_from_kspacing(kspacing: float,
-                                             reciprocal_lattice_vectors: np.ndarray) -> tuple[int, ...]:
+        reciprocal_lattice_vectors: np.ndarray) -> tuple[int, ...]:
     """Calculate subdivisions along reciprocal lattice vectors from the miniumum allowed distance between k-points (KSPACING).
 
     Args:
@@ -81,11 +81,10 @@ def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray,
     highest_total = 0.0
     kspacing_min, kspacing_max = kspacing_range
     for kspacing in np.arange(kspacing_min, kspacing_max + step, step):
-        subdivisions = get_subdivisions_from_kspacing(kspacing, reciprocal_lattice_vectors)
+        kspacing_float = float(kspacing)
+        subdivisions = get_subdivisions_from_kspacing(kspacing_float, reciprocal_lattice_vectors)
         total = 1 / sum(subdivisions)
-
         if total > highest_total:
-            allowed_kspacing.append(round(kspacing, 3))
+            allowed_kspacing.append(round(kspacing_float, 3))
             highest_total = total
-
     return tuple(allowed_kspacing)

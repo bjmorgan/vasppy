@@ -35,7 +35,7 @@ class Xdatcar:
         self.poscar[0].read_from(filename)
         with open(filename) as f:
             lines = f.read()
-        frame_header = re.compile("\nDirect configuration=\s+\d+\n")
+        frame_header = re.compile(r"\nDirect configuration=\s+\d+\n")
         frame_coordinates = [
             frame.split("\n") for frame in frame_header.split(lines)[2:]
         ]

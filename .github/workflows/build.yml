@@ -27,17 +27,23 @@ jobs:
             pip install pytest
             pip install pytest-cov
             pip install pylint
+            pip install coveralls
             pip install .
             pip list
         - name: Run tests
           run: |
-            pytest --cov-config=.coveragerc --cov=vasppy --cov-report lcov
-        - name: Coveralls GitHub Action
+            pytest --cov-config=.coveragerc --cov=vasppy --cov-report=xml --cov-report=term
+        - name: Debug - Check coverage file
           if: matrix.python-version == '3.12'
-          uses: coverallsapp/github-action@v2
-          with:
-            file: ./coverage.lcov
-            github-token: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            ls -la coverage.xml
+            head -n 20 coverage.xml
+        - name: Upload to Coveralls
+          if: matrix.python-version == '3.12'
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            coveralls --service=github
         - name: Static type checking
           run: |
             mypy vasppy

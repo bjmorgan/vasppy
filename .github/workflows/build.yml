@@ -23,14 +23,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -U numpy
-          pip install mypy
-          pip install types-PyYAML
-          pip install pytest
-          pip install pytest-cov
-          pip install pylint
-          pip install .
+          pip install -e ".[dev]"
           pip list
       
       - name: Run tests

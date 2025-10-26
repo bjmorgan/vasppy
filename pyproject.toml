@@ -1,0 +1,106 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vasppy"
+version = "0.7.1.0"
+description = "Python utilities for working with VASP inputs and outputs"
+readme = "README.md"
+authors = [
+    {name = "Benjamin J. Morgan", email = "bjm42@bath.ac.uk"}
+]
+license = {text = "MIT"}
+keywords = ["vasp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "monty",
+    "numpy",
+    "pandas",
+    "pymatgen>=2023.6.28",
+    "PyYAML",
+    "fortranformat",
+    "scipy>=1.4.1",
+    "tqdm",
+    "lxml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "types-PyYAML",
+    "pylint>=2.15",
+    "coverage[toml]>=7.0",
+]
+docs = [
+    "sphinx>=6.0",
+    "sphinx-rtd-theme",
+    "nbsphinx",
+]
+
+[project.urls]
+Homepage = "https://github.com/bjmorgan/vasppy"
+Documentation = "https://vasppy.readthedocs.io"
+Repository = "https://github.com/bjmorgan/vasppy"
+"Bug Tracker" = "https://github.com/bjmorgan/vasppy/issues"
+
+[project.scripts]
+check_species = "vasppy.scripts.check_species:main"
+checkforce = "vasppy.scripts.checkforce:main"
+convergence_testing = "vasppy.scripts.convergence_testing:main"
+murnfit = "vasppy.scripts.murnfit:main"
+vasp_summary = "vasppy.scripts.vasp_summary:main"
+poscar_to_cif = "vasppy.scripts.poscar_to_cif:main"
+potcar_spec = "vasppy.scripts.potcar_spec:main"
+effective_mass = "vasppy.scripts.effective_mass:main"
+fat_bands = "vasppy.scripts.fat_bands:main"
+pimaim_to_poscar = "vasppy.scripts.pimaim_to_poscar:main"
+pimaim_to_xtl = "vasppy.scripts.pimaim_to_xtl:main"
+poscar_to_pimaim = "vasppy.scripts.poscar_to_pimaim:main"
+poscar_to_xtl = "vasppy.scripts.poscar_to_xtl:main"
+proc_poscar = "vasppy.scripts.proc_poscar:main"
+rotate_poscar = "vasppy.scripts.rotate_poscar:main"
+spacegroup = "vasppy.scripts.spacegroup:main"
+vasp_grid = "vasppy.scripts.vasp_grid:main"
+xdatcar_to_disp = "vasppy.scripts.xdatcar_to_disp:main"
+xdatcar_to_poscart = "vasppy.scripts.xdatcar_to_poscart:main"
+xdatcar_to_rdf = "vasppy.scripts.xdatcar_to_rdf:main"
+r2r2_expansion = "vasppy.scripts.r2r2_expansion:main"
+
+[tool.setuptools]
+packages = ["vasppy", "vasppy.scripts", "vasppy.data"]
+
+[tool.setuptools.package-data]
+vasppy = ["data/*.yaml"]
+
+[tool.coverage.run]
+source = ["vasppy"]
+omit = [
+    "*/python?.?/*",
+    "*/lib-python/?.?/*.py",
+    "*/lib_pypy/_*.py",
+    "*/site-packages/ordereddict.py",
+    "*/site-packages/nose/*",
+    "*/unittest2/*",
+    "docs",
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

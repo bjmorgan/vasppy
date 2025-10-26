@@ -1,9 +1,0 @@
-numpy
-monty
-pandas
-pymatgen>=2023.6.28
-PyYAML 
-fortranformat
-scipy>=1.4.1
-tqdm
-lxml

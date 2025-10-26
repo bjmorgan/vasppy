@@ -1,6 +1,0 @@
-Sphinx~=6.2.1
-sphinx-rtd-theme
-nbsphinx
-jupyter
-git+https://github.com/bjmorgan/figure_formatting.git
--r ../requirements.txt

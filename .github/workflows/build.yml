@@ -30,7 +30,7 @@ jobs:
           pip install pytest
           pip install pytest-cov
           pip install pylint
-          pip install .
+          pip install -e .
           pip list
       
       - name: Run tests

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from pymatgen.core import Structure # type: ignore
+from pymatgen.core import Structure
 from vasppy.utils import dr_ij
-from typing import Type
+from typing import Any, Type, cast
 import numpy as np
+from numpy.typing import NDArray
 
 """
 This module provides a NeighbourList class following the scheme in
@@ -25,6 +26,8 @@ class NeighbourList(object):
 
     """
 
+    vectors: NDArray[np.integer[Any]]
+    
     def __init__(
         self,
         structure: Structure,
@@ -51,7 +54,7 @@ class NeighbourList(object):
         self.vectors = (all_dr_ij <= r_cut).astype(int)
 
     @property
-    def coordination_numbers(self) -> np.ndarray:
+    def coordination_numbers(self) -> NDArray[np.integer[Any]]:
         """
         Return the coordination number of each site i.
 
@@ -62,13 +65,13 @@ class NeighbourList(object):
             None
 
         """
-        return np.sum(self.vectors, axis=1)
+        return  cast(NDArray[np.integer[Any]], np.sum(self.vectors, axis=1))
 
     def __eq__(self, other: object) -> bool:
         """Test whether two NeighbourList objects have equal vectors."""
         if not isinstance(other, NeighbourList):
             return NotImplemented
-        return (self.vectors == other.vectors).all()
+        return bool((self.vectors == other.vectors).all())
 
     @classmethod
     def from_species_strings(
@@ -104,7 +107,7 @@ class NeighbourList(object):
 
 def neighbour_list_correlation(
     nlist_i: NeighbourList, nlist_j: NeighbourList
-) -> np.ndarray:
+) -> NDArray[np.floating[Any]]:
     """
     Compute the normalised correlation between two NeighbourList object.
 
@@ -129,12 +132,15 @@ def neighbour_list_correlation(
         raise ValueError(
             f"NeighbourList vector shapes are not equal: {nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
         )
-    return np.einsum("ij,ij->i", nlist_i.vectors, nlist_j.vectors) / np.einsum(
-        "ij,ij->i", nlist_i.vectors, nlist_i.vectors
+    return cast(
+        NDArray[np.floating[Any]],
+        np.einsum("ij,ij->i", nlist_i.vectors, nlist_j.vectors) / np.einsum(
+            "ij,ij->i", nlist_i.vectors, nlist_i.vectors
+        )
     )
 
 
-def neighbour_list_n_out(nlist_i: NeighbourList, nlist_j: NeighbourList) -> np.ndarray:
+def neighbour_list_n_out(nlist_i: NeighbourList, nlist_j: NeighbourList) -> NDArray[np.floating[Any]]:
     """
     Compute n^out between two NeighbourList object.
 
@@ -159,12 +165,15 @@ def neighbour_list_n_out(nlist_i: NeighbourList, nlist_j: NeighbourList) -> np.n
         raise ValueError(
             f"NeighbourList vector shapes are not equal: {nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
         )
-    return np.einsum("ij,ij->i", nlist_i.vectors, nlist_i.vectors) - np.einsum(
-        "ij,ij->i", nlist_i.vectors, nlist_j.vectors
+    return cast(
+        NDArray[np.floating[Any]],
+        np.einsum("ij,ij->i", nlist_i.vectors, nlist_i.vectors) - np.einsum(
+            "ij,ij->i", nlist_i.vectors, nlist_j.vectors
+        )
     )
 
 
-def neighbour_list_n_in(nlist_i: NeighbourList, nlist_j: NeighbourList) -> np.ndarray:
+def neighbour_list_n_in(nlist_i: NeighbourList, nlist_j: NeighbourList) -> NDArray[np.floating[Any]]:
     """
     Compute n^in between two NeighbourList object.
 
@@ -189,6 +198,9 @@ def neighbour_list_n_in(nlist_i: NeighbourList, nlist_j: NeighbourList) -> np.nd
         raise ValueError(
             f"NeighbourList vector shapes are not equal: {nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
         )
-    return np.einsum("ij,ij->i", nlist_j.vectors, nlist_j.vectors) - np.einsum(
-        "ij,ij->i", nlist_i.vectors, nlist_j.vectors
+    return cast(
+        NDArray[np.floating[Any]],
+        np.einsum("ij,ij->i", nlist_j.vectors, nlist_j.vectors) - np.einsum(
+            "ij,ij->i", nlist_i.vectors, nlist_j.vectors
+        )
     )

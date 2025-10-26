@@ -1,5 +1,4 @@
-import numpy as np  # type: ignore
-from typing import Optional
+import numpy as np
 
 class AutoKPoints:
     """Class for automatic k-point generation data in KPOINTS."""
@@ -8,8 +7,8 @@ class AutoKPoints:
         self,
         title: str,
         subdivisions: np.ndarray,
-        grid_centering: Optional[str] = "G",
-        shift: Optional[np.ndarray] = None,
+        grid_centering: str | None = "G",
+        shift: np.ndarray | None = None,
     ) -> None:
         """Initialise an AutoKPoints object.
 

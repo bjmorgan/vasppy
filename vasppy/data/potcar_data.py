@@ -1,5 +1,5 @@
 import os
-import yaml # type: ignore
+import yaml
 
 my_path = os.path.dirname(__file__)
 

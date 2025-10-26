@@ -1,4 +1,4 @@
-import yaml # type: ignore
+import yaml
 import re
 from collections import Counter
 

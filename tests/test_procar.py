@@ -276,6 +276,19 @@ class ProcarSupportFunctionsTestCase(unittest.TestCase):
             self.assertAlmostEqual(
                 procar.least_squares_effective_mass(k_points, eigenvalues), 13.605693123
             )
+            
+    def test_least_squares_effective_mass_with_nonzero_offset(self):
+        """Test that effective mass is independent of energy offset."""
+        k_points = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]])
+        # Same parabola as test_least_squares_effective_mass but shifted by +10.0 eV
+        eigenvalues = np.array([10.0, 11.0, 14.0])
+        with patch(
+            "vasppy.procar.points_are_in_a_straight_line"
+        ) as mock_straight_line_test:
+            mock_straight_line_test.return_value = True
+            self.assertAlmostEqual(
+                procar.least_squares_effective_mass(k_points, eigenvalues), 13.605693123
+            )
 
     def test_least_squares_effective_mass_raises_valueerror_if_points_are_not_collinear(
         self,

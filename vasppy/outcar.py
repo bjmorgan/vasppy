@@ -1,6 +1,6 @@
 import numpy as np
 import re
-from pymatgen.io.vasp.outputs import Outcar  # type: ignore
+from pymatgen.io.vasp.outputs import Outcar
 
 
 def reciprocal_lattice_from_outcar(

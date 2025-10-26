@@ -4,7 +4,6 @@ from pathlib import Path
 import os
 from contextlib import contextmanager
 from pymatgen.core import Structure # type: ignore
-from typing import Optional, List
 import numpy as np
 
 
@@ -56,7 +55,7 @@ def file_md5(filename: str) -> str:
     return md5sum(file_string)
 
 
-def match_filename(filename: str) -> Optional[str]:
+def match_filename(filename: str) -> str | None:
     """Checks whether a file exists, either as named, or as a a gzippped file (filename.gz)
 
     Args:
@@ -102,8 +101,8 @@ def validate_checksum(filename, md5sum):
 
 def dr_ij(
     structure: Structure,
-    indices_i: Optional[List[int]] = None,
-    indices_j: Optional[List[int]] = None,
+    indices_i: list[int] | None = None,
+    indices_j: list[int] | None = None,
     self_reference: bool = False,
 ) -> np.ndarray:
     """
@@ -145,4 +144,4 @@ def dr_ij(
         to_return = dr_ij[mask].reshape(len(indices_i), -1)
     else:
         to_return = dr_ij
-    return to_return
+    return np.asarray(to_return)

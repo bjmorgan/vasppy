@@ -43,6 +43,7 @@ dev = [
     "pytest-cov>=4.0",
     "mypy>=1.0",
     "types-PyYAML",
+    "scipy-stubs",
     "pylint>=2.15",
     "coverage[toml]>=7.0",
 ]

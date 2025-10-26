@@ -60,7 +60,7 @@ class Doscar:
         lorbit: int = 11,
         spin_orbit_coupling: bool = False,
         read_pdos: bool = True,
-        species: Optional[List[str]] = None,
+        species: list[str] | None = None,
     ) -> None:
         """
         Create a Doscar object from a VASP DOSCAR file.
@@ -85,7 +85,7 @@ class Doscar:
         if self.spin_orbit_coupling:
             raise NotImplementedError("Spin-orbit coupling is not yet implemented")
         self.lorbit = lorbit
-        self.pdos: Optional[np.ndarray] = None
+        self.pdos: np.ndarray | None = None
         self.species = species
         self.read_header()
         self.read_total_dos()
@@ -160,10 +160,10 @@ class Doscar:
 
     def pdos_select(
         self,
-        atoms: Optional[Union[int, List[int]]] = None,
-        spin: Optional[str] = None,
-        l: Optional[str] = None,
-        m: Optional[List[str]] = None,
+        atoms: int | list[int] | None = None,
+        spin: str | None = None,
+        l: str | None = None,
+        m: List[str] | None = None,
     ) -> np.ndarray:
         """
         Returns a subset of the projected density of states array.
@@ -245,10 +245,10 @@ class Doscar:
 
     def pdos_sum(
         self,
-        atoms: Optional[Union[int, List[int]]] = None,
-        spin: Optional[str] = None,
-        l: Optional[str] = None,
-        m: Optional[List[str]] = None,
+        atoms: int | list[int] | None = None,
+        spin: str | None = None,
+        l: str | None = None,
+        m: list[str] | None = None,
     ) -> np.ndarray:
         return np.array(
             np.sum(self.pdos_select(atoms=atoms, spin=spin, l=l, m=m), axis=(0, 2, 3))
@@ -256,10 +256,10 @@ class Doscar:
 
     def plot_pdos(
         self,
-        ax: Optional[Axes] = None,
-        to_plot: Optional[Dict[str, List[str]]] = None,
-        colors: Optional[Iterable] = None,
-        plot_total_dos: Optional[bool] = True,
+        ax: Axes | None = None,
+        to_plot: dict[str, list[str]] | None = None,
+        colors: Iterable | None = None,
+        plot_total_dos: bool | None = True,
         xrange: Optional[Tuple[float, float]] = None,
         ymax: Optional[float] = None,
         scaling: Optional[Dict[str, Dict[str, float]]] = None,

@@ -2,14 +2,14 @@
 
 # Adapted from http://kitchingroup.cheme.cmu.edu/blog/2013/02/18/Nonlinear-curve-fitting/
 
-import numpy as np  # type: ignore
+import numpy as np
 import pandas as pd  # type: ignore
-from scipy.optimize import leastsq  # type: ignore
+from scipy.optimize import leastsq
 import argparse
 import warnings
 
-from pymatgen.io.vasp import Vasprun  # type: ignore
-from pymatgen.io.vasp.outputs import UnconvergedVASPWarning  # type: ignore
+from pymatgen.io.vasp import Vasprun 
+from pymatgen.io.vasp.outputs import UnconvergedVASPWarning
 
 import matplotlib  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore

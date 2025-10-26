@@ -125,7 +125,8 @@ def points_are_in_a_straight_line(points, tolerance=1e-7):
 
 
 def two_point_effective_mass(
-    cartesian_k_points: np.ndarray, eigenvalues: np.ndarray
+    cartesian_k_points: np.ndarray,
+    eigenvalues: np.ndarray
 ) -> float:
     """Calculate the effective mass given eigenvalues at two k-points.
 
@@ -146,11 +147,12 @@ def two_point_effective_mass(
     mod_dk = np.sqrt(np.dot(dk, dk))
     delta_e = (eigenvalues[1] - eigenvalues[0]) * ev_to_hartree * 2.0
     effective_mass = mod_dk * mod_dk / delta_e
-    return effective_mass
+    return float(effective_mass)
 
 
 def least_squares_effective_mass(
-    cartesian_k_points: np.ndarray, eigenvalues: np.ndarray
+    cartesian_k_points: np.ndarray,
+    eigenvalues: np.ndarray
 ) -> float:
     """Calculate the effective mass using a least squares quadratic fit.
 
@@ -169,9 +171,8 @@ def least_squares_effective_mass(
         raise ValueError("k-points are not collinear")
     dk = cartesian_k_points - cartesian_k_points[0]
     mod_dk = np.linalg.norm(dk, axis=1)
-    eigenvalues - eigenvalues[0]
     effective_mass = 1.0 / (np.polyfit(mod_dk, eigenvalues, 2)[0] * ev_to_hartree * 2.0)
-    return effective_mass
+    return float(effective_mass)
 
 
 class Procar:

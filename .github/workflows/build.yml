@@ -36,20 +36,6 @@ jobs:
       - name: Run tests
         run: |
           pytest --cov-config=.coveragerc --cov=vasppy --cov-report lcov
-
-      - name: Debug - Inspect coverage file
-        run: |
-          echo "=== First 50 lines of coverage.lcov ==="
-          head -n 50 coverage.lcov
-          echo ""
-          echo "=== Checking file paths in coverage ==="
-          grep "^SF:" coverage.lcov | head -n 10
-          echo ""
-          echo "=== Working directory ==="
-          pwd
-          echo ""
-          echo "=== Directory structure ==="
-          ls -la
       
       - name: Coveralls GitHub Action
         uses: coverallsapp/github-action@v2.3.6

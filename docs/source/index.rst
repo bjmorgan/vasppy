@@ -6,6 +6,12 @@ vasppy
    :maxdepth: 2
 
 .. toctree::
+   :caption: CLI Scripts
+   :maxdepth: 2
+
+   cli_scripts
+
+.. toctree::
    :caption: Examples
    :maxdepth: 1
 

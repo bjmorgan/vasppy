@@ -93,14 +93,17 @@ def fermi_energy_from_outcar(filename="OUTCAR"):
     return fermi_energy
 
 
-def forces_from_outcar(filename="OUTCAR"):
+def forces_from_outcar(filename="OUTCAR", last_one_only=False):
     """Finds and returns forces from the OUTCAR file.
 
     Args:
         filename (:obj:'str', optional): the name of the ``OUTCAR`` file to be read. Default is `OUTCAR`.
+        last_one_only (:obj:'bool', optional): if True, return only the last ionic step. Default is False.
 
     Returns:
-        (np.array): The force as found in the ``OUTCAR`` file, as a NSTEPS x NIONS x 3 numpy array.
+        (np.array): The forces as found in the ``OUTCAR`` file.
+            If last_one_only is False: returns NSTEPS x NIONS x 3 numpy array.
+            If last_one_only is True: returns NIONS x 3 numpy array.
 
     """
     outcar = Outcar(filename)
@@ -109,7 +112,7 @@ def forces_from_outcar(filename="OUTCAR"):
         row_pattern=r"\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+\s+([+-]?\d+\.\d+)\s+([+-]?\d+\.\d+)\s+([+-]?\d+\.\d+)",
         footer_pattern=r"\s--+",
         postprocess=lambda x: float(x),
-        last_one_only=False,
+        last_one_only=last_one_only,
     )
     return np.array(forces)
 

@@ -155,12 +155,9 @@ def main() -> None:
     if args.all:
         # Print summary for all ionic steps
         print(f"{'Max Force':<12}{'Non-opt':<10}{'Mean Excess':<10}")
-        for step, forces_data in enumerate(
-            get_all_forces_data(
+        for forces_data in get_all_forces_data(
                 outcar_filename=args.outcar, convergence=args.convergence
-            ),
-            start=1,
-        ):
+            ):
             print(
                 f"{forces_data.max_force:<12.6f}"
                 f"{forces_data.n_not_converged:<10}"

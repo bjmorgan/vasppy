@@ -55,5 +55,5 @@ setup(
                       'scipy>=1.4.1', 
                       'tqdm',
                       'lxml'],
-    python_requires='>=3.9'
+    python_requires='>=3.10'
     )

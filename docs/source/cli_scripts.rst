@@ -7,4 +7,4 @@ Command-line interface scripts for working with VASP files.
    :maxdepth: 2
 
    cli_scripts/checkforce
-   cli_scripts/convergence_testingpylint --errors-only vasppy
+   cli_scripts/convergence_testing

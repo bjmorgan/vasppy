@@ -387,11 +387,13 @@ def load_potcar(pseudopotentials: list[str] | None, potcar_file: str | None) -> 
         
     """
     if pseudopotentials:
-        return Potcar(pseudopotentials)
+        potcar = Potcar(pseudopotentials)
     elif potcar_file:
-        return Potcar.from_file(potcar_file)
+        potcar = Potcar.from_file(potcar_file)
     else:
         raise ValueError("Either pseudopotentials or potcar_file must be provided")
+    assert(isinstance(potcar, Potcar))
+    return potcar
                     
 def main() -> None:
     """Main entry point for convergence testing script."""

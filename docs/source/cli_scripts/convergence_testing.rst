@@ -281,6 +281,5 @@ Notes
 See Also
 --------
 
-- :doc:`checkforce` - Check geometry optimisation convergence
 - `VASP Manual: ENCUT <https://www.vasp.at/wiki/index.php/ENCUT>`_
 - `VASP Manual: KSPACING <https://www.vasp.at/wiki/index.php/KSPACING>`_

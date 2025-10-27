@@ -386,13 +386,13 @@ def load_potcar(pseudopotentials: list[str] | None, potcar_file: str | None) -> 
         ValueError: If neither pseudopotentials nor potcar_file is provided.
         
     """
+    potcar: Potcar
     if pseudopotentials:
         potcar = Potcar(pseudopotentials)
     elif potcar_file:
         potcar = Potcar.from_file(potcar_file)
     else:
         raise ValueError("Either pseudopotentials or potcar_file must be provided")
-    assert(isinstance(potcar, Potcar))
     return potcar
                     
 def main() -> None:

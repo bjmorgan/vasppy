@@ -904,7 +904,7 @@ class PrintDryRunSummaryTestCase(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def test_prints_base_directory(self, mock_stdout):
         """Test that base directory is printed."""
-        from vasppy.scripts.convergence_testing import print_dry_run_summary, ConvergenceTarget
+        from vasppy.scripts.convergence_testing import print_dry_run_summary
         
         encut_targets = []
         kspacing_targets = []
@@ -1122,7 +1122,7 @@ class LoadPotcarTestCase(unittest.TestCase):
         mock_potcar = Mock()
         mock_potcar_class.return_value = mock_potcar
         
-        result = load_potcar(['Li_sv'], 'POTCAR')
+        load_potcar(['Li_sv'], 'POTCAR')
         
         # Should use pseudopotentials, not file
         mock_potcar_class.assert_called_once_with(['Li_sv'])

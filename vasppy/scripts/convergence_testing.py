@@ -338,7 +338,7 @@ def print_dry_run_summary(
     for target in kspacing_targets:
         print(f"  - {target.path} (KSPACING={target.kspacing})")
     print(f"\nTotal: {len(encut_targets) + len(kspacing_targets)} convergence tests")
-    print(f"POTCARs will be included in all calculations")
+    print("POTCARs will be included in all calculations")
     if job_script:
         print(f"Job script '{job_script}' will be copied to each directory")
                     

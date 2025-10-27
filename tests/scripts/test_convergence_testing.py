@@ -2,12 +2,9 @@
 import unittest
 from unittest.mock import patch, Mock, call
 import numpy as np
-import os
 from io import StringIO
 from pathlib import Path
-from vasppy.scripts.convergence_testing import parse_args
 from vasppy.scripts.convergence_testing import create_directory_structure
-from vasppy.scripts.convergence_testing import write_vasp_input_files
 from vasppy.scripts.convergence_testing import main
 from vasppy.scripts.convergence_testing import ConvergenceTarget
 

@@ -69,7 +69,7 @@ Optional Arguments
 
 .. option:: -k KMIN KMAX KSTEP, --kspacing KMIN KMAX KSTEP
 
-   Set the minimum, maximum, and step size for KSPACING (in Å⁻¹).
+   Set the minimum, maximum, and step size for KSPACING (in Å:sup:`-1`).
    
    Default: ``0.1 0.8 0.02``
 
@@ -87,7 +87,7 @@ Optional Arguments
 
 .. option:: --base-kspacing BASE_KSPACING
 
-   Fixed KSPACING value (in Å⁻¹) to use for ENCUT convergence tests.
+   Fixed KSPACING value (in Å:sup:`-1`) to use for ENCUT convergence tests.
    
    Default: ``0.3``
 
@@ -109,7 +109,7 @@ Examples
 Basic usage with pseudopotential specification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Generate convergence tests for Li₂O using automatic pseudopotential selection::
+Generate convergence tests for Li:sub:`2`O using automatic pseudopotential selection::
 
 	convergence_testing -i INCAR -p POSCAR --pseudopotentials Li_sv O
 
@@ -123,7 +123,7 @@ Generate convergence tests using an existing POTCAR file::
 Custom convergence ranges
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Test ENCUT from 200 to 600 eV in steps of 50 eV, and KSPACING from 0.15 to 0.5 Å⁻¹ in steps of 0.05 Å⁻¹::
+Test ENCUT from 200 to 600 eV in steps of 50 eV, and KSPACING from 0.15 to 0.5 Å:sup:`-1` in steps of 0.05 Å:sup:`-1`::
 
 	convergence_testing -i INCAR -p POSCAR --potcar-file POTCAR \
 					   -e 200 600 50 \
@@ -140,7 +140,7 @@ Generate files in a specific directory::
 Adjust base parameters
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Use ENCUT=500 eV for KSPACING tests and KSPACING=0.25 Å⁻¹ for ENCUT tests::
+Use ENCUT=500 eV for KSPACING tests and KSPACING=0.25 Å:sup:`-1` for ENCUT tests::
 
 	convergence_testing -i INCAR -p POSCAR --potcar-file POTCAR \
 					   --base-encut 500 \
@@ -201,9 +201,9 @@ Typical workflow for convergence testing:
 
 1. **Prepare template files**::
 
-	   # Create a template INCAR with all parameters except ENCUT and KSPACING
-	   # Ensure POSCAR contains your structure
-	   # Have POTCAR ready or know which pseudopotentials to use
+   - Create a template INCAR with all parameters except ENCUT and KSPACING
+   - Ensure POSCAR contains your structure
+   - Have POTCAR ready or know which pseudopotentials to use
 
 2. **Generate test directories**::
 
@@ -272,7 +272,7 @@ Notes
 
 - **ENCUT**: Represents the plane-wave cutoff energy in eV. Higher values give more accurate results but increase computational cost.
 
-- **KSPACING**: Represents the minimum allowed spacing between k-points in Å⁻¹. Lower values mean denser k-point grids and higher accuracy but greater computational cost.
+- **KSPACING**: Represents the minimum allowed spacing between k-points in Å:sup:`-1`. Lower values mean denser k-point grids and higher accuracy but greater computational cost.
 
 - The script uses reciprocal lattice vectors to determine appropriate KSPACING values for your specific crystal structure.
 

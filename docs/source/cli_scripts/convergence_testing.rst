@@ -36,7 +36,7 @@ Required Arguments
 
 .. option:: -i INCAR, --incar INCAR
 
-   Path to template INCAR file. This file should contain all VASP parameters except ENCUT and KSPACING, which will be set automatically for each test.
+   Path to template INCAR file containing desired VASP parameters. Any ENCUT and KSPACING values in the template will be automatically overwritten for each convergence test.
 
 .. option:: -p POSCAR, --poscar POSCAR
 

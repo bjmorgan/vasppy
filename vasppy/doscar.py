@@ -11,7 +11,7 @@ from collections.abc import Iterable
 TABLEAU_GREY: str = "#bab0ac"
 
 
-def pdos_column_names(lmax: int, ispin: int) -> List[str]:
+def pdos_column_names(lmax: int, ispin: int) -> list[str]:
     if lmax == 2:
         names = ["s", "p_y", "p_z", "p_x", "d_xy", "d_yz", "d_z2-r2", "d_xz", "d_x2-y2"]
     elif lmax == 3:
@@ -92,8 +92,8 @@ class Doscar:
         if read_pdos:
             try:
                 self.read_projected_dos()
-            except:
-                raise
+            except (pd.errors.ParserError, pd.errors.EmptyDataError, ValueError):
+                self.pdos = None
         # if species is set, should check that this is consistent with the number of entries in the
         # projected_dos dataset
 
@@ -121,17 +121,20 @@ class Doscar:
             self.filename,
             skiprows=start_to_read,
             nrows=self.number_of_data_points,
-            delim_whitespace=True,
+            sep=r'\s+',
             names=["energy", "up", "down", "int_up", "int_down"],
             index_col=False,
         )
         self.energy: np.ndarray = df.energy.values
-        df.drop("energy", axis=1)
+        df = df.drop("energy", axis=1)
         self.tdos = df
 
     # currently assume spin-polarised, no-SO-coupling, no f-states
     def read_atomic_dos_as_df(self, atom_number: int) -> pd.DataFrame:
-        assert atom_number > 0 & atom_number <= self.number_of_atoms
+        if not (atom_number > 0 and atom_number <= self.number_of_atoms):
+            raise ValueError(
+                f"atom_number must be between 1 and {self.number_of_atoms}, got {atom_number}"
+            )
         start_to_read = Doscar.number_of_header_lines + atom_number * (
             self.number_of_data_points + 1
         )
@@ -139,7 +142,7 @@ class Doscar:
             self.filename,
             skiprows=start_to_read,
             nrows=self.number_of_data_points,
-            delim_whitespace=True,
+            sep=r'\s+',
             names=pdos_column_names(lmax=self.lmax, ispin=self.ispin),
             index_col=False,
         )
@@ -163,7 +166,7 @@ class Doscar:
         atoms: int | list[int] | None = None,
         spin: str | None = None,
         l: str | None = None,
-        m: List[str] | None = None,
+        m: list[str] | None = None,
     ) -> np.ndarray:
         """
         Returns a subset of the projected density of states array.
@@ -189,9 +192,9 @@ class Doscar:
 
         """
         assert isinstance(self.pdos, np.ndarray)
-        valid_m_values: Dict[str, List[str]] = {
+        valid_m_values: dict[str, list[str]] = {
             "s": [],
-            "p": ["x", "y", "z"],
+            "p": ["y", "z", "x"],
             "d": ["xy", "yz", "z2-r2", "xz", "x2-y2"],
             "f": ["y(3x2-y2)", "xyz", "yz2", "z3", "xz2", "z(x2-y2)", "x(x2-3y2)"],
         }
@@ -221,21 +224,21 @@ class Doscar:
         elif l == "p":
             if not m:
                 channel_idx = [1, 2, 3]
-            else:  # TODO this looks like it should be i+1
+            else:
                 channel_idx = [
                     i + 1 for i, v in enumerate(valid_m_values["p"]) if v in m
                 ]
         elif l == "d":
             if not m:
                 channel_idx = [4, 5, 6, 7, 8]
-            else:  # TODO this looks like it should be i+4
+            else:
                 channel_idx = [
                     i + 4 for i, v in enumerate(valid_m_values["d"]) if v in m
                 ]
         elif l == "f":
             if not m:
                 channel_idx = [9, 10, 11, 12, 13, 14, 15]
-            else:  # TODO this looks like it should be i+9
+            else:
                 channel_idx = [
                     i + 9 for i, v in enumerate(valid_m_values["f"]) if v in m
                 ]

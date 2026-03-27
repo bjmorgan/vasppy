@@ -63,5 +63,46 @@ class TestRadialDistributionFunction(unittest.TestCase):
         mock_dr_ij.assert_has_calls(expected_calls)
 
 
+    def test_RadialDistributionFunction_accepts_numpy_array_indices(self):
+        mock_structures = [Mock(spec=Structure)]
+        mock_structures[0].lattice = Mock(spec=Lattice)
+        mock_structures[0].lattice.volume = 1.0
+        indices_i = np.array([0, 1])
+        indices_j = np.array([0, 1])
+        with patch("vasppy.rdf.dr_ij") as mock_dr_ij:
+            mock_dr_ij.return_value = np.array([5.0, 6.0])
+            with patch("vasppy.rdf.shell_volumes") as mock_shell_volumes:
+                mock_shell_volumes.return_value = np.ones(500)
+                # Should not raise ValueError: ambiguous truth value of an array
+                rdf = RadialDistributionFunction(
+                    structures=mock_structures,
+                    indices_i=indices_i,
+                    indices_j=indices_j,
+                )
+        self.assertIsInstance(rdf.indices_i, list)
+        self.assertIsInstance(rdf.indices_j, list)
+        self.assertEqual(rdf.indices_i, [0, 1])
+        self.assertEqual(rdf.indices_j, [0, 1])
+
+    def test_RadialDistributionFunction_accepts_numpy_array_indices_j_none(self):
+        mock_structures = [Mock(spec=Structure)]
+        mock_structures[0].lattice = Mock(spec=Lattice)
+        mock_structures[0].lattice.volume = 1.0
+        indices_i = np.array([0, 1])
+        with patch("vasppy.rdf.dr_ij") as mock_dr_ij:
+            mock_dr_ij.return_value = np.array([5.0, 6.0])
+            with patch("vasppy.rdf.shell_volumes") as mock_shell_volumes:
+                mock_shell_volumes.return_value = np.ones(500)
+                rdf = RadialDistributionFunction(
+                    structures=mock_structures,
+                    indices_i=indices_i,
+                )
+        self.assertIsInstance(rdf.indices_i, list)
+        self.assertIsInstance(rdf.indices_j, list)
+        self.assertEqual(rdf.indices_i, [0, 1])
+        self.assertEqual(rdf.indices_j, [0, 1])
+        self.assertTrue(rdf.self_reference)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -49,6 +49,10 @@ class RadialDistributionFunction:
              None
 
         """
+        if isinstance(indices_i, np.ndarray):
+            indices_i = indices_i.tolist()
+        if indices_j is not None and isinstance(indices_j, np.ndarray):
+            indices_j = indices_j.tolist()
         if weights:
             if len(weights) != len(structures):
                 raise ValueError(
@@ -57,9 +61,9 @@ class RadialDistributionFunction:
                 )
         else:
             weights = [1.0] * len(structures)
-        self.self_reference = (not indices_j) or (indices_j == indices_i)
         if not indices_j:
             indices_j = indices_i
+        self.self_reference = (indices_j == indices_i)
         self.indices_i = indices_i
         self.indices_j = indices_j
         self.nbins = nbins

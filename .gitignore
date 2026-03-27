@@ -11,3 +11,8 @@ MANIFEST
 /vasppy.egg-info
 /docs/build
 .nova/
+/docs/superpowers/
+/*.md
+!/CHANGELOG.md
+!/CONTRIBUTING.md
+!/README.md

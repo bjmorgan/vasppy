@@ -1,11 +1,24 @@
 #! /usr/bin/env python3
 
-from vasppy.poscar import Poscar
-import math
+"""Script to rotate the cell lattice of a VASP POSCAR file."""
+
 import argparse
+import math
+
+import numpy as np
+from pymatgen.core import Lattice, Structure
+from pymatgen.io.vasp.inputs import Poscar
+
+from vasppy.cell import Cell
 
 
-def parse_command_line_arguments():
+def parse_command_line_arguments() -> argparse.Namespace:
+    """Parse command-line arguments.
+
+    Returns:
+        Parsed argument namespace with poscar path, axis vector, and
+        rotation angle in degrees.
+    """
     parser = argparse.ArgumentParser(
         description="Rotates the cell lattice in VASP POSCAR files"
     )
@@ -21,17 +34,25 @@ def parse_command_line_arguments():
     parser.add_argument(
         "-d", "--degrees", type=int, help="rotation angle in degrees", required=True
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """Read a POSCAR, rotate its cell lattice, and print the result."""
     args = parse_command_line_arguments()
-    poscar = Poscar()
-    poscar.read_from(args.poscar)
+    structure = Structure.from_file(args.poscar)
     theta = math.pi * args.degrees / 180.0
-    poscar.cell.rotate(args.axis, theta)
-    poscar.output()
+
+    cell = Cell(structure.lattice.matrix.copy())
+    cell.rotate(args.axis, theta)
+
+    new_lattice = Lattice(cell.matrix)
+    rotated_structure = Structure(
+        new_lattice,
+        structure.species,
+        structure.frac_coords,
+    )
+    print(Poscar(rotated_structure))
 
 
 if __name__ == "__main__":

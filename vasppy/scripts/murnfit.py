@@ -2,19 +2,19 @@
 
 # Adapted from http://kitchingroup.cheme.cmu.edu/blog/2013/02/18/Nonlinear-curve-fitting/
 
-import numpy as np
-import pandas as pd  # type: ignore
-from scipy.optimize import leastsq
 import argparse
 import warnings
 
-from pymatgen.io.vasp import Vasprun 
-from pymatgen.io.vasp.outputs import UnconvergedVASPWarning
-
 import matplotlib  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
+import numpy as np
+import pandas as pd  # type: ignore
+from numpy.typing import NDArray
+from pymatgen.core import Structure
+from pymatgen.io.vasp import Vasprun
+from pymatgen.io.vasp.outputs import UnconvergedVASPWarning
+from scipy.optimize import leastsq
 
-from vasppy.poscar import Poscar
 from vasppy.summary import find_vasp_calculations
 from vasppy.utils import match_filename
 
@@ -22,7 +22,8 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pymatgen")
 matplotlib.use("agg")
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments for the Murnaghan fit script."""
     parser = argparse.ArgumentParser(
         description="Perform a Murnaghan equation of state fit across VASP subdirectories"
     )
@@ -34,13 +35,39 @@ def parse_args():
     return args
 
 
-def read_vasprun(filename):
+def read_vasprun(filename: str) -> Vasprun:
+    """Read a vasprun.xml file with minimal parsing.
+
+    Args:
+        filename: Path to the vasprun.xml file.
+
+    Returns:
+        A Vasprun object.
+    """
     return Vasprun(
         filename, parse_potcar_file=False, parse_dos=False, parse_eigen=False
     )
 
 
-def read_data(verbose=True):
+def read_data(verbose: bool = True) -> pd.DataFrame:
+    """Read volume and energy data from VASP calculation subdirectories.
+
+    Scans subdirectories for vasprun.xml and POSCAR files, collecting
+    initial POSCAR volumes, relaxed volumes, and energies. Checks that
+    the ratio of relaxed to initial volume is consistent across all
+    calculations (indicating the same base cell geometry).
+
+    Args:
+        verbose: If True, print the collected data table.
+
+    Returns:
+        A DataFrame with columns: poscar_volume, volume, energy,
+        converged, and volume_ratio.
+
+    Raises:
+        ValueError: If no VASP calculations are found, or if the
+            volume ratios are inconsistent.
+    """
     dir_list = find_vasp_calculations()
     if not dir_list:
         raise ValueError(
@@ -59,43 +86,49 @@ def read_data(verbose=True):
                         print(warning.message)
         except Exception:
             continue
-        poscar = Poscar.from_file(d + "POSCAR")
+        poscar_structure = Structure.from_file(d + "POSCAR")
         data.append(
             [
-                poscar.scaling,
+                poscar_structure.volume,
                 vasprun.final_structure.volume,
                 vasprun.final_energy,
                 converged,
             ]
         )
-    column_titles = ["scaling", "volume", "energy", "converged"]
-    df = pd.DataFrame(data, columns=column_titles).sort_values(by="scaling")
+    column_titles = ["poscar_volume", "volume", "energy", "converged"]
+    df = pd.DataFrame(data, columns=column_titles).sort_values(by="poscar_volume")
     df = df.reset_index(drop=True)
-    df["scaling_factor"] = df.volume / df.scaling**3
-    scaling_factor_round = 4
+    df["volume_ratio"] = df.volume / df.poscar_volume
+    volume_ratio_round = 4
     if verbose:
         print(df.to_string(index=False))
-    if len(set(df.scaling_factor.round(scaling_factor_round))) != 1:
-        raise ValueError("POSCAR scaling factors and volumes are inconsistent")
+    if len(set(df.volume_ratio.round(volume_ratio_round))) != 1:
+        raise ValueError("POSCAR volumes and relaxed volumes are inconsistent")
     return df
 
 
-def murnaghan(vol, e0, b0, bp, v0):
-    """
-    Calculate the energy as a function of volume, using the Murnaghan equation of state
-    [Murnaghan, Proc. Nat. Acad. Sci. 30, 244 (1944)]
+def murnaghan(
+    vol: float | NDArray[np.floating],
+    e0: float,
+    b0: float,
+    bp: float,
+    v0: float,
+) -> float | NDArray[np.floating]:
+    """Calculate energy using the Murnaghan equation of state.
+
+    Murnaghan, Proc. Nat. Acad. Sci. 30, 244 (1944).
     https://en.wikipedia.org/wiki/Murnaghan_equation_of_state
     cf. Fu and Ho, Phys. Rev. B 28, 5480 (1983).
 
     Args:
-        vol (float): this volume.
-        e0 (float):  energy at the minimum-energy volume, E0.
-        b0 (float):  bulk modulus at the minimum-energy volume, B0.
-        bp (float):  pressure-derivative of the bulk modulus at the minimum-energy volume, B0'.
-        v0 (float):  volume at the minimum-energy volume, V0.
+        vol: Volume(s) at which to evaluate the energy.
+        e0: Energy at the equilibrium volume, E0.
+        b0: Bulk modulus at the equilibrium volume, B0.
+        bp: Pressure derivative of the bulk modulus, B0'.
+        v0: Equilibrium volume, V0.
 
     Returns:
-        (float): The energy at this volume.
+        The energy at the given volume(s).
     """
     energy = (
         e0 + b0 * vol / bp * (((v0 / vol) ** bp) / (bp - 1) + 1) - v0 * b0 / (bp - 1.0)
@@ -103,12 +136,39 @@ def murnaghan(vol, e0, b0, bp, v0):
     return energy
 
 
-def objective(pars, x, y):
+def objective(
+    pars: tuple[float, ...],
+    x: NDArray[np.floating],
+    y: NDArray[np.floating],
+) -> NDArray[np.floating]:
+    """Compute residuals between observed energies and the Murnaghan model.
+
+    Args:
+        pars: Murnaghan parameters (e0, b0, bp, v0).
+        x: Observed volumes.
+        y: Observed energies.
+
+    Returns:
+        Array of residuals (observed minus predicted).
+    """
     err = y - murnaghan(x, *pars)
     return err
 
 
-def lstsq_fit(volumes, energies):
+def lstsq_fit(
+    volumes: NDArray[np.floating],
+    energies: NDArray[np.floating],
+) -> tuple[NDArray[np.floating], int]:
+    """Fit the Murnaghan equation of state to volume-energy data.
+
+    Args:
+        volumes: Array of volumes.
+        energies: Array of corresponding energies.
+
+    Returns:
+        A tuple of (fitted parameters, info flag) from
+        scipy.optimize.leastsq.
+    """
     e_min = energies.min()
     v_min = volumes[np.argwhere(energies == e_min)[0][0]]
     x0 = [e_min, 2.0, 10.0, v_min]  # initial guess of parameters
@@ -116,7 +176,13 @@ def lstsq_fit(volumes, energies):
     return plsq
 
 
-def make_plot(df, fit_params):
+def make_plot(df: pd.DataFrame, fit_params: tuple[float, ...]) -> None:
+    """Generate a plot of the equation of state fit.
+
+    Args:
+        df: DataFrame containing volume, energy, and converged columns.
+        fit_params: Fitted Murnaghan parameters (e0, b0, bp, v0).
+    """
     v_min = df.volume.min() * 0.99
     v_max = df.volume.max() * 1.01
     v_fitting = np.linspace(v_min, v_max, num=50)
@@ -136,17 +202,24 @@ def make_plot(df, fit_params):
     plt.savefig("murn.pdf")
 
 
-def fit(verbose=False, plot=False):
+def fit(verbose: bool = False, plot: bool = False) -> None:
+    """Perform a Murnaghan equation of state fit and print results.
+
+    Args:
+        verbose: If True, print the raw data table.
+        plot: If True, save a plot to murn.pdf.
+    """
     df = read_data(verbose=verbose)
     e0, b0, bp, v0 = lstsq_fit(np.array(df.volume), np.array(df.energy))[0]
     if plot:
         make_plot(df, (e0, b0, bp, v0))
     print("E0: {:.4f}".format(e0))
     print("V0: {:.4f}".format(v0))
-    print("opt. scaling: {:.5f}".format((v0 / df.scaling_factor.mean()) ** (1 / 3)))
+    print("opt. POSCAR volume: {:.4f}".format(v0 / df.volume_ratio.mean()))
 
 
-def main():
+def main() -> None:
+    """Entry point for the murnfit command-line script."""
     args = parse_args()
     fit(verbose=args.verbose, plot=args.plot)
 

@@ -45,9 +45,24 @@ class KPointTestCase(unittest.TestCase):
             np.dot(self.k_point.frac_coords, reciprocal_lattice),
         )
 
-    def test___eq___(self):
+    def test___eq___equal_kpoints(self):
         other_k_point = deepcopy(self.k_point)
-        self.assertEqual(self.k_point, other_k_point)
+        self.assertTrue(self.k_point == other_k_point)
+
+    def test___eq___unequal_index(self):
+        other_k_point = deepcopy(self.k_point)
+        other_k_point.index = 99
+        self.assertFalse(self.k_point == other_k_point)
+
+    def test___eq___unequal_frac_coords(self):
+        other_k_point = deepcopy(self.k_point)
+        other_k_point.frac_coords = np.array([0.9, 0.8, 0.7])
+        self.assertFalse(self.k_point == other_k_point)
+
+    def test___eq___unequal_weight(self):
+        other_k_point = deepcopy(self.k_point)
+        other_k_point.weight = 0.99
+        self.assertFalse(self.k_point == other_k_point)
 
 
 class ProcarTestCase(unittest.TestCase):
@@ -188,6 +203,14 @@ class ParserTestCase(unittest.TestCase):
             ],
         )
         self.assertEqual([k.weight for k in k_points], [0.005, 0.005, 0.005])
+
+    def test_k_point_parser_extra_space_after_weight_equals(self):
+        """Regression test for issue #11: extra space after 'weight =' should be parsed."""
+        procar_string = " k-point    1 :    0.50000000 0.25000000 0.75000000     weight =  0.00806452"
+        k_points = procar.k_point_parser(procar_string)
+        self.assertEqual(len(k_points), 1)
+        np.testing.assert_array_equal(k_points[0].frac_coords, [0.5, 0.25, 0.75])
+        self.assertAlmostEqual(k_points[0].weight, 0.00806452)
 
     def test_get_numbers_from_string(self):
         """Checking function for extracting numbers from a string"""

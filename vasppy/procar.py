@@ -33,8 +33,8 @@ class KPoint:
     def __eq__(self, other):
         return (
             (self.index == other.index)
-            & (self.frac_coords == other.frac_coords).all()
-            & (self.weight == other.weight)
+            and (self.frac_coords == other.frac_coords).all()
+            and (self.weight == other.weight)
         )
 
     def __repr__(self) -> str:
@@ -66,7 +66,7 @@ def k_point_parser(string: str) -> list[KPoint]:
 
     """
     regex = re.compile(
-        r"k-point\s+(\d+)\s*:\s+([- ][01].\d{8})([- ][01].\d{8})([- ][01].\d{8})\s+weight = ([01].\d+)"
+        r"k-point\s+(\d+)\s*:\s+([- ][01].\d+)([- ][01].\d+)([- ][01].\d+)\s+weight = *(-*[01].\d+)"
     )
     captured = regex.findall(string)
     k_points = []

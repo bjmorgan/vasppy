@@ -1,19 +1,53 @@
 #! /usr/bin/env python3
+"""Check species consistency between a VASP POSCAR and POTCAR pair.
 
-from vasppy.poscar import Poscar
-from vasppy.summary import potcar_spec, potcar_sets
+Species are considered consistent if the species labels in the POSCAR match
+the start of the pseudopotential labels in the POTCAR, in order. For example,
+a POSCAR containing ``Na Cl`` will match a POTCAR containing ``Na_pv Cl``.
+If any species labels do not match, an ``AttributeError`` is raised.
+
+The ``-p`` flag additionally checks that all pseudopotentials belong to a
+specific pseudopotential set.
+"""
+
 import argparse
+from typing import List
 
-"""
-A command line utility for testing species consistency between a VASP POSCAR and POTCAR pair of files. Species are considered consistent if the species labels used in the POSCAR file match the start of the pseudopotential labels in the POTCAR file, in order. e.g. a POSCAR that contains `Ti O` will match a POTCAR that contains `Ti_pv O`. If any species labels do not match the script raises an AttributeError.
+from pymatgen.core import Structure
 
-The `-p` flag will check that all the pseudopotentials in the POTCAR file belong to a specific pseudopotential set.
-"""
+from vasppy.summary import potcar_spec, potcar_sets
 
 
-def parse_command_line_arguments():
+def unique_species_from_structure(filename: str) -> List[str]:
+    """Return unique species labels from a POSCAR file, in order of appearance.
+
+    Args:
+        filename: Path to the VASP POSCAR file.
+
+    Returns:
+        A list of element symbol strings, in the order they first appear in
+        the structure, with duplicates removed.
+    """
+    structure = Structure.from_file(filename)
+    seen: List[str] = []
+    for site in structure:
+        label = site.species_string
+        if label not in seen:
+            seen.append(label)
+    return seen
+
+
+def parse_command_line_arguments() -> argparse.Namespace:
+    """Parse command-line arguments for check_species.
+
+    Returns:
+        Parsed argument namespace with ``poscar``, ``potcar``, and
+        optional ``ppset`` attributes.
+    """
     parser = argparse.ArgumentParser(
-        description="Check species consistency between a VASP POSCAR file and a POTCAR file."
+        description=(
+            "Check species consistency between a VASP POSCAR file and a POTCAR file."
+        )
     )
     parser.add_argument(
         "poscar",
@@ -30,23 +64,27 @@ def parse_command_line_arguments():
     parser.add_argument(
         "-p",
         "--ppset",
-        help="check whether the POTCAR pseudopotentials belong to a specific pseudopotential set",
+        help=(
+            "check whether the POTCAR pseudopotentials belong to a specific "
+            "pseudopotential set"
+        ),
         choices=potcar_sets,
     )
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """Entry point: check that POSCAR and POTCAR species are consistent."""
     args = parse_command_line_arguments()
-    poscar = Poscar.from_file(args.poscar)
+    species = unique_species_from_structure(args.poscar)
     potcar_names, potcar_datasets = potcar_spec(args.potcar)
-    for i, (species, name, dataset) in enumerate(
-        zip(poscar.atoms, potcar_names, potcar_datasets, strict=True), 1,
+    for i, (sp, name, dataset) in enumerate(
+        zip(species, potcar_names, potcar_datasets, strict=True), 1
     ):
-        if not name.startswith(species):
+        if not name.startswith(sp):
             raise AttributeError(
                 "Species {} mismatch:\nPOSCAR contains {}\nPOTCAR contains {}".format(
-                    i, species, name
+                    i, sp, name
                 )
             )
         if args.ppset and args.ppset != dataset:

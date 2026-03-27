@@ -1,10 +1,29 @@
 #! /usr/bin/env python3
 
-from vasppy.poscar import Poscar
+"""Manipulate VASP POSCAR files.
+
+Reads a POSCAR file and outputs it with optional transformations
+such as supercell generation, Bohr conversion, and coordinate
+type selection.
+"""
+
+from __future__ import annotations
+
 import argparse
 
-def parse_command_line_arguments():
-    # command line arguments
+import numpy as np
+from pymatgen.core import Lattice, Structure
+from pymatgen.io.vasp import Poscar as PmgPoscar
+
+from vasppy.units import angstrom_to_bohr
+
+
+def parse_command_line_arguments() -> argparse.Namespace:
+    """Parse command-line arguments for POSCAR manipulation.
+
+    Returns:
+        Parsed command-line arguments.
+    """
     parser = argparse.ArgumentParser(description="Manipulates VASP POSCAR files")
     parser.add_argument("poscar", help="filename of the VASP POSCAR to be processed")
     parser.add_argument(
@@ -68,7 +87,158 @@ def parse_command_line_arguments():
     return args
 
 
-def main():
+def _species_labels(structure: Structure) -> list[str]:
+    """Return per-site species labels for a structure.
+
+    Args:
+        structure: A pymatgen Structure.
+
+    Returns:
+        List of species symbol strings, one per site.
+    """
+    return [str(site.specie) for site in structure]
+
+
+def _species_groups(structure: Structure) -> tuple[list[str], list[int]]:
+    """Return species names and counts grouped by contiguous runs.
+
+    Args:
+        structure: A pymatgen Structure.
+
+    Returns:
+        Tuple of (species names, atom counts) matching POSCAR format.
+    """
+    labels = _species_labels(structure)
+    if not labels:
+        return [], []
+    species: list[str] = []
+    counts: list[int] = []
+    current = labels[0]
+    count = 1
+    for label in labels[1:]:
+        if label == current:
+            count += 1
+        else:
+            species.append(current)
+            counts.append(count)
+            current = label
+            count = 1
+    species.append(current)
+    counts.append(count)
+    return species, counts
+
+
+def _get_coordinates(
+    structure: Structure,
+    coordinate_type: str,
+) -> np.ndarray:
+    """Return coordinates as a numpy array for the given coordinate type.
+
+    Args:
+        structure: A pymatgen Structure.
+        coordinate_type: Either 'Direct' or 'Cartesian'.
+
+    Returns:
+        Array of coordinates with shape (n_sites, 3).
+    """
+    if coordinate_type == "Direct":
+        return np.array([site.frac_coords for site in structure])
+    return np.array([site.coords for site in structure])
+
+
+def _output_header(
+    structure: Structure,
+    title: str,
+    scaling: float,
+    coordinate_type: str,
+    opts: dict[str, object],
+) -> None:
+    """Print the POSCAR header to stdout.
+
+    Args:
+        structure: A pymatgen Structure.
+        title: Title line for the POSCAR.
+        scaling: Scaling factor for the lattice.
+        coordinate_type: Either 'Direct' or 'Cartesian'.
+        opts: Output options dictionary.
+    """
+    print(title)
+    print(scaling)
+    matrix = np.array(structure.lattice.matrix)
+    if opts.get("orthorhombic"):
+        matrix = matrix * np.eye(3)
+    for row in matrix:
+        print("".join(["   {: .10f}".format(element) for element in row]))
+    species, counts = _species_groups(structure)
+    print(" ".join(species))
+    print(" ".join(str(n) for n in counts))
+    if opts.get("selective"):
+        print("Selective Dynamics")
+    print(coordinate_type)
+
+
+def _output_coordinates(
+    structure: Structure,
+    coordinate_type: str,
+    opts: dict[str, object],
+) -> None:
+    """Print coordinate lines to stdout.
+
+    Args:
+        structure: A pymatgen Structure.
+        coordinate_type: Either 'Direct' or 'Cartesian'.
+        opts: Output options dictionary.
+    """
+    coords = _get_coordinates(structure, coordinate_type)
+    labels = _species_labels(structure)
+    for i, (coord, label) in enumerate(zip(coords, labels)):
+        prefix_string = ""
+        suffix_string = ""
+        if opts.get("selective"):
+            if opts["selective"] == "T":
+                suffix_string += " T T T"
+            elif opts["selective"] == "F":
+                suffix_string += " F F F"
+            else:
+                raise ValueError
+        if opts.get("numbered"):
+            suffix_string += " {}".format(i + 1)
+        if opts.get("label"):
+            if opts["label"] == 1:
+                prefix_string += label.ljust(6)
+            elif opts["label"] == 4:
+                suffix_string += " {}".format(label)
+            else:
+                raise ValueError(opts["label"])
+        print(
+            prefix_string
+            + "".join(["  {: .10f}".format(element) for element in coord])
+            + suffix_string
+        )
+
+
+def _convert_to_bohr(structure: Structure) -> tuple[Structure, float]:
+    """Convert a structure from Angstrom to Bohr units.
+
+    Returns a new structure whose lattice matrix is in Bohr, and a
+    scaling factor (the Bohr-to-Angstrom ratio) that reproduces the
+    original POSCAR ``in_bohr()`` output convention.
+
+    Args:
+        structure: A pymatgen Structure in Angstrom.
+
+    Returns:
+        Tuple of (new Structure with lattice in Bohr, scaling factor).
+    """
+    new_matrix = np.array(structure.lattice.matrix) / angstrom_to_bohr
+    new_lattice = Lattice(new_matrix)
+    frac_coords = np.array([site.frac_coords for site in structure])
+    species = [site.specie for site in structure]
+    return Structure(new_lattice, species, frac_coords), angstrom_to_bohr
+
+
+def main() -> None:
+    """Main entry point for the proc_poscar script."""
     args = parse_command_line_arguments()
     coordinate_types = {
         "d": "Direct",
@@ -77,33 +247,42 @@ def main():
         "cartesian": "Cartesian",
     }
     coordinate_type = coordinate_types[args.coordinate_type]
-    # initialise
-    poscar = Poscar()
-    # read POSCAR file
-    poscar.read_from(args.poscar)
-    if args.scale:
-        poscar.cell.matrix *= poscar.scaling
-        poscar.scaling = 1.0
-    if args.supercell:  # generate supercell
+
+    poscar_data = PmgPoscar.from_file(args.poscar)
+    structure = poscar_data.structure
+    title = poscar_data.comment
+    # pymatgen already applies the scaling factor when reading,
+    # so we track it separately for output formatting.
+    scaling = 1.0
+
+    if args.supercell:
         if args.group:
-            # check that if grouping is switched on, we are asking for a supercell that allows a "3D-chequerboard" pattern.
-            for i, _axis in zip(args.supercell, range(3), strict=True):
+            for i in args.supercell:
                 if i % 2 == 1 and i > 1:
                     raise Exception(
                         "odd supercell expansions != 1 are incompatible with automatic grouping"
                     )
-        poscar = poscar.replicate(*args.supercell, group=args.group)
+        structure.make_supercell(args.supercell)
+
     if args.bohr:
-        poscar = poscar.in_bohr()
-    # output to stdout
-    output_opts = {
+        structure, scaling = _convert_to_bohr(structure)
+
+    output_opts: dict[str, object] = {
         "label": args.label,
         "numbered": args.number_atoms,
         "coordinates_only": args.coordinates_only,
         "selective": args.selective,
         "orthorhombic": args.orthorhombic,
     }
-    poscar.output(coordinate_type=coordinate_type, opts=output_opts)
+    if not args.coordinates_only:
+        _output_header(
+            structure,
+            title=title,
+            scaling=scaling,
+            coordinate_type=coordinate_type,
+            opts=output_opts,
+        )
+    _output_coordinates(structure, coordinate_type=coordinate_type, opts=output_opts)
 
 
 if __name__ == "__main__":

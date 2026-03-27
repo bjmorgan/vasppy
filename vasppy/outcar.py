@@ -15,7 +15,8 @@ def reciprocal_lattice_from_outcar(
     Returns:
         List(Float): The reciprocal lattice vectors.
     """
-    outcar = open(filename, "r").read()
+    with open(filename) as f:
+        outcar = f.read()
     # just keeping the last component
     recLat = re.findall(r"reciprocal\s*lattice\s*vectors\s*([-.\s\d]*)", outcar)[-1]
     recLat = recLat.split()
@@ -85,7 +86,8 @@ def fermi_energy_from_outcar(filename="OUTCAR"):
         (Float): The Fermi energy as found in the ``OUTCAR`` file.
 
     """
-    outcar = open(filename, "r").read()
+    with open(filename) as f:
+        outcar = f.read()
     # returns a match object
     fermi_energy = re.search(r"E-fermi\s*:\s*([-.\d]*)", outcar)
     # take the first group - group(0) contains entire match

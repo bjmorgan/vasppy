@@ -67,37 +67,53 @@ def load_vasp_summary(filename):
     return data
 
 
-def potcar_spec(filename, return_hashes=False):
-    """
-    Returns a dictionary specifying the pseudopotentials contained in a POTCAR file.
+def potcar_spec(
+    filename: str,
+    return_hashes: bool = False,
+) -> tuple[list[str], list[str]]:
+    """Return pseudopotential names and dataset labels from a POTCAR file.
+
+    Parses a POTCAR file, splitting it into individual pseudopotential
+    blocks and matching each against known md5 checksums.  Returns a
+    pair of aligned lists so that duplicate species are preserved.
 
     Args:
-        filename (str): The name of the POTCAR file to process.
-        return_hash (bool): If True the return dictionary values will be the md5 hashes of
-            the component pseudopotential files.
+        filename: The name of the POTCAR file to process.
+        return_hashes: If ``True`` the second list contains the md5
+            hashes of the component pseudopotential strings instead of
+            dataset labels.
 
     Returns:
-        (Dict): A dictionary of pseudopotential filename: dataset pairs, e.g.
-                {'Fe_pv': 'PBE_54', 'O', 'PBE_54'}
+        A ``(names, values)`` tuple of two lists.  *names* contains
+        the pseudopotential labels (e.g. ``['Fe_pv', 'O']``) and
+        *values* contains either the dataset labels
+        (e.g. ``['PBE_54', 'PBE_54']``) or, when *return_hashes* is
+        ``True``, the md5 hashes.
+
+    Raises:
+        ValueError: If any pseudopotential block cannot be matched to
+            a known md5 hash.
     """
-    p_spec = {}
     with open(filename, "r") as f:
         potcars = [s for s in re.split("(End of Dataset\n)", f.read()) if s]
     potcar_md5sums = [
         md5sum("".join(pair))
         for pair in zip(potcars[::2], potcars[1::2])
     ]
+    names: list[str] = []
+    values: list[str] = []
     for this_md5sum in potcar_md5sums:
         for ps in potcar_sets:
             for p, p_md5sum in potcar_md5sum_data[ps].items():
                 if this_md5sum == p_md5sum:
+                    names.append(p)
                     if return_hashes:
-                        p_spec[p] = this_md5sum
+                        values.append(this_md5sum)
                     else:
-                        p_spec[p] = ps
-    if len(p_spec) != len(potcar_md5sums):
+                        values.append(ps)
+    if len(names) != len(potcar_md5sums):
         raise ValueError("One or more POTCARs did not have matching md5 hashes")
-    return p_spec
+    return names, values
 
 
 def find_vasp_calculations():
@@ -219,8 +235,6 @@ class Summary:
             )
         except ET.ParseError:
             self.vasprun = None
-        except:
-            raise
 
     @property
     def stoich(self):

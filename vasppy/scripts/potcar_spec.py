@@ -25,15 +25,14 @@ def parse_command_line_arguments():
 
 def main():
     args = parse_command_line_arguments()
+    names, datasets = potcar_spec(args.potcar)
     if args.hash:
-        hashes = {}
-        for p, md5hash in potcar_spec(args.potcar, return_hashes=True).items():
-            hashes[p] = md5hash
-    for p, ps in potcar_spec(args.potcar).items():
-        if args.hash:
-            print(p, ps, hashes[p])
-        else:
-            print(p, ps)
+        _, hashes = potcar_spec(args.potcar, return_hashes=True)
+        for name, dataset, md5hash in zip(names, datasets, hashes):
+            print(name, dataset, md5hash)
+    else:
+        for name, dataset in zip(names, datasets):
+            print(name, dataset)
 
 
 if __name__ == "__main__":

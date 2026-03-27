@@ -39,21 +39,20 @@ def parse_command_line_arguments():
 def main():
     args = parse_command_line_arguments()
     poscar = Poscar.from_file(args.poscar)
-    potcars = potcar_spec(args.potcar)
-    for i, (species, potcar) in enumerate(zip(poscar.atoms, potcars, strict=True), 1):
-        matching_potcar = potcar.startswith(species)
-        if not matching_potcar:
+    potcar_names, potcar_datasets = potcar_spec(args.potcar)
+    for i, (species, name, dataset) in enumerate(
+        zip(poscar.atoms, potcar_names, potcar_datasets, strict=True), 1,
+    ):
+        if not name.startswith(species):
             raise AttributeError(
                 "Species {} mismatch:\nPOSCAR contains {}\nPOTCAR contains {}".format(
-                    i, species, potcar
+                    i, species, name
                 )
             )
-        if args.ppset:
-            this_ppset = potcars[potcar]
-            if args.ppset != this_ppset:
-                raise AttributeError(
-                    "Pseudopotential set mismatch: {}".format(potcars.values())
-                )
+        if args.ppset and args.ppset != dataset:
+            raise AttributeError(
+                "Pseudopotential set mismatch: {}".format(potcar_datasets)
+            )
 
 
 if __name__ == "__main__":

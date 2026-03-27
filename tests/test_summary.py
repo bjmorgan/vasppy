@@ -176,7 +176,7 @@ class SummaryHelperFunctionsTestCase(unittest.TestCase):
                     mock_potcar_data,
                     clear=True,
                 ):
-                    p_spec = potcar_spec(mock_potcar_filename)
+                    names, values = potcar_spec(mock_potcar_filename)
                     mock_open.assert_called_with(mock_potcar_filename, "r")
                     mock_md5sum.assert_has_calls(
                         [
@@ -185,7 +185,8 @@ class SummaryHelperFunctionsTestCase(unittest.TestCase):
                             call("sds\nEnd of Dataset\n"),
                         ]
                     )
-        self.assertEqual(p_spec, {"A": "PBE", "E": "PBE_54", "D": "PBE_52"})
+        self.assertEqual(names, ["A", "E", "D"])
+        self.assertEqual(values, ["PBE", "PBE_54", "PBE_52"])
 
     def test_potcar_spec_returns_hashes(self):
         mock_potcar_filename = "POTCAR"
@@ -201,7 +202,9 @@ class SummaryHelperFunctionsTestCase(unittest.TestCase):
                     mock_potcar_data,
                     clear=True,
                 ):
-                    p_spec = potcar_spec(mock_potcar_filename, return_hashes=True)
+                    names, hashes = potcar_spec(
+                        mock_potcar_filename, return_hashes=True,
+                    )
                     mock_open.assert_called_with(mock_potcar_filename, "r")
                     mock_md5sum.assert_has_calls(
                         [
@@ -210,7 +213,42 @@ class SummaryHelperFunctionsTestCase(unittest.TestCase):
                             call("sds\nEnd of Dataset\n"),
                         ]
                     )
-        self.assertEqual(p_spec, {"A": "12", "E": "56", "D": "23"})
+        self.assertEqual(names, ["A", "E", "D"])
+        self.assertEqual(hashes, ["12", "56", "23"])
+
+    def test_potcar_spec_preserves_duplicate_species(self):
+        """Duplicate species must appear in both returned lists."""
+        mock_potcar_string_dupes = (
+            "foo\nEnd of Dataset\nbar\nEnd of Dataset\n"
+        )
+        mock_potcar_data_dupes = {
+            "PBE": {"O": "aa"},
+            "PBE_52": {},
+            "PBE_54": {},
+            "PBE_54r": {},
+            "LDA": {},
+            "LDA_52": {},
+            "LDA_54": {},
+            "LDA_54r": {},
+            "GGA": {},
+            "USPP_GGA": {},
+            "USPP_LDA": {},
+        }
+        with patch(
+            "builtins.open",
+            return_value=io.StringIO(mock_potcar_string_dupes),
+        ):
+            with patch(
+                "vasppy.summary.md5sum", side_effect=("aa", "aa")
+            ):
+                with patch.dict(
+                    "vasppy.data.potcar_data.potcar_md5sum_data",
+                    mock_potcar_data_dupes,
+                    clear=True,
+                ):
+                    names, values = potcar_spec("POTCAR")
+        self.assertEqual(names, ["O", "O"])
+        self.assertEqual(values, ["PBE", "PBE"])
 
     def test_potcar_spec_raises_valueerror_if_md5sum_not_matched(self):
         mock_potcar_filename = "POTCAR"

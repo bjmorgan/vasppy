@@ -36,7 +36,7 @@ class Band:
 
     def __eq__(self, other):
         return (
-            (self.index == other.index)
-            & (self.energy == other.energy)
-            & (self.occupancy == other.occupancy)
+            self.index == other.index
+            and self.energy == other.energy
+            and self.occupancy == other.occupancy
         )

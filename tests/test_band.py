@@ -44,5 +44,12 @@ class BandTestCase(unittest.TestCase):
         self.assertEqual(handle_occupancy(-0.1, negative_occupancies="zero"), 0.0)
 
 
+    def test_band_eq_returns_false_for_different_energy(self):
+        """Test Band.__eq__ returns False when energies differ."""
+        band_a = Band(index=1, energy=1.0, occupancy=0.5)
+        band_b = Band(index=1, energy=2.0, occupancy=0.5)
+        self.assertFalse(band_a == band_b)
+
+
 if __name__ == "__main__":
     unittest.main()

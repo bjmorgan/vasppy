@@ -17,21 +17,19 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "monty",
     "numpy",
     "pandas",
     "pymatgen>=2023.6.28",
     "PyYAML",
-    "fortranformat",
     "scipy>=1.4.1",
     "tqdm",
     "lxml",
@@ -69,17 +67,11 @@ poscar_to_cif = "vasppy.scripts.poscar_to_cif:main"
 potcar_spec = "vasppy.scripts.potcar_spec:main"
 effective_mass = "vasppy.scripts.effective_mass:main"
 fat_bands = "vasppy.scripts.fat_bands:main"
-pimaim_to_poscar = "vasppy.scripts.pimaim_to_poscar:main"
-pimaim_to_xtl = "vasppy.scripts.pimaim_to_xtl:main"
-poscar_to_pimaim = "vasppy.scripts.poscar_to_pimaim:main"
 poscar_to_xtl = "vasppy.scripts.poscar_to_xtl:main"
 proc_poscar = "vasppy.scripts.proc_poscar:main"
 rotate_poscar = "vasppy.scripts.rotate_poscar:main"
 spacegroup = "vasppy.scripts.spacegroup:main"
 vasp_grid = "vasppy.scripts.vasp_grid:main"
-xdatcar_to_disp = "vasppy.scripts.xdatcar_to_disp:main"
-xdatcar_to_poscart = "vasppy.scripts.xdatcar_to_poscart:main"
-xdatcar_to_rdf = "vasppy.scripts.xdatcar_to_rdf:main"
 r2r2_expansion = "vasppy.scripts.r2r2_expansion:main"
 
 [tool.setuptools]
@@ -101,7 +93,7 @@ omit = [
 ]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false

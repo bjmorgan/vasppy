@@ -1,12 +1,17 @@
 #! /usr/bin/env python3
 
-from vasppy.poscar import Poscar
-from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 import argparse
 
+from pymatgen.core import Structure
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
-def parse_command_line_arguments():
-    # command line arguments
+
+def parse_command_line_arguments() -> argparse.Namespace:
+    """Parse command line arguments.
+
+    Returns:
+        Parsed argument namespace.
+    """
     parser = argparse.ArgumentParser(
         description="Finds the spacegroup for a VASP POSCAR file"
     )
@@ -15,22 +20,16 @@ def parse_command_line_arguments():
         "-s",
         "--symprec",
         type=float,
-        help="Precision for symmetry analuysis (defalut=1e-3)",
+        help="Precision for symmetry analysis (default=1e-3)",
         default=1e-3,
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """Read a POSCAR file and print the space group symbol."""
     args = parse_command_line_arguments()
-    # initialise
-    poscar = (
-        Poscar()
-    )  # this doesn't really need vasppy. Could just use pymatgen to read the POSCAR
-    # read POSCAR file
-    poscar.read_from(args.poscar)
-    structure = poscar.to_pymatgen_structure()
+    structure = Structure.from_file(args.poscar)
     symmetry_analyzer = SpacegroupAnalyzer(structure, symprec=args.symprec)
     print(symmetry_analyzer.get_space_group_symbol())
 

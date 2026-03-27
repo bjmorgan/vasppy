@@ -1,13 +1,19 @@
 #! /usr/bin/env python3
 
-from vasppy.poscar import Poscar
 import argparse
 
+from pymatgen.core import Structure
+from pymatgen.io.cif import CifWriter
 
-def parse_command_line_arguments():
-    # command line arguments
+
+def parse_command_line_arguments() -> argparse.Namespace:
+    """Parse command line arguments.
+
+    Returns:
+        Parsed argument namespace.
+    """
     parser = argparse.ArgumentParser(
-        description="Converts a VASP POSCAR file to the .xtl file format"
+        description="Converts a VASP POSCAR file to the .cif file format"
     )
     parser.add_argument("poscar", help="filename of the VASP POSCAR to be processed")
     parser.add_argument(
@@ -16,17 +22,15 @@ def parse_command_line_arguments():
         type=float,
         help="Symmetry precision for a symmetrised .cif output",
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """Read a POSCAR file and print its contents in CIF format."""
     args = parse_command_line_arguments()
-    # initialise
-    poscar = Poscar()
-    # read POSCAR file
-    poscar.read_from(args.poscar)
-    poscar.output_as_cif(args.symprec)
+    structure = Structure.from_file(args.poscar)
+    cif_writer = CifWriter(structure, symprec=args.symprec)
+    print(cif_writer)
 
 
 if __name__ == "__main__":

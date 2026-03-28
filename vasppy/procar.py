@@ -1,6 +1,5 @@
 from functools import reduce
 from copy import deepcopy
-import warnings
 import math
 import re
 
@@ -247,41 +246,57 @@ class Procar:
             ``'non_collinear'``, and ``'spin_polarised'``.
     """
 
-    def __init__(self, spin: int = 1, negative_occupancies: str = "warn") -> None:
-        """Initialise an empty Procar object.
+    def __init__(
+        self,
+        data: np.ndarray,
+        bands: np.ndarray,
+        k_points: list[KPoint],
+        number_of_k_points: int,
+        number_of_bands: int,
+        number_of_ions: int,
+        number_of_projections: int,
+        spin_channels: int,
+        k_point_blocks: int,
+        calculation: dict[str, bool],
+        negative_occupancies: str = "warn",
+    ) -> None:
+        """Initialise a Procar object with fully parsed data.
 
         Args:
-            spin: Number of spin channels (default 1). Typically determined
-                automatically when reading from file.
-            negative_occupancies: How to handle negative occupancies when
-                reading band data. Accepted values are:
-
-                - ``'warn'`` (default): Issue a warning.
-                - ``'raise'``: Raise an ``AttributeError``.
-                - ``'zero'``: Set negative partial occupancies to zero.
+            data: 5D numpy array of projection data with axes
+                (k-points, bands, spin-channels, ions+tot, projections).
+            bands: 1D numpy array of :obj:`Band` objects.
+            k_points: List of :obj:`KPoint` objects.
+            number_of_k_points: Number of k-points.
+            number_of_bands: Number of bands.
+            number_of_ions: Number of ions.
+            number_of_projections: Number of lm-projections.
+            spin_channels: Number of spin channels (1, 2, or 4).
+            k_point_blocks: Number of k-point blocks (1 or 2).
+            calculation: Dictionary describing the calculation type with
+                keys ``'non_spin_polarised'``, ``'non_collinear'``, and
+                ``'spin_polarised'``.
+            negative_occupancies: How to handle negative occupancies.
+                Accepted values are ``'warn'``, ``'raise'``, or ``'zero'``.
 
         Raises:
             ValueError: If ``negative_occupancies`` is not one of the
                 accepted values.
         """
-        self._spin_channels = spin  # should be determined from PROCAR
-        self._number_of_k_points: int | None = None
-        self._number_of_ions: int | None = None
-        self._number_of_bands: int | None = None
-        self._number_of_projections: int | None = None
-        self._k_point_blocks: int | None = None
-        self._data: np.ndarray | None = None
-        self._bands: np.ndarray | None = None
-        self._k_points: list[KPoint] | None = None
-        self.calculation: dict[str, bool] = {
-            "non_spin_polarised": False,
-            "non_collinear": False,
-            "spin_polarised": False,
-        }
         if negative_occupancies not in ["warn", "raise", "zero"]:
             raise ValueError(
                 "negative_occupancies can be one of [ 'warn', 'raise', 'zero' ]"
             )
+        self._data = data
+        self._bands = bands
+        self._k_points = k_points
+        self._number_of_k_points = number_of_k_points
+        self._number_of_bands = number_of_bands
+        self._number_of_ions = number_of_ions
+        self._number_of_projections = number_of_projections
+        self._spin_channels = spin_channels
+        self._k_point_blocks = k_point_blocks
+        self.calculation = calculation
         self.negative_occupancies = negative_occupancies
 
     @property
@@ -350,76 +365,6 @@ class Procar:
         new_procar.sanity_check()
         return new_procar
 
-    def parse_projections(self) -> None:
-        """Parse projection data from the stored PROCAR string.
-
-        Determines spin channels and k-point blocks from the data shape,
-        then stores the projection data array.
-
-        Raises:
-            Exception: If the projection data cannot be reconciled with the
-                expected shape for any supported calculation type.
-        """
-        self.projection_data = projections_parser(self.read_in)
-        try:
-            if self._number_of_bands * self._number_of_k_points == len(
-                self.projection_data
-            ):
-                self._spin_channels = 1  # non-magnetic, non-spin-polarised
-                self._k_point_blocks = 1
-                self.calculation["non_spin_polarised"] = True
-            else:
-                raise ValueError("projection count does not match non-spin-polarised expectation")
-        except Exception:
-            if self._number_of_bands * self._number_of_k_points * 4 == len(
-                self.projection_data
-            ):
-                self._spin_channels = 4  # non-collinear (spin-orbit coupling)
-                self._k_point_blocks = 1
-                self.calculation["non_collinear"] = True
-                pass
-            elif self._number_of_bands * self._number_of_k_points * 2 == len(
-                self.projection_data
-            ):
-                self._spin_channels = 2  # spin-polarised
-                self._k_point_blocks = 2
-                self.calculation["spin_polarised"] = True
-                pass
-            else:
-                raise
-        self._number_of_projections = (
-            int(self.projection_data.shape[1] / (self._number_of_ions + 1)) - 1
-        )
-
-    def parse_k_points(self) -> None:
-        """Parse k-points from the stored PROCAR string.
-
-        Populates ``self._k_points`` with the first
-        ``self._number_of_k_points`` parsed k-points.
-        """
-        self._k_points = k_point_parser(self.read_in)[: self._number_of_k_points]
-
-    def parse_bands(self) -> None:
-        """Parse band data from the stored PROCAR string.
-
-        Populates ``self._bands`` as a numpy array of :obj:`Band` objects.
-        """
-        band_data = re.findall(
-            r"band\s*(\d+)\s*#\s*energy\s*([-.\d]+)\s?\s*#\s" r"*occ.\s*([-.\d]+)",
-            self.read_in,
-        )
-        self._bands = np.array(
-            [
-                Band(
-                    float(i),
-                    float(e),
-                    float(o),
-                    negative_occupancies=self.negative_occupancies,
-                )
-                for i, e, o in band_data
-            ]
-        )
-
     def sanity_check(self) -> None:
         """Verify that the parsed data is internally consistent.
 
@@ -473,7 +418,6 @@ class Procar:
                 - ``'warn'`` (default): Warn that some partial occupancies
                   are negative.
                 - ``'raise'``: Raise an ``AttributeError``.
-                - ``'ignore'``: Do nothing.
                 - ``'zero'``: Set negative partial occupancies to zero.
 
             select_zero_weighted_k_points: Set to True to only read
@@ -482,71 +426,111 @@ class Procar:
         Returns:
             A :obj:`Procar` instance.
         """
-        pcar = cls(negative_occupancies=negative_occupancies)
-        pcar._read_from_file(filename=filename)
-        if select_zero_weighted_k_points:
-            k_point_indices = [
-                i for i, kp in enumerate(pcar.k_points) if kp.weight == 0.0
-            ]
-            pcar = pcar.select_k_points(k_point_indices)
-        return pcar
-
-    def read_from_file(self, filename: str) -> None:
-        """Read PROCAR data from file (deprecated public API).
-
-        .. deprecated::
-            Use :meth:`from_file` or :meth:`from_files` instead.
-
-        Args:
-            filename: Filename of the ``PROCAR`` file.
-        """
-        warnings.warn(
-            "read_from_file() is deprecated as a part of the public API.\nPlease use Procar.from_file() or Procar.from_files() instead",
-            stacklevel=2,
-        )
-        return self._read_from_file(filename=filename)
-
-    def _read_from_file(self, filename: str) -> None:
-        """Read the projected wavefunction character of each band from a VASP PROCAR file.
-
-        Args:
-            filename: Filename of the PROCAR file.
-        """
         with open(filename, "r") as file_in:
             file_in.readline()
-            self._number_of_k_points, self._number_of_bands, self._number_of_ions = [
+            number_of_k_points, number_of_bands, number_of_ions = [
                 int(f) for f in get_numbers_from_string(file_in.readline())
             ]
-            self.read_in = file_in.read()
-        self.parse_k_points()
-        self.parse_bands()
-        self.parse_projections()
-        self.sanity_check()
-        self.read_in = None  # clear memory
-        if self.calculation["spin_polarised"]:
-            self._data = (
-                self.projection_data.reshape(
+            read_in = file_in.read()
+
+        # Parse k-points
+        k_points = k_point_parser(read_in)[:number_of_k_points]
+
+        # Parse bands
+        band_data = re.findall(
+            r"band\s*(\d+)\s*#\s*energy\s*([-.\d]+)\s?\s*#\s*occ.\s*([-.\d]+)",
+            read_in,
+        )
+        bands = np.array(
+            [
+                Band(
+                    float(i),
+                    float(e),
+                    float(o),
+                    negative_occupancies=negative_occupancies,
+                )
+                for i, e, o in band_data
+            ]
+        )
+
+        # Parse projections and determine calculation type
+        projection_data = projections_parser(read_in)
+        calculation = {
+            "non_spin_polarised": False,
+            "non_collinear": False,
+            "spin_polarised": False,
+        }
+        n_proj_rows = len(projection_data)
+        expected = number_of_bands * number_of_k_points
+        if n_proj_rows == expected:
+            spin_channels = 1
+            k_point_blocks = 1
+            calculation["non_spin_polarised"] = True
+        elif n_proj_rows == expected * 4:
+            spin_channels = 4
+            k_point_blocks = 1
+            calculation["non_collinear"] = True
+        elif n_proj_rows == expected * 2:
+            spin_channels = 2
+            k_point_blocks = 2
+            calculation["spin_polarised"] = True
+        else:
+            raise ValueError(
+                f"Cannot determine calculation type: {n_proj_rows} projection "
+                f"rows for {number_of_k_points} k-points and "
+                f"{number_of_bands} bands"
+            )
+
+        number_of_projections = (
+            int(projection_data.shape[1] / (number_of_ions + 1)) - 1
+        )
+
+        # Reshape projection data into the 5D array
+        if calculation["spin_polarised"]:
+            data = (
+                projection_data.reshape(
                     (
-                        self._spin_channels,
-                        self._number_of_k_points,
-                        self._number_of_bands,
-                        self._number_of_ions + 1,
-                        self._number_of_projections + 1,
+                        spin_channels,
+                        number_of_k_points,
+                        number_of_bands,
+                        number_of_ions + 1,
+                        number_of_projections + 1,
                     )
                 )[:, :, :, :, 1:]
                 .swapaxes(0, 1)
                 .swapaxes(1, 2)
             )
         else:
-            self._data = self.projection_data.reshape(
+            data = projection_data.reshape(
                 (
-                    self._number_of_k_points,
-                    self._number_of_bands,
-                    self._spin_channels,
-                    self._number_of_ions + 1,
-                    self._number_of_projections + 1,
+                    number_of_k_points,
+                    number_of_bands,
+                    spin_channels,
+                    number_of_ions + 1,
+                    number_of_projections + 1,
                 )
             )[:, :, :, :, 1:]
+
+        pcar = cls(
+            data=data,
+            bands=bands,
+            k_points=k_points,
+            number_of_k_points=number_of_k_points,
+            number_of_bands=number_of_bands,
+            number_of_ions=number_of_ions,
+            number_of_projections=number_of_projections,
+            spin_channels=spin_channels,
+            k_point_blocks=k_point_blocks,
+            calculation=calculation,
+            negative_occupancies=negative_occupancies,
+        )
+        pcar.sanity_check()
+        if select_zero_weighted_k_points:
+            k_point_indices = [
+                i for i, kp in enumerate(pcar.k_points) if kp.weight == 0.0
+            ]
+            pcar = pcar.select_k_points(k_point_indices)
+        return pcar
 
     @property
     def number_of_k_points(self) -> int:

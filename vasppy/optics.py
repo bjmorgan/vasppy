@@ -1,51 +1,74 @@
-"""
-functions for working with optical properties from vasprun.xml
-"""
+"""Functions for working with optical properties from vasprun.xml."""
 
 from math import pi
 import numpy as np
 from scipy.constants import physical_constants, speed_of_light  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 eV_to_recip_cm = 1.0 / (
     physical_constants["Planck constant in eV s"][0] * speed_of_light * 1e2
 )
 
 
-def matrix_eigvals(matrix):
+def matrix_eigvals(matrix: np.ndarray) -> np.ndarray:
     """Calculate the eigenvalues of a matrix.
 
     Args:
-        matrix (np.array): The matrix to diagonalise.
+        matrix: The matrix to diagonalise.
 
     Returns:
-        (np.array): Array of the matrix eigenvalues.
+        Array of the matrix eigenvalues.
     """
     eigvals, eigvecs = np.linalg.eig(matrix)
     return eigvals
 
 
-def to_matrix(xx, yy, zz, xy, yz, xz):
+def to_matrix(
+    xx: float,
+    yy: float,
+    zz: float,
+    xy: float,
+    yz: float,
+    xz: float,
+) -> np.ndarray:
     """Convert a list of matrix components to a symmetric 3x3 matrix.
 
     Inputs should be in the order xx, yy, zz, xy, yz, xz.
 
     Args:
-        xx (float): xx component of the matrix.
-        yy (float): yy component of the matrix.
-        zz (float): zz component of the matrix.
-        xy (float): xy component of the matrix.
-        yz (float): yz component of the matrix.
-        xz (float): xz component of the matrix.
+        xx: xx component of the matrix.
+        yy: yy component of the matrix.
+        zz: zz component of the matrix.
+        xy: xy component of the matrix.
+        yz: yz component of the matrix.
+        xz: xz component of the matrix.
 
     Returns:
-        (np.array): The matrix, as a 3x3 numpy array.
+        The matrix as a 3x3 numpy array.
     """
     matrix = np.array([[xx, xy, xz], [xy, yy, yz], [xz, yz, zz]])
     return matrix
 
 
-def plot_dielectric_functions(dielectric, ax=None):
+def plot_dielectric_functions(
+    dielectric: list,
+    ax: Axes | None = None,
+) -> Figure | None:
+    """Plot the real and imaginary dielectric functions.
+
+    Args:
+        dielectric: Dielectric data in pymatgen vasprun format.
+            Element 0 is a list of energies; element 1 contains the real
+            dielectric tensors; element 2 contains the imaginary dielectric
+            tensors.
+        ax: Optional matplotlib Axes to plot on. If ``None``, a new figure and
+            axes are created.
+
+    Returns:
+        The matplotlib Figure if a new one was created, otherwise ``None``.
+    """
     real_dielectric = parse_dielectric_data(dielectric[1])
     imag_dielectric = parse_dielectric_data(dielectric[2])
     if ax is None:
@@ -61,42 +84,46 @@ def plot_dielectric_functions(dielectric, ax=None):
     return fig
 
 
-def parse_dielectric_data(data):
-    """Convert a set of 2D vasprun formatted dielectric data to
-    the eigenvalues of each corresponding 3x3 symmetric numpy matrices.
+def parse_dielectric_data(data: list) -> np.ndarray:
+    """Convert a set of 2D vasprun-formatted dielectric data to eigenvalues.
+
+    Converts each entry to a 3x3 symmetric numpy matrix and returns the
+    eigenvalues of each matrix.
 
     Args:
-        data (list): length N list of dielectric data. Each entry should be
-                     a list of ``[xx, yy, zz, xy, xz, yz ]`` dielectric
-                     tensor elements.
+        data: Length-N list of dielectric data. Each entry should be a list of
+            ``[xx, yy, zz, xy, xz, yz]`` dielectric tensor elements.
 
     Returns:
-        (np.array):  a Nx3 numpy array. Each row contains the eigenvalues
-                     for the corresponding row in `data`.
+        An Nx3 numpy array. Each row contains the eigenvalues for the
+        corresponding row in ``data``.
     """
     return np.array([matrix_eigvals(to_matrix(*e)) for e in data])
 
 
-def absorption_coefficient(dielectric):
-    """Calculate the optical absorption coefficient from an input set of
-    pymatgen vasprun dielectric constant data.
+def absorption_coefficient(dielectric: list) -> np.ndarray:
+    """Calculate the optical absorption coefficient from dielectric data.
 
     Args:
-        dielectric (list): A list containing the dielectric response function
-                           in the pymatgen vasprun format.
+        dielectric: A list containing the dielectric response function in
+            pymatgen vasprun format.
 
-                           | element 0: list of energies
-                           | element 1: real dielectric tensors, in ``[xx, yy, zz, xy, xz, yz]`` format.
-                           | element 2: imaginary dielectric tensors, in ``[xx, yy, zz, xy, xz, yz]`` format.
+            - Element 0: list of energies.
+            - Element 1: real dielectric tensors in ``[xx, yy, zz, xy, xz, yz]``
+              format.
+            - Element 2: imaginary dielectric tensors in
+              ``[xx, yy, zz, xy, xz, yz]`` format.
 
     Returns:
-        (np.array): absorption coefficient using eV as frequency units (cm^-1).
+        Absorption coefficient using eV as frequency units (cm :sup:`-1`).
 
-    Notes:
+    Note:
         The absorption coefficient is calculated as
 
-        .. math:: \\alpha = \\frac{2\\sqrt{2} \\pi}{\\lambda} \\sqrt{-\\epsilon_1+\\sqrt{\\epsilon_1^2+\\epsilon_2^2}}
+        .. math::
 
+            \\alpha = \\frac{2\\sqrt{2}\\pi}{\\lambda}
+            \\sqrt{-\\epsilon_1 + \\sqrt{\\epsilon_1^2 + \\epsilon_2^2}}
     """
     energies_in_eV = np.array(dielectric[0])
     real_dielectric = parse_dielectric_data(dielectric[1])

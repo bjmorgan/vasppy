@@ -273,7 +273,7 @@ class Doscar:
         if atoms is None:
             return list(range(self.number_of_atoms))
         if isinstance(atoms, int):
-            return [atoms]
+            atoms = [atoms]
         return list(atoms)
 
     def _resolve_spin_idx(self, spin: str | None) -> list[int]:

@@ -1,5 +1,6 @@
 from functools import reduce
 from copy import deepcopy
+from typing import cast
 import math
 import re
 
@@ -45,7 +46,7 @@ class KPoint:
         Returns:
             The reciprocal Cartesian coordinates of this k-point.
         """
-        return np.dot(self.frac_coords, reciprocal_lattice)
+        return cast(np.ndarray, np.dot(self.frac_coords, reciprocal_lattice))
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, KPoint):
@@ -135,7 +136,7 @@ def area_of_a_triangle_in_cartesian_space(
 
 
 def points_are_in_a_straight_line(
-    points: list[np.ndarray],
+    points: np.ndarray | list[np.ndarray],
     tolerance: float = 1e-7,
 ) -> bool:
     """Check whether a set of points fall on a straight line.
@@ -693,14 +694,13 @@ class Procar:
         ion_projection = np.sum(orbital_projection[:, :, :, ions], axis=3)
         spin_projection = np.sum(ion_projection[:, :, spins], axis=2)
         x_axis = self.x_axis(reciprocal_lattice)
-        to_return = []
+        rows = []
         for i in range(self.number_of_bands):
             for k, (e, p) in enumerate(
-                zip(band_energies[i], spin_projection.T[i], strict=None)
+                zip(band_energies[i], spin_projection.T[i], strict=False)
             ):
-                to_return.append([x_axis[k], e - e_fermi, p * scaling])
-        to_return = np.array(to_return).reshape((self.number_of_bands, -1, 3))
-        return to_return
+                rows.append([x_axis[k], e - e_fermi, p * scaling])
+        return np.array(rows).reshape((self.number_of_bands, -1, 3))
 
     def effective_mass_calc(
         self,

@@ -260,7 +260,8 @@ class Summary:
         except ET.ParseError:
             warnings.warn(
                 f"Could not parse {self.vasprun_filename} in {self.directory}; "
-                "summary output will be incomplete"
+                "summary output will be incomplete",
+                stacklevel=2,
             )
             self.vasprun = None
 

@@ -88,7 +88,7 @@ def read_data(verbose: bool = True) -> pd.DataFrame:
                     else:
                         print(warning.message)
         except (ET.ParseError, FileNotFoundError) as e:
-            warnings.warn(f"Skipping {d}: {e}")
+            warnings.warn(f"Skipping {d}: {e}", stacklevel=2)
             continue
         poscar_structure = Structure.from_file(d + "POSCAR")
         data.append(

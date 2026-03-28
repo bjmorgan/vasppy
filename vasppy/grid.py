@@ -129,11 +129,15 @@ class Grid:
     def write_to_filename(self, filename: str) -> None:
         """Write the volumetric data to a file in VASP CHGCAR format.
 
+        Grid values are written in Fortran column-major order with five
+        values per line, matching the VASP convention.
+
         Args:
             filename: Path to the output file.
 
         Raises:
-            ValueError: If no structure has been loaded.
+            ValueError: If no structure has been loaded (i.e.
+                :meth:`read_from_filename` has not been called).
         """
         if self.structure is None:
             raise ValueError("Cannot write: no structure loaded. Call read_from_filename() first.")
@@ -148,11 +152,18 @@ class Grid:
             )
 
     def read_dimensions(self) -> None:
-        """Read grid dimensions from the volumetric file."""
+        """Read grid dimensions from the volumetric file.
+
+        Parses the grid dimensions line immediately after the POSCAR header
+        and updates ``self.dimensions`` and ``self.spacing``.
+        """
         with open(self.filename) as f:
             for i, line in enumerate(f):
                 if i == self.number_of_header_lines:
-                    self.dimensions = tuple(int(x) for x in line.split())
+                    parsed = tuple(int(x) for x in line.split())
+                    self.dimensions: tuple[int, int, int] = (
+                        parsed[0], parsed[1], parsed[2]
+                    )
                     self.spacing = np.array(
                         [1.0 / n for n in self.dimensions]
                     )
@@ -176,22 +187,25 @@ class Grid:
         """Calculate the planar average perpendicular to a given axis.
 
         Args:
-            normal_axis_label: Axis label ('x', 'y', or 'z').
+            normal_axis_label: Axis label (``'x'``, ``'y'``, or ``'z'``).
 
         Returns:
             1D array of averaged values along the specified axis.
+
+        Raises:
+            KeyError: If ``normal_axis_label`` is not ``'x'``, ``'y'``,
+                or ``'z'``.
         """
         axes = [0, 1, 2]
         axes.remove(Grid.projections[normal_axis_label])
-        return np.sum(np.sum(self.grid, axis=axes[1]), axis=axes[0]) / (
-            self.dimensions[0] * self.dimensions[1]
-        )
+        n_plane = self.dimensions[axes[0]] * self.dimensions[axes[1]]
+        return np.sum(np.sum(self.grid, axis=axes[1]), axis=axes[0]) / n_plane
 
-    def by_index(self, index: list[int]) -> float:
+    def by_index(self, index: list[int] | np.ndarray) -> float:
         """Return the grid value at a given index.
 
         Args:
-            index: Three-element list [i, j, k].
+            index: Three-element list or array ``[i, j, k]``.
 
         Returns:
             The grid value at that index.
@@ -217,6 +231,10 @@ class Grid:
 
         Returns:
             Cartesian coordinates as a numpy array.
+
+        Raises:
+            AttributeError: If ``self.structure`` is ``None`` (i.e. no file
+                has been read yet).
         """
         return self.fractional_coordinate_at_index(index).dot(
             self.structure.lattice.matrix

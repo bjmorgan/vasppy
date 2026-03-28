@@ -157,3 +157,42 @@ class TestGridCubeSlice:
         assert cube.shape == (2, 2, 2)
         assert cube[0, 0, 0] == g.grid[0, 0, 0]
         assert cube[1, 0, 0] == g.grid[1, 0, 0]
+
+
+class TestGridByIndex:
+    def test_by_index_returns_correct_value(self):
+        g = Grid().read_from_filename(CHGCAR_MINIMAL)
+        assert g.by_index([0, 0, 0]) == pytest.approx(1.0)
+        assert g.by_index([1, 0, 0]) == pytest.approx(2.0)
+
+    def test_by_index_with_numpy_array(self):
+        import numpy as np
+        g = Grid().read_from_filename(CHGCAR_MINIMAL)
+        idx = np.array([0, 0, 1])
+        assert g.by_index(idx) == pytest.approx(11.0)
+
+
+class TestGridWriteNoStructure:
+    def test_write_without_structure_raises(self, tmp_path):
+        g = Grid(dimensions=(2, 2, 2))
+        with pytest.raises(ValueError, match="no structure loaded"):
+            g.write_to_filename(str(tmp_path / "out"))
+
+
+class TestGridAverageAxes:
+    """Explicit tests verifying the planar average divisor is correct
+    for non-cubic grids where nx != ny != nz."""
+
+    def test_average_y_axis(self):
+        """Average along y should divide by nx*nz, not nx*ny."""
+        g = Grid().read_from_filename(CHGCAR_MINIMAL)
+        # Grid shape (2, 5, 2); average along y → sum over axes 0 and 2, divide by 2*2=4
+        avg = g.average("y")
+        assert avg.shape == (5,)
+        # Manual check: grid[:, 0, :].sum() / 4 = (1+11+2+12)/4 = 26/4 = 6.5
+        assert avg[0] == pytest.approx(6.5)
+
+    def test_average_invalid_axis_raises(self):
+        g = Grid().read_from_filename(CHGCAR_MINIMAL)
+        with pytest.raises(KeyError):
+            g.average("w")

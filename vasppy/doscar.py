@@ -112,8 +112,6 @@ class Doscar:
                 self.read_projected_dos()
             except (pd.errors.ParserError, pd.errors.EmptyDataError, ValueError):
                 self.pdos = None
-        # if species is set, should check that this is consistent with the number of entries in the
-        # projected_dos dataset
 
     @property
     def number_of_channels(self) -> int:
@@ -150,13 +148,10 @@ class Doscar:
         self.number_of_data_points = int(self.header[5].split()[2])
         self.efermi = float(self.header[5].split()[3])
 
-    def read_total_dos(self) -> pd.DataFrame:  # assumes spin_polarised
+    def read_total_dos(self) -> None:
         """Read the total DOS block from the DOSCAR file.
 
         Populates ``self.energy`` and ``self.tdos``.
-
-        Returns:
-            The total DOS dataframe (also stored as ``self.tdos``).
         """
         start_to_read: int = Doscar.number_of_header_lines
         df: pd.DataFrame = pd.read_csv(
@@ -170,8 +165,6 @@ class Doscar:
         self.energy: np.ndarray = df.energy.values
         df = df.drop("energy", axis=1)
         self.tdos = df
-
-    # currently assume spin-polarised, no-SO-coupling, no f-states
     def read_atomic_dos_as_df(self, atom_number: int) -> pd.DataFrame:
         """Read the projected DOS for a single atom as a dataframe.
 
@@ -348,7 +341,7 @@ class Doscar:
         self,
         ax: Axes | None = None,
         to_plot: dict[str, list[str]] | None = None,
-        colors: Iterable | None = None,
+        colours: Iterable | None = None,
         plot_total_dos: bool | None = True,
         xrange: tuple[float, float] | None = None,
         ymax: float | None = None,
@@ -369,7 +362,7 @@ class Doscar:
                 labels to plot, e.g. ``{'Fe': ['s', 'd'], 'O': ['p']}``.
                 Default is to plot s, p, d (and f if ``lmax=3``) for every
                 unique species in ``self.species``.
-            colors: Iterable of colour values for successive traces. Defaults
+            colours: Iterable of colour values for successive traces. Defaults
                 to the matplotlib Tableau colour set.
             plot_total_dos: Whether to plot the total DOS as a shaded region.
                 Default is True.
@@ -397,11 +390,11 @@ class Doscar:
             fig = None
         if not isinstance(ax, Axes):
             raise TypeError("ax must be a matplotlib Axes instance")
-        if not colors:
-            colors = mcd.TABLEAU_COLORS
-        if not isinstance(colors, Iterable):
-            raise TypeError("colors must be an iterable")
-        color_iterator = (c for c in colors)
+        if not colours:
+            colours = mcd.TABLEAU_COLORS
+        if not isinstance(colours, Iterable):
+            raise TypeError("colours must be an iterable")
+        color_iterator = (c for c in colours)
 
         if not scaling:
             scaling = {}

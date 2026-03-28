@@ -136,7 +136,6 @@ class TestRadialDistributionFunction(unittest.TestCase):
         self.assertIsInstance(rdf.indices_j, list)
         self.assertEqual(rdf.indices_i, [0, 1])
         self.assertEqual(rdf.indices_j, [0, 1])
-        self.assertTrue(rdf.self_reference)
 
     def test_smeared_rdf_returns_array_of_same_length(self):
         """Test that smeared_rdf returns an array of the same length as rdf."""

@@ -60,7 +60,6 @@ class RadialDistributionFunction:
                 )
         else:
             weights = [1.0] * len(structures)
-        self.self_reference = indices_j is None
         if indices_j is None:
             indices_j = indices_i
         self.indices_i = indices_i

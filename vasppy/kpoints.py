@@ -16,17 +16,13 @@ class AutoKPoints:
         """Initialise an AutoKPoints object.
 
         Args:
-            title (str): The first line of the file, treated as a comment by VASP.
-            subdivisions: (np.ndarray(int, int, int)):
-                Numbers of subdivisions along each reciprocal lattice vector.
-            grid_centering (str, optional):
-                Specify gamma-centered (G) or the original Monkhorst-Pack scheme (MP).
-                Default is 'G'.
-            shift: (np.ndarray(float, float, float), optional):
-                Optional shift of the mesh (s_1, s_2, s_3). Default is ( [ 0., 0., 0. ] ).
-
-        Returns:
-            None
+            title: The first line of the file, treated as a comment by VASP.
+            subdivisions: Numbers of subdivisions along each reciprocal
+                lattice vector.
+            grid_centering: Specify gamma-centred (``'G'``) or the original
+                Monkhorst-Pack scheme (``'MP'``). Default is ``'G'``.
+            shift: Optional shift of the mesh ``(s_1, s_2, s_3)``.
+                Default is ``[0., 0., 0.]``.
 
         Raises:
             ValueError: If an unrecognised grid-centering option is passed in.
@@ -46,37 +42,43 @@ class AutoKPoints:
         else:
             self.shift = shift
 
-def get_subdivisions_from_kspacing(kspacing: float,
-        reciprocal_lattice_vectors: np.ndarray) -> tuple[int, ...]:
-    """Calculate subdivisions along reciprocal lattice vectors from the miniumum allowed distance between k-points (KSPACING).
+def get_subdivisions_from_kspacing(
+    kspacing: float,
+    reciprocal_lattice_vectors: np.ndarray,
+) -> tuple[int, ...]:
+    """Calculate subdivisions from the minimum allowed distance between k-points.
 
     Args:
-        kspacing (float): The minimum allowed distance between k-points.
-        reciprocal_lattice_vectors (np.ndarray): The reciprocal lattice vectors. These can be retrieved from ASE as atoms.cell.reciprocal() or from Pymatgen as
-        structure.lattice.reciprocal_lattice_crystallographic.matrix.
+        kspacing: The minimum allowed distance between k-points (KSPACING).
+        reciprocal_lattice_vectors: The reciprocal lattice vectors.
 
     Returns:
-        tuple[int, ...]: The subdivisions along each reciprocal lattice vector.
+        The subdivisions along each reciprocal lattice vector.
     """
     return tuple(
         int(np.max([1, np.ceil(np.linalg.norm(row) * 2 * np.pi / kspacing)]))
         for row in reciprocal_lattice_vectors
     )
 
-def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray,
-                                     kspacing_range: tuple[float, float]=(0.1, 0.8),
-                                     step: float=0.02) -> tuple[float, ...]:
-    """Generate a range of minimum allowed distances between k-points (KSPACING) for convergence testing. This function ensures that no two values of KSPACING
-    are generated that correspond to the same k-point mesh.
+def get_convergence_testing_kspacing(
+    reciprocal_lattice_vectors: np.ndarray,
+    kspacing_range: tuple[float, float] = (0.1, 0.8),
+    step: float = 0.02,
+) -> tuple[float, ...]:
+    """Generate KSPACING values for convergence testing.
+
+    Produces a range of KSPACING values ensuring that no two values
+    correspond to the same k-point mesh.
 
     Args:
-        reciprocal_lattice_vectors (np.ndarray): The reciprocal lattice vectors. These can be retrieved from ASE as atoms.cell.reciprocal() or from Pymatgen as
-        structure.lattice.reciprocal_lattice_crystallographic.matrix.
-        kspacing_range (tuple[float, float]): The minimum and maximum KSPACING values. Defaults to (0.1, 0.8).
-        step (float): The interval between KSPACING values to be tested. Defaults to 0.02.
+        reciprocal_lattice_vectors: The reciprocal lattice vectors.
+        kspacing_range: The minimum and maximum KSPACING values.
+            Defaults to ``(0.1, 0.8)``.
+        step: The interval between KSPACING values to be tested.
+            Defaults to ``0.02``.
 
     Returns:
-        tuple[float, ...]: A range of KSPACING values which all correspond to distinct k-point grids.
+        KSPACING values that each correspond to a distinct k-point grid.
     """
     allowed_kspacing = []
     highest_total = 0.0

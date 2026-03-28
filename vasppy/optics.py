@@ -92,7 +92,7 @@ def parse_dielectric_data(data: list) -> np.ndarray:
 
     Args:
         data: Length-N list of dielectric data. Each entry should be a list of
-            ``[xx, yy, zz, xy, xz, yz]`` dielectric tensor elements.
+            ``[xx, yy, zz, xy, yz, xz]`` dielectric tensor elements.
 
     Returns:
         An Nx3 numpy array. Each row contains the eigenvalues for the
@@ -109,10 +109,10 @@ def absorption_coefficient(dielectric: list) -> np.ndarray:
             pymatgen vasprun format.
 
             - Element 0: list of energies.
-            - Element 1: real dielectric tensors in ``[xx, yy, zz, xy, xz, yz]``
+            - Element 1: real dielectric tensors in ``[xx, yy, zz, xy, yz, xz]``
               format.
             - Element 2: imaginary dielectric tensors in
-              ``[xx, yy, zz, xy, xz, yz]`` format.
+              ``[xx, yy, zz, xy, yz, xz]`` format.
 
     Returns:
         Absorption coefficient using eV as frequency units (cm :sup:`-1`).

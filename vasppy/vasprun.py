@@ -47,7 +47,7 @@ def parse_structure(structure: etree.Element) -> StructureData:
 
         - ``lattice``: cell matrix (list[list[float]]).
         - ``frac_coords``: atom fractional coordinates (list[list[float]]).
-        - ``selective_dynamics``: selective dynamics (list[bool] or None).
+        - ``selective_dynamics``: selective dynamics (list[list[bool]] or None).
     """
     latt = parse_varray(structure.find("crystal").find("varray"))
     pos = parse_varray(structure.find("varray"))

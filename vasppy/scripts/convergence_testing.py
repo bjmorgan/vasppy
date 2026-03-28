@@ -1,7 +1,7 @@
 """Generate a series of VASP inputs for convergence testing."""
 import argparse
 import shutil
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from pymatgen.core import Structure
@@ -90,7 +90,7 @@ class ConvergenceTarget:
     base_incar: dict[str, Any]
 
     # Parameters that should be included in INCAR
-    CONVERGENCE_PARAMS = ['encut', 'kspacing']
+    CONVERGENCE_PARAMS: ClassVar[list[str]] = ['encut', 'kspacing']
 
     def __post_init__(self) -> None:
         """Validate that at least one convergence parameter is set."""

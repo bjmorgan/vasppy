@@ -49,6 +49,7 @@ class KPoint:
         return cast(np.ndarray, np.dot(self.frac_coords, reciprocal_lattice))
 
     def __eq__(self, other: object) -> bool:
+        """Check equality based on index, fractional coordinates, and weight."""
         if not isinstance(other, KPoint):
             return NotImplemented
         return (
@@ -417,7 +418,7 @@ class Procar:
 
                 - ``'warn'`` (default): Warn that some partial occupancies
                   are negative.
-                - ``'raise'``: Raise an ``AttributeError``.
+                - ``'raise'``: Raise a ``ValueError``.
                 - ``'zero'``: Set negative partial occupancies to zero.
 
             select_zero_weighted_k_points: Set to True to only read
@@ -715,7 +716,7 @@ class Procar:
         Args:
             k_point_indices: List of 1-based k-point indices to use.
             band_index: 1-based band index.
-            reciprocal_lattice: 3x3 Cartesian reciprocal lattice in Å⁻¹.
+            reciprocal_lattice: 3x3 Cartesian reciprocal lattice in inverse Angstroms.
             spin: 1-based spin channel index. Default is 1.
             printing: If True, print k-point and eigenvalue data to stdout.
                 Default is False.
@@ -832,22 +833,3 @@ class Procar:
         new_procar.sanity_check()
         return new_procar
 
-
-# TODO Need complete set of example PROCAR files before we start to write
-# something that can write these all back out in the appropriate format
-#    def write_file( self, filename ):
-#        if self.calculation['non_collinear']:
-#            raise NotImplementedError
-#        with open( filename, 'w' ) as f:
-#            f.write( 'PROCAR lm decomposed' )
-#            for s in range( self.spin_channels ): # not sure what happens for non-collinear calculations
-#                line = ff.FortranRecordWriter("/'# of k-points:',I5,9X,'# of bands:',I5,9X,'# of ions:',I5")
-#                f.write( line.write( [ self.number_of_k_points, self.number_of_bands, self.number_of_ions ] )+'\n' )
-#                for k_point in self.k_points:
-#                    line = ff.FortranRecordWriter("/' k-point ',I5,' :',3X,3F11.8,'     weight = ',F10.8/")
-#                    f.write( line.write( [ k_point.index, *k_point.frac_coords, k_point.weight ] ) )
-#                    for band in self.bands:
-#                        line = ff.FortranRecordWriter("/'band ',I5,' # energy',F14.8,' # occ.',F12.8/")
-#                        f.write( line.write( [ band.index, band.energy, band.occupancy ] ) )
-#                        f.write( '\nion      s     py     pz     px    dxy    dyz    dz2    dxz    dx2    tot\n' )
-#

@@ -84,13 +84,61 @@ def _read_poscar_header(filename: str) -> tuple[Structure, int]:
     return pmg_poscar.structure, offset + 1
 
 
+def _read_dimensions(filename: str, n_header_lines: int) -> tuple[int, int, int]:
+    """Read grid dimensions from the volumetric file.
+
+    Args:
+        filename: Path to the VASP volumetric file.
+        n_header_lines: Number of header lines before the dimensions line.
+
+    Returns:
+        Grid dimensions as (nx, ny, nz).
+    """
+    with open(filename) as f:
+        for i, line in enumerate(f):
+            if i == n_header_lines:
+                parsed = tuple(int(x) for x in line.split())
+                return (parsed[0], parsed[1], parsed[2])
+    raise ValueError(f"Could not read dimensions from {filename}")
+
+
+def _read_grid(
+    filename: str,
+    n_header_lines: int,
+    dimensions: tuple[int, int, int],
+) -> np.ndarray:
+    """Read grid data values from the volumetric file.
+
+    Args:
+        filename: Path to the VASP volumetric file.
+        n_header_lines: Number of header lines before the dimensions line.
+        dimensions: Grid dimensions (nx, ny, nz).
+
+    Returns:
+        3D numpy array of grid data in shape ``dimensions``.
+    """
+    total_points = dimensions[0] * dimensions[1] * dimensions[2]
+    grid_data_lines = math.ceil(total_points / 5)
+    grid_data = []
+    with open(filename) as f:
+        for i, line in enumerate(f):
+            if (i > n_header_lines) and (
+                i <= n_header_lines + grid_data_lines
+            ):
+                grid_data.append(line.strip())
+    grid_data = np.array(" ".join(grid_data).split(), dtype=float)
+    return grid_data.reshape(dimensions, order="F")
+
+
 class Grid:
     """Represents volumetric data on a regular grid from VASP CHGCAR/LOCPOT files.
 
+    Every ``Grid`` instance is fully initialised at construction: it always
+    has a valid ``structure``, ``dimensions``, and ``grid`` array.
+
     Attributes:
         projections: Mapping from axis labels to indices.
-        filename: Path to the source file, or None.
-        structure: pymatgen Structure from the POSCAR header, or None.
+        structure: pymatgen Structure from the POSCAR header.
         dimensions: Grid dimensions (nx, ny, nz).
         spacing: Fractional spacing along each axis.
         grid: 3D numpy array of grid data.
@@ -98,33 +146,39 @@ class Grid:
 
     projections: dict[str, int] = {"x": 0, "y": 1, "z": 2}
 
-    def __init__(self, dimensions: tuple[int, int, int] = (1, 1, 1)) -> None:
+    def __init__(
+        self,
+        structure: Structure,
+        dimensions: tuple[int, int, int],
+        grid: np.ndarray,
+    ) -> None:
         """Initialise a Grid object.
 
         Args:
+            structure: pymatgen Structure describing the unit cell.
             dimensions: Grid dimensions as (nx, ny, nz).
+            grid: 3D numpy array of volumetric data with shape
+                matching ``dimensions``.
         """
-        self.filename: str | None = None
-        self.structure: Structure | None = None
-        self.number_of_header_lines = 0
+        self.structure = structure
         self.dimensions = dimensions
         self.spacing = np.array([1.0 / n for n in self.dimensions])
-        self.grid = np.zeros(self.dimensions, dtype=float)
+        self.grid = grid
 
-    def read_from_filename(self, filename: str) -> Grid:
+    @classmethod
+    def from_file(cls, filename: str) -> Grid:
         """Read volumetric data from a VASP CHGCAR/LOCPOT file.
 
         Args:
             filename: Path to the file.
 
         Returns:
-            This Grid instance (for method chaining).
+            A fully-constructed Grid instance.
         """
-        self.filename = filename
-        self.structure, self.number_of_header_lines = _read_poscar_header(filename)
-        self.read_dimensions()
-        self.read_grid()
-        return self
+        structure, n_header_lines = _read_poscar_header(filename)
+        dimensions = _read_dimensions(filename, n_header_lines)
+        grid_data = _read_grid(filename, n_header_lines, dimensions)
+        return cls(structure=structure, dimensions=dimensions, grid=grid_data)
 
     def write_to_filename(self, filename: str) -> None:
         """Write the volumetric data to a file in VASP CHGCAR format.
@@ -134,13 +188,7 @@ class Grid:
 
         Args:
             filename: Path to the output file.
-
-        Raises:
-            ValueError: If no structure has been loaded (i.e.
-                :meth:`read_from_filename` has not been called).
         """
-        if self.structure is None:
-            raise ValueError("Cannot write: no structure loaded. Call read_from_filename() first.")
         with open(filename, "w") as f:
             poscar_str = PmgPoscar(self.structure).get_str()
             f.write(poscar_str)
@@ -150,38 +198,6 @@ class Grid:
                 np.swapaxes(self.grid, 0, 2).reshape(-1, 5),
                 fmt="%.11E",
             )
-
-    def read_dimensions(self) -> None:
-        """Read grid dimensions from the volumetric file.
-
-        Parses the grid dimensions line immediately after the POSCAR header
-        and updates ``self.dimensions`` and ``self.spacing``.
-        """
-        with open(self.filename) as f:
-            for i, line in enumerate(f):
-                if i == self.number_of_header_lines:
-                    parsed = tuple(int(x) for x in line.split())
-                    self.dimensions: tuple[int, int, int] = (
-                        parsed[0], parsed[1], parsed[2]
-                    )
-                    self.spacing = np.array(
-                        [1.0 / n for n in self.dimensions]
-                    )
-                    break
-
-    def read_grid(self) -> None:
-        """Read grid data values from the volumetric file."""
-        total_points = self.dimensions[0] * self.dimensions[1] * self.dimensions[2]
-        grid_data_lines = math.ceil(total_points / 5)
-        grid_data = []
-        with open(self.filename) as f:
-            for i, line in enumerate(f):
-                if (i > self.number_of_header_lines) and (
-                    i <= self.number_of_header_lines + grid_data_lines
-                ):
-                    grid_data.append(line.strip())
-        grid_data = np.array(" ".join(grid_data).split(), dtype=float)
-        self.grid = grid_data.reshape(self.dimensions, order="F")
 
     def average(self, normal_axis_label: str) -> np.ndarray:
         """Calculate the planar average perpendicular to a given axis.
@@ -231,10 +247,6 @@ class Grid:
 
         Returns:
             Cartesian coordinates as a numpy array.
-
-        Raises:
-            AttributeError: If ``self.structure`` is ``None`` (i.e. no file
-                has been read yet).
         """
         return self.fractional_coordinate_at_index(index).dot(
             self.structure.lattice.matrix
@@ -303,11 +315,15 @@ class Grid:
         """
         old_lattice = self.structure.lattice
         new_matrix = np.diag(np.diag(old_lattice.matrix))
-        new_grid = Grid(dimensions=dimensions)
         new_lattice = Lattice(new_matrix)
         # Create a dummy structure for the new grid
-        new_grid.structure = Structure(
+        new_structure = Structure(
             new_lattice, ["X"], [[0, 0, 0]],
+        )
+        new_grid = Grid(
+            structure=new_structure,
+            dimensions=dimensions,
+            grid=np.zeros(dimensions, dtype=float),
         )
         index_grid = np.array(
             [[i, j, k] for (i, j, k), _ in np.ndenumerate(new_grid.grid)]

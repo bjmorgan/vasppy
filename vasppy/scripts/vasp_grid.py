@@ -30,8 +30,7 @@ def parse_command_line_arguments():
 
 def main():
     args = parse_command_line_arguments()
-    vgrid = grid.Grid()
-    vgrid.read_from_filename(args.gridfile)
+    vgrid = grid.Grid.from_file(args.gridfile)
     if args.orthorhombic:
         vgrid = vgrid.interpolate_to_orthorhombic_grid(vgrid.dimensions)
     if args.projection:

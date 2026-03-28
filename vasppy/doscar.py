@@ -219,7 +219,7 @@ class Doscar:
             atoms: Atom numbers to include in the selection. Atom numbers
                 count from 0 (array index). Default selects all atoms.
             spin: Spin channel(s) to include. Accepted values are ``'up'``,
-                ``'down'``, and ``'both'``. Default selects both spins.
+                ``'down'``, and ``'both'``. Default selects all available spin channels.
             l: Angular momentum to include. Accepted values are ``'s'``,
                 ``'p'``, ``'d'``, and ``'f'``. Setting ``l`` without ``m``
                 returns all projections for that angular momentum.
@@ -259,7 +259,7 @@ class Doscar:
             atom_idx = atoms
         to_return = self.pdos[atom_idx, :, :, :]
         _spin_map: dict[str, list[int]] = {"up": [0], "down": [1], "both": [0, 1]}
-        if not spin:
+        if spin is None:
             spin_idx = list(range(self.ispin))
         elif spin in _spin_map:
             spin_idx = _spin_map[spin]
@@ -268,33 +268,18 @@ class Doscar:
                 "valid spin values are 'up', 'down', and 'both'. The default is 'both'"
             )
         to_return = to_return[:, :, :, spin_idx]
-        if not l:
+        _l_offsets: dict[str, int] = {"s": 0, "p": 1, "d": 4, "f": 9}
+        _l_widths: dict[str, int] = {"s": 1, "p": 3, "d": 5, "f": 7}
+        if l is None:
             channel_idx = list(range(self.number_of_channels))
-        elif l == "s":
-            channel_idx = [0]
-        elif l == "p":
-            if not m:
-                channel_idx = [1, 2, 3]
-            else:
-                channel_idx = [
-                    i + 1 for i, v in enumerate(valid_m_values["p"]) if v in m
-                ]
-        elif l == "d":
-            if not m:
-                channel_idx = [4, 5, 6, 7, 8]
-            else:
-                channel_idx = [
-                    i + 4 for i, v in enumerate(valid_m_values["d"]) if v in m
-                ]
-        elif l == "f":
-            if not m:
-                channel_idx = [9, 10, 11, 12, 13, 14, 15]
-            else:
-                channel_idx = [
-                    i + 9 for i, v in enumerate(valid_m_values["f"]) if v in m
-                ]
-        else:
+        elif l not in _l_offsets:
             raise ValueError(f"'{l}' is not a valid angular momentum label; use 's', 'p', 'd', or 'f'")
+        else:
+            offset = _l_offsets[l]
+            if m is None or not valid_m_values[l]:
+                channel_idx = list(range(offset, offset + _l_widths[l]))
+            else:
+                channel_idx = [offset + i for i, v in enumerate(valid_m_values[l]) if v in m]
         return to_return[:, :, channel_idx, :]
 
     def pdos_sum(

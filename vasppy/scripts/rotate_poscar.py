@@ -5,7 +5,6 @@
 import argparse
 import math
 
-import numpy as np
 from pymatgen.core import Lattice, Structure
 from pymatgen.io.vasp.inputs import Poscar
 

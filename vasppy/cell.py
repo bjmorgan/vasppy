@@ -1,6 +1,8 @@
 """Cell geometry utilities: angle/rotation helpers and the Cell class."""
 
 import math
+from typing import cast
+
 import numpy as np
 
 
@@ -18,7 +20,7 @@ def angle(x: np.ndarray, y: np.ndarray) -> float:
     x_mod = np.linalg.norm(x)
     y_mod = np.linalg.norm(y)
     cos_angle = dot / (x_mod * y_mod)
-    return np.degrees(np.arccos(cos_angle))
+    return float(np.degrees(np.arccos(cos_angle)))
 
 
 def rotation_matrix(axis: np.ndarray, theta: float) -> np.ndarray:
@@ -32,7 +34,6 @@ def rotation_matrix(axis: np.ndarray, theta: float) -> np.ndarray:
         The corresponding 3x3 rotation matrix.
     """
     axis = np.asarray(axis)
-    theta = np.asarray(theta)
     axis = axis / math.sqrt(np.dot(axis, axis))
     a = math.cos(theta / 2)
     b, c, d = -axis * math.sin(theta / 2)
@@ -99,7 +100,7 @@ class Cell:
         Returns:
             The fractional coordinates of the nearest image of *point* to *origin*.
         """
-        return origin + self.minimum_image(origin, point)
+        return cast(np.ndarray, origin + self.minimum_image(origin, point))
 
     def minimum_image(self, r1: np.ndarray, r2: np.ndarray) -> np.ndarray:
         """Find the minimum image vector from point r1 to point r2.
@@ -158,7 +159,7 @@ class Cell:
         Returns:
             Array of shape (N, 3) containing the corresponding fractional coordinates.
         """
-        return coordinates.dot(self.inv_matrix)
+        return cast(np.ndarray, coordinates.dot(self.inv_matrix))
 
     def fractional_to_cartesian_coordinates(self, coordinates: np.ndarray) -> np.ndarray:
         """Convert a set of fractional coordinates in the cell to Cartesian coordinates.
@@ -169,7 +170,7 @@ class Cell:
         Returns:
             Array of shape (N, 3) containing the corresponding Cartesian coordinates.
         """
-        return coordinates.dot(self.matrix)
+        return cast(np.ndarray, coordinates.dot(self.matrix))
 
     def inside_cell(self, r: np.ndarray) -> np.ndarray:
         """Return the equivalent point inside the cell for a fractional coordinate.
@@ -190,7 +191,7 @@ class Cell:
         Returns:
             The scalar cell volume.
         """
-        return np.dot(self.matrix[0], np.cross(self.matrix[1], self.matrix[2]))
+        return float(np.dot(self.matrix[0], np.cross(self.matrix[1], self.matrix[2])))
 
     def unit_vectors(self) -> np.ndarray:
         """The unit vectors for the cell lattice vectors.
@@ -198,7 +199,7 @@ class Cell:
         Returns:
             Array of shape (3, 3) containing the unit vectors of each lattice vector.
         """
-        return (self.matrix.transpose() / self.lengths()).transpose()
+        return cast(np.ndarray, (self.matrix.transpose() / self.lengths()).transpose())
 
     def rotate(self, axis: np.ndarray, theta: float) -> None:
         """Rotate the cell in place about the given axis by theta radians.

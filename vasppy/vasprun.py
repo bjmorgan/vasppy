@@ -67,13 +67,12 @@ def structure_from_structure_data(
     Returns:
         A pymatgen Structure object.
     """
-    structure = Structure(
+    return Structure(
         lattice=lattice,
         species=atom_names,
         coords=frac_coords,
         coords_are_cartesian=False,
     )
-    return structure
 
 
 class Vasprun:
@@ -180,8 +179,7 @@ class Vasprun:
         Returns:
             timesteps x atoms x 3 numpy array of fractional coordinates.
         """
-        frac_coords = np.array([s.frac_coords for s in self.structures])
-        return frac_coords
+        return np.array([s.frac_coords for s in self.structures])
 
     @property
     def cart_coords(self) -> np.ndarray:
@@ -190,8 +188,7 @@ class Vasprun:
         Returns:
             timesteps x atoms x 3 numpy array of Cartesian coordinates.
         """
-        cart_coords = np.array([s.cart_coords for s in self.structures])
-        return cart_coords
+        return np.array([s.cart_coords for s in self.structures])
 
     @property
     def forces(self) -> np.ndarray | None:
@@ -206,7 +203,4 @@ class Vasprun:
             elem = child.find("varray/[@name='forces']")
             if elem is not None:
                 forces.append(parse_varray(elem))
-        if forces:
-            return np.array(forces)
-        else:
-            return None
+        return np.array(forces) if forces else None

@@ -117,7 +117,7 @@ def forces_from_outcar(
         header_pattern=r"\sPOSITION\s+TOTAL-FORCE \(eV/Angst\)\n\s-+",
         row_pattern=r"\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+\s+([+-]?\d+\.\d+)\s+([+-]?\d+\.\d+)\s+([+-]?\d+\.\d+)",
         footer_pattern=r"\s--+",
-        postprocess=lambda x: float(x),
+        postprocess=float,
         last_one_only=last_one_only,
     )
     return np.array(forces)
@@ -138,7 +138,7 @@ def coords_from_outcar(filename: str = "OUTCAR") -> np.ndarray:
         header_pattern=r"\sPOSITION\s+TOTAL-FORCE \(eV/Angst\)\n\s-+",
         row_pattern=r"\s+[+-]?(\d+\.\d+)\s+[+-]?(\d+\.\d+)\s+[+-]?(\d+\.\d+)\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+\s+[+-]?\d+\.\d+",
         footer_pattern=r"\s--+",
-        postprocess=lambda x: float(x),
+        postprocess=float,
         last_one_only=False,
     )
     return np.array(coords)

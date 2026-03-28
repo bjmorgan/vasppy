@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pymatgen.core import Structure
 from vasppy.utils import dr_ij
-from typing import Any, Type, cast
+from typing import Any, cast
 import numpy as np
 from numpy.typing import NDArray
 
@@ -75,7 +75,7 @@ class NeighbourList:
 
     @classmethod
     def from_species_strings(
-        cls: Type[NeighbourList],
+        cls: type[NeighbourList],
         structure: Structure,
         species_i: str,
         species_j: str,

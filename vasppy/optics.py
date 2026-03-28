@@ -21,8 +21,7 @@ def matrix_eigvals(matrix: np.ndarray) -> np.ndarray:
     Returns:
         Array of the matrix eigenvalues.
     """
-    eigvals, eigvecs = np.linalg.eig(matrix)
-    return eigvals
+    return np.linalg.eigvals(matrix)
 
 
 def to_matrix(
@@ -48,8 +47,7 @@ def to_matrix(
     Returns:
         The matrix as a 3x3 numpy array.
     """
-    matrix = np.array([[xx, xy, xz], [xy, yy, yz], [xz, yz, zz]])
-    return matrix
+    return np.array([[xx, xy, xz], [xy, yy, yz], [xz, yz, zz]])
 
 
 def plot_dielectric_functions(

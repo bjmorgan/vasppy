@@ -48,9 +48,7 @@ def pdos_column_names(lmax: int, ispin: int) -> list[str]:
     else:
         raise ValueError("lmax value not supported")
     if ispin == 2:
-        all_names: list[str] = []
-        for n in names:
-            all_names.extend([f"{n}_up", f"{n}_down"])
+        all_names: list[str] = [f"{n}_{s}" for n in names for s in ("up", "down")]
     else:
         all_names = names
     all_names.insert(0, "energy")
@@ -177,7 +175,7 @@ class Doscar:
         Raises:
             ValueError: If ``atom_number`` is outside the valid range.
         """
-        if not (atom_number > 0 and atom_number <= self.number_of_atoms):
+        if not (0 < atom_number <= self.number_of_atoms):
             raise ValueError(
                 f"atom_number must be between 1 and {self.number_of_atoms}, got {atom_number}"
             )
@@ -200,10 +198,7 @@ class Doscar:
         Populates ``self.pdos`` as a 4D numpy array with dimensions
         ``[atom_no, energy_value, lm-projection, spin]``.
         """
-        pdos_list = []
-        for i in range(self.number_of_atoms):
-            df = self.read_atomic_dos_as_df(i + 1)
-            pdos_list.append(df)
+        pdos_list = [self.read_atomic_dos_as_df(i + 1) for i in range(self.number_of_atoms)]
         self.pdos = np.vstack([np.array(df) for df in pdos_list]).reshape(
             self.number_of_atoms,
             self.number_of_data_points,

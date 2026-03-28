@@ -57,7 +57,7 @@ class KPoint:
         )
 
     def __repr__(self) -> str:
-        coords_str = " ".join([str(c) for c in self.frac_coords])
+        coords_str = " ".join(str(c) for c in self.frac_coords)
         return f"k-point {self.index}: {coords_str} weight = {self.weight}"
 
 
@@ -638,7 +638,7 @@ class Procar:
         for i, band_data in enumerate(band_structure_data, 1):
             print(f"# band: {i}")
             for k_point_data in band_data:
-                print(" ".join([str(f) for f in k_point_data]))
+                print(" ".join(str(f) for f in k_point_data))
             print()
 
     def weighted_band_structure(
@@ -749,7 +749,7 @@ class Procar:
             for row in np.concatenate(
                 (frac_k_point_coords, np.array([eigenvalues]).T), axis=1
             ):
-                print(" ".join([str(f) for f in row]))
+                print(" ".join(str(f) for f in row))
         reciprocal_lattice = reciprocal_lattice * 2 * math.pi * angstrom_to_bohr
         cart_k_point_coords = np.array(
             [k.cart_coords(reciprocal_lattice) for k in self._k_points]

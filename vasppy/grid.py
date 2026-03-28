@@ -97,8 +97,8 @@ def _read_dimensions(filename: str, n_header_lines: int) -> tuple[int, int, int]
     with open(filename) as f:
         for i, line in enumerate(f):
             if i == n_header_lines:
-                parsed = tuple(int(x) for x in line.split())
-                return (parsed[0], parsed[1], parsed[2])
+                nx, ny, nz = (int(x) for x in line.split())
+                return (nx, ny, nz)
     raise ValueError(f"Could not read dimensions from {filename}")
 
 
@@ -117,7 +117,7 @@ def _read_grid(
     Returns:
         3D numpy array of grid data in shape ``dimensions``.
     """
-    total_points = dimensions[0] * dimensions[1] * dimensions[2]
+    total_points = math.prod(dimensions)
     grid_data_lines = math.ceil(total_points / 5)
     lines: list[str] = []
     with open(filename) as f:

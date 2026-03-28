@@ -384,11 +384,7 @@ class Summary:
         """Print the k-point scheme and grid."""
         print("k-points:")
         print(f"    scheme: {self.vasprun.kpoints.style}")
-        print(
-            "    grid: {}".format(
-                " ".join(str(k) for k in self.vasprun.kpoints.kpts[0])
-            )
-        )
+        print(f"    grid: {' '.join(str(k) for k in self.vasprun.kpoints.kpts[0])}")
 
     def print_functional(self) -> None:
         """Print the DFT functional."""

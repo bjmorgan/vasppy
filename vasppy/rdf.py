@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Type
+from typing import Any
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from pymatgen.core import Structure
@@ -104,7 +104,7 @@ class RadialDistributionFunction:
 
     @classmethod
     def from_species_strings(
-        cls: Type[RadialDistributionFunction],
+        cls: type[RadialDistributionFunction],
         structures: list[Structure],
         species_i: str,
         species_j: str | None = None,

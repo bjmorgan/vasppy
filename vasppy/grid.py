@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import cast
 
 import numpy as np
 from pymatgen.core import Lattice, Structure
@@ -215,7 +216,7 @@ class Grid:
         axes = [0, 1, 2]
         axes.remove(Grid.projections[normal_axis_label])
         n_plane = self.dimensions[axes[0]] * self.dimensions[axes[1]]
-        return np.sum(np.sum(self.grid, axis=axes[1]), axis=axes[0]) / n_plane
+        return cast(np.ndarray, np.sum(np.sum(self.grid, axis=axes[1]), axis=axes[0]) / n_plane)
 
     def by_index(self, index: list[int] | np.ndarray) -> float:
         """Return the grid value at a given index.
@@ -226,7 +227,7 @@ class Grid:
         Returns:
             The grid value at that index.
         """
-        return self.grid[index[0], index[1], index[2]]
+        return float(self.grid[index[0], index[1], index[2]])
 
     def fractional_coordinate_at_index(self, index: np.ndarray | list) -> np.ndarray:
         """Convert a grid index to fractional coordinates.
@@ -237,7 +238,7 @@ class Grid:
         Returns:
             Fractional coordinates as a numpy array.
         """
-        return np.multiply(self.spacing, index)
+        return cast(np.ndarray, np.multiply(self.spacing, index))
 
     def cartesian_coordinate_at_index(self, index: np.ndarray | list) -> np.ndarray:
         """Convert a grid index to Cartesian coordinates.
@@ -248,9 +249,9 @@ class Grid:
         Returns:
             Cartesian coordinates as a numpy array.
         """
-        return self.fractional_coordinate_at_index(index).dot(
+        return cast(np.ndarray, self.fractional_coordinate_at_index(index).dot(
             self.structure.lattice.matrix
-        )
+        ))
 
     def cube_slice(self, x0: int, y0: int, z0: int) -> np.ndarray:
         """Extract a 2x2x2 cube of grid values around a point.

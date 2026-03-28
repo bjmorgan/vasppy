@@ -31,12 +31,11 @@ potcar_sets = [
 ]
 
 
-def load_vasp_summary(filename):
-    """
-    Reads a `vasp_summary.yaml` format YAML file and returns
-    a dictionary of dictionaries. Each YAML document in the file
-    corresponds to one sub-dictionary, with the corresponding
-    top-level key given by the `title` value.
+def load_vasp_summary(filename: str) -> dict[str, dict]:
+    """Read a ``vasp_summary.yaml`` file and return a dictionary of documents.
+
+    Each YAML document in the file becomes a sub-dictionary keyed by its
+    ``title`` value.
 
     Example:
         The file::
@@ -48,18 +47,17 @@ def load_vasp_summary(filename):
             title: bar
             data: bar_data
 
-        is converted to the dictionary::
+        is converted to::
 
-            { 'foo': { 'title': 'foo', 'data': 'foo_data' },
-              'bar': { 'title': 'bar', 'data': 'bar_data' } }
+            {'foo': {'title': 'foo', 'data': 'foo_data'},
+             'bar': {'title': 'bar', 'data': 'bar_data'}}
 
     Args:
-        filename (str): File path for the `vasp_summary.yaml` file.
+        filename: File path for the ``vasp_summary.yaml`` file.
 
     Returns:
-        (dict(dict,dict,...)): A dictionary of separate YAML documents,
-            each as dictionaries.a
-
+        Dictionary mapping each document's title to its full document
+        dictionary.
     """
     with open(filename, "r") as stream:
         docs = yaml.load_all(stream, Loader=yaml.SafeLoader)
@@ -74,25 +72,23 @@ def potcar_spec(
     """Return pseudopotential names and dataset labels from a POTCAR file.
 
     Parses a POTCAR file, splitting it into individual pseudopotential
-    blocks and matching each against known md5 checksums.  Returns a
-    pair of aligned lists so that duplicate species are preserved.
+    blocks and matching each against known md5 checksums. Returns a pair
+    of aligned lists so that duplicate species are preserved.
 
     Args:
         filename: The name of the POTCAR file to process.
-        return_hashes: If ``True`` the second list contains the md5
-            hashes of the component pseudopotential strings instead of
-            dataset labels.
+        return_hashes: If True the second list contains the md5 hashes of
+            the component pseudopotential strings instead of dataset labels.
 
     Returns:
-        A ``(names, values)`` tuple of two lists.  *names* contains
-        the pseudopotential labels (e.g. ``['Fe_pv', 'O']``) and
-        *values* contains either the dataset labels
-        (e.g. ``['PBE_54', 'PBE_54']``) or, when *return_hashes* is
-        ``True``, the md5 hashes.
+        A ``(names, values)`` tuple of two lists. *names* contains the
+        pseudopotential labels (e.g. ``['Fe_pv', 'O']``) and *values*
+        contains either the dataset labels (e.g. ``['PBE_54', 'PBE_54']``)
+        or, when *return_hashes* is True, the md5 hashes.
 
     Raises:
-        ValueError: If any pseudopotential block cannot be matched to
-            a known md5 hash.
+        ValueError: If any pseudopotential block cannot be matched to a
+            known md5 hash.
     """
     with open(filename, "r") as f:
         potcars = [s for s in re.split("(End of Dataset\n)", f.read()) if s]
@@ -116,16 +112,15 @@ def potcar_spec(
     return names, values
 
 
-def find_vasp_calculations():
-    """
-    Returns a list of all subdirectories that contain either a vasprun.xml file
-    or a compressed vasprun.xml.gz file.
+def find_vasp_calculations() -> list[str]:
+    """Return a list of all subdirectories that contain a ``vasprun.xml`` file.
 
-    Args:
-        None
+    Searches recursively from the current directory for ``vasprun.xml`` and
+    ``vasprun.xml.gz`` files.
 
     Returns:
-        (List): list of all VASP calculation subdirectories.
+        List of directory paths (relative, with leading ``./``) that contain
+        VASP calculation output.
     """
     dir_list = [
         "./" + re.sub(r"vasprun\.xml", "", path)
@@ -139,8 +134,21 @@ def find_vasp_calculations():
 
 
 class Summary:
-    """
-    TODO Document Summary class
+    """Summarise a VASP calculation directory as a structured YAML document.
+
+    Reads a ``vaspmeta.yaml`` file and a ``vasprun.xml`` (or
+    ``vasprun.xml.gz``) from a given directory and exposes methods to
+    print individual fields in YAML format.  The :meth:`output` method
+    drives the overall summary output.
+
+    Attributes:
+        directory: Path to the VASP calculation directory.
+        meta: A :obj:`VASPMeta` instance parsed from ``vaspmeta.yaml``.
+        vasprun: A pymatgen :obj:`Vasprun` instance, or ``None`` if the
+            ``vasprun.xml`` could not be parsed.
+        vasprun_filename: The matched filename for the vasprun file.
+        print_methods: Mapping from flag names to bound print methods.
+        supported_flags: Mapping from flag names to human-readable labels.
     """
 
     supported_flags = {
@@ -170,7 +178,21 @@ class Summary:
         "nelect": "NELECT",
     }
 
-    def __init__(self, directory="."):
+    def __init__(self, directory: str = ".") -> None:
+        """Initialise a Summary object for a VASP calculation directory.
+
+        Args:
+            directory: Path to the directory containing ``vaspmeta.yaml``
+                and ``vasprun.xml``. Default is the current directory.
+
+        Raises:
+            FileNotFoundError: If ``vaspmeta.yaml`` is not found in
+                ``directory``.
+            FileNotFoundError: If no ``vasprun.xml`` or ``vasprun.xml.gz``
+                file is found in ``directory``.
+            ValueError: If the set of supported flags does not match the
+                set of registered print methods (internal consistency check).
+        """
         self.directory = directory
         with cd(directory):
             try:
@@ -180,7 +202,7 @@ class Summary:
                     f"vaspmeta.yaml not found in {directory}"
                 ) from exc
             self.parse_vasprun()
-        self.print_methods = {
+        self.print_methods: dict[str, object] = {
             "title": self.print_title,
             "description": self.print_description,
             "notes": self.print_notes,
@@ -212,19 +234,16 @@ class Summary:
             print(set(self.supported_flags.keys()))
             raise (ValueError)
 
-    def parse_vasprun(self):
-        """
-        Read in `vasprun.xml` as a pymatgen Vasprun object.
+    def parse_vasprun(self) -> None:
+        """Read ``vasprun.xml`` as a pymatgen Vasprun object.
 
-        Args:
-            None
+        Sets ``self.vasprun_filename`` and ``self.vasprun``. If the
+        ``vasprun.xml`` is malformed, ``self.vasprun`` is set to ``None``
+        rather than raising.
 
-        Returns:
-            None
-
-        None:
-            If the vasprun.xml is not well formed this method will catch the ParseError
-            and set self.vasprun = None.
+        Raises:
+            FileNotFoundError: If no ``vasprun.xml`` or ``vasprun.xml.gz``
+                file can be found.
         """
         self.vasprun_filename = match_filename("vasprun.xml")
         if not self.vasprun_filename:
@@ -237,24 +256,41 @@ class Summary:
             self.vasprun = None
 
     @property
-    def stoich(self):
+    def stoich(self) -> dict:
+        """Elemental stoichiometry of the final structure.
+
+        Returns:
+            Dictionary mapping element symbol strings to float amounts.
+        """
         return self.vasprun.final_structure.composition.get_el_amt_dict()
 
     @property
-    def functional(self):
-        """
-        String description of the calculation functional.
+    def functional(self) -> str:
+        """String description of the calculation functional.
 
         Returns:
-            (Str): String describing the calculation functional.
-
+            String describing the DFT functional used.
         """
         return self.vasprun.run_type
 
-    def potcars_are_pbe(self):
+    def potcars_are_pbe(self) -> bool:
+        """Check whether all POTCARs are PBE type.
+
+        Returns:
+            True if all POTCAR symbols contain ``'PBE'``, otherwise False.
+        """
         return all("PBE" in s for s in self.vasprun.potcar_symbols)
 
-    def output(self, to_print):
+    def output(self, to_print: list[str]) -> None:
+        """Write summary fields to stdout in YAML document format.
+
+        If the vasprun is unavailable (None), only ``title``, ``type``,
+        and ``status`` are printed.
+
+        Args:
+            to_print: List of flag names to print in order. Valid flag
+                names are the keys of :attr:`supported_flags`.
+        """
         if not self.vasprun:
             to_print = ["title", "type", "status"]
         print("---")
@@ -262,126 +298,149 @@ class Summary:
             self.print_methods[p]()
         print("", flush=True)
 
-    def print_type(self):
+    def print_type(self) -> None:
+        """Print the calculation type if set."""
         if self.meta.type:
-            print("type: {}".format(self.meta.type))
+            print(f"type: {self.meta.type}")
 
-    def print_title(self):
-        print("title: {}".format(self.meta.title))
+    def print_title(self) -> None:
+        """Print the calculation title."""
+        print(f"title: {self.meta.title}")
 
-    def print_description(self):
-        print("description: {}".format(self.meta.description.strip()))
+    def print_description(self) -> None:
+        """Print the calculation description."""
+        print(f"description: {self.meta.description.strip()}")
 
-    def print_notes(self):
+    def print_notes(self) -> None:
+        """Print notes, or a YAML null marker if notes are not set."""
         if self.meta.notes:
-            print("notes: {}".format(self.meta.notes.strip()))
+            print(f"notes: {self.meta.notes.strip()}")
         else:
             print("notes: ~")
 
-    def print_status(self):
-        print("status: {}".format(self.meta.status))
+    def print_status(self) -> None:
+        """Print the calculation status."""
+        print(f"status: {self.meta.status}")
 
-    def print_lreal(self):
-        print("lreal: {}".format(self.vasprun.parameters["LREAL"]))
+    def print_lreal(self) -> None:
+        """Print the LREAL INCAR parameter."""
+        print(f"lreal: {self.vasprun.parameters['LREAL']}")
 
-    def print_stoichiometry(self):
+    def print_stoichiometry(self) -> None:
+        """Print the elemental stoichiometry."""
         print("stoichiometry:")
         for element in self.stoich:
-            print("    - {}: {}".format(element, int(self.stoich[element])))
+            print(f"    - {element}: {int(self.stoich[element])}")
 
-    def print_potcar(self):
+    def print_potcar(self) -> None:
+        """Print the POTCAR species and symbols."""
         print("potcar:")
         for e, p in zip(self.stoich, self.vasprun.potcar_symbols):
-            print("    - {}: {}".format(e, p))
+            print(f"    - {e}: {p}")
 
-    def print_energy(self):
-        # if this gets more options, it might be a good idea to set the
-        # appropriate method using a dictionary?
-        # or we could subclass Summary --> NEB_Summary ?
+    def print_energy(self) -> None:
+        """Print the final energy of the calculation.
+
+        For NEB calculations, prints image energies via
+        :meth:`print_neb_energy`. For standard calculations, prints the
+        ``vasprun.final_energy`` value.
+
+        Raises:
+            ValueError: If ``meta.type`` is set to an unsupported value.
+        """
         if not self.meta.type:
-            print("energy: {}".format(self.vasprun.final_energy))
+            print(f"energy: {self.vasprun.final_energy}")
         elif self.meta.type == "neb":
             self.print_neb_energy()
         else:
-            raise ValueError("VASPMeta type not supported: {}".format(self.meta.type))
+            raise ValueError(f"VASPMeta type not supported: {self.meta.type}")
 
-    def print_neb_energy(self):
+    def print_neb_energy(self) -> None:
+        """Print the NEB image energies."""
         image_00_energy = final_energy_from_outcar("00/OUTCAR")
-        print("reference energy: {} eV".format(image_00_energy))
+        print(f"reference energy: {image_00_energy} eV")
         neb = NEBAnalysis.from_dir(".")
         print("neb image energies:")
         for i, e in enumerate(neb.energies):
-            print("    - {:02d}: {:10.6f} eV".format(i, e))
+            print(f"    - {i:02d}: {e:10.6f} eV")
 
-    def print_version(self):
+    def print_version(self) -> None:
+        """Print the VASP executable version string."""
         version_string = vasp_version_from_outcar(
-            "{}/OUTCAR".format(self.directory)
+            f"{self.directory}/OUTCAR"
         ).split()[0]
-        print("version: {}".format(version_string))
+        print(f"version: {version_string}")
 
-    def print_eatom(self):
-        # This is one way to try to uniquely identify the POTCARs used, because the
-        # potcar_symbol (e.g. `Ti_pv 07Sep2000`) is not sufficient.
+    def print_eatom(self) -> None:
+        """Print the EATOM values from the OUTCAR for each species."""
         print("eatom:")
         for e, eatom in zip(
             self.stoich,
-            potcar_eatom_list_from_outcar("{}/OUTCAR".format(self.directory))
+            potcar_eatom_list_from_outcar(f"{self.directory}/OUTCAR")
         ):
-            print("    - {}: {} eV".format(e, eatom))
+            print(f"    - {e}: {eatom} eV")
 
-    def print_kpoints(self):
+    def print_kpoints(self) -> None:
+        """Print the k-point scheme and grid."""
         print("k-points:")
-        print("    scheme: {}".format(self.vasprun.kpoints.style))
+        print(f"    scheme: {self.vasprun.kpoints.style}")
         print(
             "    grid: {}".format(
                 " ".join(str(k) for k in self.vasprun.kpoints.kpts[0])
             )
         )
 
-    def print_functional(self):
-        print("functional: {}".format(self.functional))
+    def print_functional(self) -> None:
+        """Print the DFT functional."""
+        print(f"functional: {self.functional}")
 
-    def print_ibrion(self):
-        print("ibrion: {}".format(self.vasprun.incar["IBRION"]))
+    def print_ibrion(self) -> None:
+        """Print the IBRION INCAR parameter."""
+        print(f"ibrion: {self.vasprun.incar['IBRION']}")
 
-    def print_ediffg(self):
-        print("ediffg: {}".format(self.vasprun.incar["EDIFFG"]))
+    def print_ediffg(self) -> None:
+        """Print the EDIFFG INCAR parameter."""
+        print(f"ediffg: {self.vasprun.incar['EDIFFG']}")
 
-    def print_encut(self):
+    def print_encut(self) -> None:
+        """Print the ENCUT (or ENMAX) INCAR parameter."""
         if "ENCUT" in self.vasprun.incar:
-            print("encut: {}".format(self.vasprun.incar["ENCUT"]))
+            print(f"encut: {self.vasprun.incar['ENCUT']}")
         elif "ENMAX" in self.vasprun.incar:
-            print("encut: {}".format(self.vasprun.incar["ENMAX"]))
+            print(f"encut: {self.vasprun.incar['ENMAX']}")
 
-    def print_converged(self):
-        print("converged: {}".format(self.vasprun.converged))
+    def print_converged(self) -> None:
+        """Print the convergence status."""
+        print(f"converged: {self.vasprun.converged}")
 
-    def print_vasprun_md5(self):
+    def print_vasprun_md5(self) -> None:
+        """Print the md5 checksum of the vasprun.xml file."""
         print(
-            "vasprun md5: {}".format(
-                file_md5("{}/{}".format(self.directory, self.vasprun_filename))
-            )
+            f"vasprun md5: {file_md5(f'{self.directory}/{self.vasprun_filename}')}"
         )
 
-    def print_file_tracking(self):
+    def print_file_tracking(self) -> None:
+        """Print tracking information for any files listed in the metadata."""
         if self.meta.track:
             print("file tracking:")
             for f, new_filename in self.meta.track.items():
-                print("    {}:".format(f))
+                print(f"    {f}:")
                 if not new_filename:
                     new_filename = f
-                print("        filename: {}".format(new_filename))
+                print(f"        filename: {new_filename}")
                 filename = match_filename(self.directory + f)
                 if filename:
                     md5 = file_md5(filename)
                 else:
                     md5 = "null"
-                print("        md5: {}".format(md5))
+                print(f"        md5: {md5}")
 
-    def print_directory(self):
-        print("directory: {}".format(self.directory))
+    def print_directory(self) -> None:
+        """Print the calculation directory path."""
+        print(f"directory: {self.directory}")
 
-    def print_plus_u(self):
+    def print_plus_u(self) -> None:
+        """Print Dudarev DFT+U parameters if present."""
         if "LDAUU" in self.vasprun.incar:
             lqn = {0: "s", 1: "p", 2: "d", 3: "f"}
             ldauu = self.vasprun.incar["LDAUU"]
@@ -391,13 +450,16 @@ class Summary:
                 print("ldau:")
                 for e, u, j, l in zip(self.stoich, ldauu, ldauj, ldaul):
                     if u != 0:
-                        print("    - {}: {} {} {}".format(e, lqn[l], u, j))
+                        print(f"    - {e}: {lqn[l]} {u} {j}")
 
-    def print_cbm(self):
-        print("cbm: {}".format(self.vasprun.eigenvalue_band_properties[1]))
+    def print_cbm(self) -> None:
+        """Print the conduction band minimum from the vasprun."""
+        print(f"cbm: {self.vasprun.eigenvalue_band_properties[1]}")
 
-    def print_vbm(self):
-        print("vbm: {}".format(self.vasprun.eigenvalue_band_properties[2]))
+    def print_vbm(self) -> None:
+        """Print the valence band maximum from the vasprun."""
+        print(f"vbm: {self.vasprun.eigenvalue_band_properties[2]}")
 
-    def print_nelect(self):
-        print("nelect: {}".format(self.vasprun.parameters["NELECT"]))
+    def print_nelect(self) -> None:
+        """Print the NELECT INCAR parameter."""
+        print(f"nelect: {self.vasprun.parameters['NELECT']}")

@@ -281,5 +281,193 @@ class SummaryHelperFunctionsTestCase(unittest.TestCase):
         self.assertEqual(vasp_summary, expected_dict)
 
 
+class SummaryPrintMethodsTestCase(unittest.TestCase):
+    """Tests for the remaining Summary print_* methods."""
+
+    @patch("vasppy.summary.VASPMeta")
+    @patch("vasppy.summary.Summary.parse_vasprun")
+    def setUp(self, mock_parse_vasprun, MockVASPMeta):
+        MockVASPMeta.from_file = Mock(return_value="foo")
+        self.summary = Summary()
+        self.summary.vasprun = Mock(spec=Vasprun)
+        self.summary.meta = Mock(spec=VASPMeta)
+        self.summary.meta.notes = None
+        self.summary.directory = "."
+        self.summary.vasprun_filename = "vasprun.xml"
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_status(self, mock_stdout):
+        self.summary.meta.status = "converged"
+        self.summary.print_status()
+        self.assertEqual(mock_stdout.getvalue(), "status: converged\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_lreal(self, mock_stdout):
+        self.summary.vasprun.parameters = {"LREAL": False}
+        self.summary.print_lreal()
+        self.assertEqual(mock_stdout.getvalue(), "lreal: False\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_description(self, mock_stdout):
+        self.summary.meta.description = "  a description  "
+        self.summary.print_description()
+        self.assertEqual(mock_stdout.getvalue(), "description: a description\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_stoichiometry(self, mock_stdout):
+        self.summary.vasprun.final_structure = Mock()
+        self.summary.vasprun.final_structure.composition.get_el_amt_dict.return_value = {
+            "Fe": 2.0, "O": 3.0
+        }
+        self.summary.print_stoichiometry()
+        output = mock_stdout.getvalue()
+        self.assertIn("stoichiometry:", output)
+        self.assertIn("Fe: 2", output)
+        self.assertIn("O: 3", output)
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_potcar(self, mock_stdout):
+        self.summary.vasprun.final_structure = Mock()
+        self.summary.vasprun.final_structure.composition.get_el_amt_dict.return_value = {
+            "Fe": 2.0
+        }
+        self.summary.vasprun.potcar_symbols = ["PAW_PBE Fe_pv"]
+        self.summary.print_potcar()
+        output = mock_stdout.getvalue()
+        self.assertIn("potcar:", output)
+        self.assertIn("Fe: PAW_PBE Fe_pv", output)
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_energy_no_type(self, mock_stdout):
+        self.summary.meta.type = None
+        self.summary.vasprun.final_energy = -10.5
+        self.summary.print_energy()
+        self.assertEqual(mock_stdout.getvalue(), "energy: -10.5\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_energy_unsupported_type_raises(self, mock_stdout):
+        self.summary.meta.type = "foo"
+        with self.assertRaises(ValueError):
+            self.summary.print_energy()
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_functional(self, mock_stdout):
+        self.summary.vasprun.run_type = "GGA"
+        self.summary.print_functional()
+        self.assertEqual(mock_stdout.getvalue(), "functional: GGA\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_ibrion(self, mock_stdout):
+        self.summary.vasprun.incar = {"IBRION": 2}
+        self.summary.print_ibrion()
+        self.assertEqual(mock_stdout.getvalue(), "ibrion: 2\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_ediffg(self, mock_stdout):
+        self.summary.vasprun.incar = {"EDIFFG": -0.01}
+        self.summary.print_ediffg()
+        self.assertEqual(mock_stdout.getvalue(), "ediffg: -0.01\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_encut_with_encut(self, mock_stdout):
+        self.summary.vasprun.incar = {"ENCUT": 520}
+        self.summary.print_encut()
+        self.assertEqual(mock_stdout.getvalue(), "encut: 520\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_encut_with_enmax(self, mock_stdout):
+        self.summary.vasprun.incar = {"ENMAX": 500}
+        self.summary.print_encut()
+        self.assertEqual(mock_stdout.getvalue(), "encut: 500\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_encut_no_key(self, mock_stdout):
+        self.summary.vasprun.incar = {}
+        self.summary.print_encut()
+        self.assertEqual(mock_stdout.getvalue(), "")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_directory(self, mock_stdout):
+        self.summary.directory = "/some/path"
+        self.summary.print_directory()
+        self.assertEqual(mock_stdout.getvalue(), "directory: /some/path\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_nelect(self, mock_stdout):
+        self.summary.vasprun.parameters = {"NELECT": 64.0}
+        self.summary.print_nelect()
+        self.assertEqual(mock_stdout.getvalue(), "nelect: 64.0\n")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_plus_u_no_ldauu(self, mock_stdout):
+        self.summary.vasprun.incar = {}
+        self.summary.print_plus_u()
+        self.assertEqual(mock_stdout.getvalue(), "")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_plus_u_all_zero(self, mock_stdout):
+        self.summary.vasprun.incar = {
+            "LDAUU": [0, 0],
+            "LDAUJ": [0, 0],
+            "LDAUL": [2, 2],
+        }
+        self.summary.vasprun.final_structure = Mock()
+        self.summary.vasprun.final_structure.composition.get_el_amt_dict.return_value = {
+            "Fe": 2.0, "O": 3.0
+        }
+        self.summary.print_plus_u()
+        self.assertEqual(mock_stdout.getvalue(), "")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_plus_u_with_nonzero(self, mock_stdout):
+        self.summary.vasprun.incar = {
+            "LDAUU": [4, 0],
+            "LDAUJ": [1, 0],
+            "LDAUL": [2, 1],
+        }
+        self.summary.vasprun.final_structure = Mock()
+        self.summary.vasprun.final_structure.composition.get_el_amt_dict.return_value = {
+            "Fe": 2.0, "O": 3.0
+        }
+        self.summary.print_plus_u()
+        output = mock_stdout.getvalue()
+        self.assertIn("ldau:", output)
+        self.assertIn("Fe: d 4 1", output)
+
+    @patch("sys.stdout", new_callable=StringIO)
+    @patch("vasppy.summary.file_md5", return_value="abc123")
+    def test_print_vasprun_md5(self, mock_md5, mock_stdout):
+        self.summary.print_vasprun_md5()
+        self.assertIn("abc123", mock_stdout.getvalue())
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_file_tracking_no_track(self, mock_stdout):
+        self.summary.meta.track = None
+        self.summary.print_file_tracking()
+        self.assertEqual(mock_stdout.getvalue(), "")
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_output_skips_most_when_vasprun_is_none(self, mock_stdout):
+        self.summary.vasprun = None
+        self.summary.meta.title = "test"
+        self.summary.meta.type = None
+        self.summary.meta.status = "done"
+        self.summary.output(["title", "type", "status", "energy"])
+        output = mock_stdout.getvalue()
+        self.assertIn("title: test", output)
+        self.assertNotIn("energy", output)
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_print_kpoints(self, mock_stdout):
+        from unittest.mock import MagicMock
+        self.summary.vasprun.kpoints = MagicMock()
+        self.summary.vasprun.kpoints.style = "Gamma"
+        self.summary.vasprun.kpoints.kpts = [[4, 4, 4]]
+        self.summary.print_kpoints()
+        output = mock_stdout.getvalue()
+        self.assertIn("scheme: Gamma", output)
+        self.assertIn("grid: 4 4 4", output)
+
+
 if __name__ == "__main__":
     unittest.main()

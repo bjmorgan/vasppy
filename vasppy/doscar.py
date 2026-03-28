@@ -271,8 +271,8 @@ class Doscar:
             List of atom indices.
         """
         if atoms is None:
-            return list(range(self.number_of_atoms))
-        if isinstance(atoms, int):
+            atoms = range(self.number_of_atoms)
+        elif isinstance(atoms, int):
             atoms = [atoms]
         return list(atoms)
 

@@ -38,8 +38,10 @@ class UtilsTestCase(unittest.TestCase):
                     validate_checksum(filename="foo", md5sum="abcdef")
 
     def test_validate_checksum_raises_if_file_not_found(self):
-        with self.assertRaises(FileNotFoundError):
-            validate_checksum(filename="nonexistent_file_xyz", md5sum="abc")
+        with patch("vasppy.utils.match_filename") as mock_match_filename:
+            mock_match_filename.return_value = None
+            with self.assertRaises(FileNotFoundError):
+                validate_checksum(filename="foo", md5sum="abc")
 
 
 class Test_drij(unittest.TestCase):

@@ -1,3 +1,4 @@
+from functools import cached_property
 from lxml import etree  # type: ignore
 from pymatgen.core import Structure  # type: ignore
 from typing import TypedDict, cast
@@ -108,38 +109,24 @@ class Vasprun:
         """
         doc = etree.parse(filename)
         self.doc = doc.getroot()
-        self._atom_names: list[str] | None = None
-        self._structures: list[Structure] | None = None
 
-    @property
+    @cached_property
     def structures(self) -> list[Structure]:
-        """Getter for the structures attribute.
+        """Parse and return all structures from the vasprun.xml file.
 
         Returns:
             A list of pymatgen Structure objects.
-
-        Note:
-            When first called this parses the vasprun XML data and caches the
-            result.
         """
-        if not self._structures:
-            self._structures = self.parse_structures()
-        return self._structures
+        return self.parse_structures()
 
-    @property
+    @cached_property
     def atom_names(self) -> list[str]:
-        """Getter for the atom_names attribute.
+        """Parse and return atom names from the vasprun.xml file.
 
         Returns:
             A list of atom name strings.
-
-        Note:
-            When first called this parses the vasprun XML data and caches the
-            result.
         """
-        if not self._atom_names:
-            self._atom_names = self.parse_atom_names()
-        return self._atom_names
+        return self.parse_atom_names()
 
     def parse_atom_names(self) -> list[str]:
         """Return a list of atom names for the atoms in this calculation.

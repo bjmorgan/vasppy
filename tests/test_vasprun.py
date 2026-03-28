@@ -21,8 +21,6 @@ class TestVasprun(unittest.TestCase):
         for element in vasprun.doc.iter():
             self.assertEqual(element.tag, "root")
             self.assertEqual(element.text, "data")
-        self.assertIsNone(vasprun._atom_names)
-        self.assertIsNone(vasprun._structures)
 
     def test_parse_atom_names(self):
         dummy_xml = (
@@ -92,15 +90,14 @@ class TestVasprun(unittest.TestCase):
         self.assertEqual(atom_names, example_atom_names)
         vasprun.parse_atom_names.assert_called_once()
 
-    def test_atom_names_returns_cached_value_if_atom_names_is_set(self):
+    def test_atom_names_is_only_parsed_once(self):
         dummy_xml = "<root>\n" "  <atominfo>\n" "  </atominfo>\n" "</root>"
         vasprun = vasprun_from_xml_string(dummy_xml)
         example_atom_names = ["A", "B", "C"]
-        vasprun._atom_names = example_atom_names
         vasprun.parse_atom_names = Mock(return_value=example_atom_names)
-        atom_names = vasprun.atom_names
-        self.assertEqual(atom_names, example_atom_names)
-        vasprun.parse_atom_names.assert_not_called()
+        _ = vasprun.atom_names
+        _ = vasprun.atom_names
+        vasprun.parse_atom_names.assert_called_once()
 
     def test_structures_calls_parse_structures_if_structures_is_unset(self):
         dummy_xml = "<root>\n" "  <structure>\n" "  </structure>\n" "</root>"
@@ -111,15 +108,14 @@ class TestVasprun(unittest.TestCase):
         self.assertEqual(structures, example_structures)
         vasprun.parse_structures.assert_called_once()
 
-    def test_structure_returns_cached_value_if_structures_is_set(self):
+    def test_structures_is_only_parsed_once(self):
         dummy_xml = "<root>\n" "  <structure>\n" "  </structure>\n" "</root>"
         vasprun = vasprun_from_xml_string(dummy_xml)
         example_structures = [Mock(Structure), Mock(Structure)]
         vasprun.parse_structures = Mock(return_value=example_structures)
-        vasprun._structures = example_structures
-        structures = vasprun.structures
-        self.assertEqual(structures, example_structures)
-        vasprun.parse_structures.assert_not_called()
+        _ = vasprun.structures
+        _ = vasprun.structures
+        vasprun.parse_structures.assert_called_once()
 
     def test_parse_structure(self):
         # construct a <structure> XML tree

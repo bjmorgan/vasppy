@@ -165,8 +165,12 @@ class Vasprun:
             A list of pymatgen Structure objects.
         """
         structures: list[Structure] = []
-        for child in self.doc.iterfind("calculation"):
+        for i, child in enumerate(self.doc.iterfind("calculation")):
             elem = child.find("structure")
+            if elem is None:
+                raise ValueError(
+                    f"Truncated vasprun.xml: missing <structure> in <calculation> {i}"
+                )
             structure_data = parse_structure(elem)
             structures.append(
                 structure_from_structure_data(

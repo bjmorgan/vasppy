@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vasppy"
-version = "0.7.2.0"
+version = "1.0.0"
 description = "Python utilities for working with VASP inputs and outputs"
 readme = "README.md"
 authors = [

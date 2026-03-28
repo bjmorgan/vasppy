@@ -36,7 +36,7 @@ def main():
         vgrid = vgrid.interpolate_to_orthorhombic_grid(vgrid.dimensions)
     if args.projection:
         index = grid.Grid.projections[args.projection]
-        grid_spacing = vgrid.poscar.cell_lengths()[index] / vgrid.dimensions[index]
+        grid_spacing = vgrid.structure.lattice.lengths[index] / vgrid.dimensions[index]
         [
             print(i * grid_spacing, av)
             for i, av in enumerate(vgrid.average(normal_axis_label=args.projection))

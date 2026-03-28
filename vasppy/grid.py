@@ -1,19 +1,41 @@
-import numpy as np
-import sys
+"""Module for reading and manipulating VASP volumetric data (CHGCAR/LOCPOT)."""
+
+from __future__ import annotations
+
 import math
-from vasppy import poscar, cell
+
+import numpy as np
+from pymatgen.core import Lattice, Structure
+from pymatgen.io.vasp.inputs import Poscar as PmgPoscar
 
 
-def interpolate(i, j, x):
+def interpolate(i: float, j: float, x: float) -> float:
+    """Linearly interpolate between two values.
+
+    Args:
+        i: Value at x=0.
+        j: Value at x=1.
+        x: Interpolation parameter in [0, 1].
+
+    Returns:
+        The interpolated value.
+    """
     return (i * (1.0 - x)) + (j * x)
 
 
-def trilinear_interpolation(cube, r):
+def trilinear_interpolation(cube: np.ndarray, r: np.ndarray) -> float:
+    """Trilinearly interpolate within a 2x2x2 cube of values.
+
+    Args:
+        cube: A (2, 2, 2) array of values at cube vertices.
+        r: Fractional position within the cube, shape (3,).
+
+    Returns:
+        The interpolated value.
+    """
     return interpolate(
         interpolate(
-            interpolate(
-                cube[0, 0, 0], cube[1, 0, 0], r[0]
-            ),  # trilinear interpolation => http://en.wikipedia.org/wiki/Trilinear_interpolation
+            interpolate(cube[0, 0, 0], cube[1, 0, 0], r[0]),
             interpolate(cube[0, 1, 0], cube[1, 1, 0], r[0]),
             r[1],
         ),
@@ -26,55 +48,120 @@ def trilinear_interpolation(cube, r):
     )
 
 
-class Grid:
-    projections = {"x": 0, "y": 1, "z": 2}
+def _read_poscar_header(filename: str) -> tuple[Structure, int]:
+    """Read the POSCAR header from a VASP volumetric file.
 
-    def __init__(self, dimensions=(1, 1, 1)):
-        self.filename = None
-        self.poscar = poscar.Poscar()
+    Parses the header to determine the number of header lines and
+    constructs a pymatgen Structure from the POSCAR portion.
+
+    Args:
+        filename: Path to the VASP volumetric file.
+
+    Returns:
+        A tuple of (structure, n_header_lines) where n_header_lines
+        is the line index of the grid dimensions line (i.e. the
+        POSCAR block plus the blank separator line).
+    """
+    with open(filename) as f:
+        lines = f.readlines()
+    # Line 0: title
+    # Line 1: scaling
+    # Lines 2-4: lattice vectors
+    # Line 5: species names
+    # Line 6: species counts
+    n_atoms = sum(int(x) for x in lines[6].split())
+    offset = 7
+    # Check for selective dynamics
+    if lines[offset].strip()[0] in "sS":
+        offset += 1
+    # Coordinate type line
+    offset += 1
+    # Atom coordinate lines
+    offset += n_atoms
+    poscar_str = "".join(lines[:offset])
+    pmg_poscar = PmgPoscar.from_str(poscar_str)
+    # Add 1 for the blank line between POSCAR block and grid dimensions
+    return pmg_poscar.structure, offset + 1
+
+
+class Grid:
+    """Represents volumetric data on a regular grid from VASP CHGCAR/LOCPOT files.
+
+    Attributes:
+        projections: Mapping from axis labels to indices.
+        filename: Path to the source file, or None.
+        structure: pymatgen Structure from the POSCAR header, or None.
+        dimensions: Grid dimensions [nx, ny, nz].
+        spacing: Fractional spacing along each axis.
+        grid: 3D numpy array of grid data.
+    """
+
+    projections: dict[str, int] = {"x": 0, "y": 1, "z": 2}
+
+    def __init__(self, dimensions: tuple[int, ...] = (1, 1, 1)) -> None:
+        """Initialise a Grid object.
+
+        Args:
+            dimensions: Grid dimensions as (nx, ny, nz).
+        """
+        self.filename: str | None = None
+        self.structure: Structure | None = None
         self.number_of_header_lines = 0
         self.dimensions = list(dimensions)
         self.spacing = np.array(
-            [1.0 / number_of_points for number_of_points in self.dimensions]
+            [1.0 / n for n in self.dimensions]
         )
         self.grid = np.zeros(self.dimensions)
 
-    def read_from_filename(self, filename):
+    def read_from_filename(self, filename: str) -> Grid:
+        """Read volumetric data from a VASP CHGCAR/LOCPOT file.
+
+        Args:
+            filename: Path to the file.
+
+        Returns:
+            This Grid instance (for method chaining).
+        """
         self.filename = filename
-        self.poscar = poscar.Poscar()
-        self.poscar.read_from(self.filename)
-        self.number_of_header_lines = (
-            sum(self.poscar.atom_numbers) + poscar.Poscar.lines_offset
-        )
+        self.structure, self.number_of_header_lines = _read_poscar_header(filename)
         self.read_dimensions()
         self.read_grid()
         return self
 
-    def write_to_filename(self, filename):
-        with open(filename, "w") as file_out:
-            sys.stdout = file_out
-            self.poscar.output()
-            self.write_dimensions()
-            sys.stdout.flush()
-            self.write_grid()
+    def write_to_filename(self, filename: str) -> None:
+        """Write the volumetric data to a file in VASP CHGCAR format.
 
-    def read_dimensions(self):
-        with open(self.filename, "r") as file_in:
-            for i, line in enumerate(file_in):
+        Args:
+            filename: Path to the output file.
+        """
+        with open(filename, "w") as f:
+            poscar_str = PmgPoscar(self.structure).get_str()
+            f.write(poscar_str)
+            f.write(f"\n{' '.join(str(i) for i in self.dimensions)}\n")
+            np.savetxt(
+                f,
+                np.swapaxes(self.grid, 0, 2).reshape(-1, 5),
+                fmt="%.11E",
+            )
+
+    def read_dimensions(self) -> None:
+        """Read grid dimensions from the volumetric file."""
+        with open(self.filename) as f:
+            for i, line in enumerate(f):
                 if i == self.number_of_header_lines:
-                    self.dimensions = [int(i) for i in line.split()]
+                    self.dimensions = [int(x) for x in line.split()]
+                    self.spacing = np.array(
+                        [1.0 / n for n in self.dimensions]
+                    )
                     break
 
-    def write_dimensions(self):
-        print("\n" + " ".join([str(i) for i in self.dimensions]))
-
-    def read_grid(self):
+    def read_grid(self) -> None:
+        """Read grid data values from the volumetric file."""
+        total_points = self.dimensions[0] * self.dimensions[1] * self.dimensions[2]
+        grid_data_lines = math.ceil(total_points / 5)
         grid_data = []
-        grid_data_lines = math.ceil(
-            (self.dimensions[0] * self.dimensions[1] * self.dimensions[2]) / 5
-        )
-        with open(self.filename) as file_in:
-            for i, line in enumerate(file_in):
+        with open(self.filename) as f:
+            for i, line in enumerate(f):
                 if (i > self.number_of_header_lines) and (
                     i <= self.number_of_header_lines + grid_data_lines
                 ):
@@ -82,84 +169,136 @@ class Grid:
         grid_data = np.array([float(s) for s in " ".join(grid_data).split()])
         self.grid = np.reshape(grid_data, tuple(self.dimensions), order="F")
 
-    def write_grid(self):
-        np.savetxt(
-            sys.stdout.buffer, np.swapaxes(self.grid, 0, 2).reshape(-1, 5), fmt="%.11E"
-        )
+    def average(self, normal_axis_label: str) -> np.ndarray:
+        """Calculate the planar average perpendicular to a given axis.
 
-    def average(self, normal_axis_label):
+        Args:
+            normal_axis_label: Axis label ('x', 'y', or 'z').
+
+        Returns:
+            1D array of averaged values along the specified axis.
+        """
         axes = [0, 1, 2]
         axes.remove(Grid.projections[normal_axis_label])
         return np.sum(np.sum(self.grid, axis=axes[1]), axis=axes[0]) / (
             self.dimensions[0] * self.dimensions[1]
         )
 
-    def by_index(self, index):
+    def by_index(self, index: list[int]) -> float:
+        """Return the grid value at a given index.
+
+        Args:
+            index: Three-element list [i, j, k].
+
+        Returns:
+            The grid value at that index.
+        """
         return self.grid[index[0], index[1], index[2]]
 
-    def fractional_coordinate_at_index(self, index):
+    def fractional_coordinate_at_index(self, index: np.ndarray | list) -> np.ndarray:
+        """Convert a grid index to fractional coordinates.
+
+        Args:
+            index: Three-element array or list of grid indices.
+
+        Returns:
+            Fractional coordinates as a numpy array.
+        """
         return np.multiply(self.spacing, index)
 
-    def cartesian_coordinate_at_index(self, index):
-        return self.fractional_coordinate_at_index(index).dot(self.poscar.cell.matrix)
+    def cartesian_coordinate_at_index(self, index: np.ndarray | list) -> np.ndarray:
+        """Convert a grid index to Cartesian coordinates.
 
-    def cube_slice(self, x0, y0, z0):
+        Args:
+            index: Three-element array or list of grid indices.
+
+        Returns:
+            Cartesian coordinates as a numpy array.
+        """
+        return self.fractional_coordinate_at_index(index).dot(
+            self.structure.lattice.matrix
+        )
+
+    def cube_slice(self, x0: int, y0: int, z0: int) -> np.ndarray:
+        """Extract a 2x2x2 cube of grid values around a point.
+
+        Wraps around periodic boundaries.
+
+        Args:
+            x0: x index of the lower corner.
+            y0: y index of the lower corner.
+            z0: z index of the lower corner.
+
+        Returns:
+            A (2, 2, 2) numpy array of grid values.
+        """
         x1 = (x0 + 1) % self.dimensions[0]
         y1 = (y0 + 1) % self.dimensions[1]
         z1 = (z0 + 1) % self.dimensions[2]
-        cube = np.array(
-            [
-                self.grid[x0, y0, z0],
-                self.grid[x0, y0, z1],
-                self.grid[x0, y1, z0],
-                self.grid[x0, y1, z1],
-                self.grid[x1, y0, z0],
-                self.grid[x1, y0, z1],
-                self.grid[x1, y1, z0],
-                self.grid[x1, y1, z1],
-            ]
-        ).reshape((2, 2, 2))
-        return cube
+        return np.array([
+            self.grid[x0, y0, z0], self.grid[x0, y0, z1],
+            self.grid[x0, y1, z0], self.grid[x0, y1, z1],
+            self.grid[x1, y0, z0], self.grid[x1, y0, z1],
+            self.grid[x1, y1, z0], self.grid[x1, y1, z1],
+        ]).reshape((2, 2, 2))
 
-    def interpolated_value_at_fractional_coordinate(self, coord):
-        point = np.multiply(
-            np.array(self.dimensions), coord
-        )  # point contains the (fractional) index of the coordinate coord.
-        origin = [
-            int(f) for f in point
-        ]  # origin contains the 3D index of the lowest-index point in the cube surrounding point (i,j,k)
-        delta = [
-            p - o for p, o in zip(point, origin)
-        ]  # delta contains the *fractional* offset of "point" from "origin"
-        cube = self.cube_slice(
-            *origin
-        )  # cube contains the data values at the 8 bounding grid points
+    def interpolated_value_at_fractional_coordinate(
+        self, coord: np.ndarray | list,
+    ) -> float:
+        """Interpolate the grid value at an arbitrary fractional coordinate.
+
+        Uses trilinear interpolation from the eight surrounding grid points.
+
+        Args:
+            coord: Fractional coordinates [x, y, z].
+
+        Returns:
+            The interpolated value.
+        """
+        point = np.multiply(np.array(self.dimensions), coord)
+        origin = [int(f) for f in point]
+        delta = [p - o for p, o in zip(point, origin)]
+        cube = self.cube_slice(*origin)
         return trilinear_interpolation(cube, delta)
 
     def interpolate_to_orthorhombic_grid(
-        self, dimensions
-    ):  # warning. This may need a more robust minimim image function in Cell.py for highly non-orthorhombic cells
-        old_grid = self
-        old_cell = old_grid.poscar.cell
+        self, dimensions: tuple[int, ...] | list[int],
+    ) -> Grid:
+        """Interpolate grid data onto an orthorhombic grid.
+
+        Creates a new Grid with a diagonal lattice matrix (using only the
+        diagonal elements of the current lattice) and interpolates all
+        values from the original grid.
+
+        Args:
+            dimensions: Dimensions for the new orthorhombic grid.
+
+        Returns:
+            A new Grid with the interpolated data.
+
+        Note:
+            This may need a more robust minimum image function for highly
+            non-orthorhombic cells.
+        """
+        old_lattice = self.structure.lattice
+        new_matrix = np.diag(np.diag(old_lattice.matrix))
         new_grid = Grid(dimensions=dimensions)
-        new_grid.poscar.cell = cell.Cell(np.diag(np.diag(self.poscar.cell.matrix)))
+        new_lattice = Lattice(new_matrix)
+        # Create a dummy structure for the new grid
+        new_grid.structure = Structure(
+            new_lattice, ["X"], [[0, 0, 0]],
+        )
         index_grid = np.array(
-            [[i, j, k] for (i, j, k), value in np.ndenumerate(new_grid.grid)]
+            [[i, j, k] for (i, j, k), _ in np.ndenumerate(new_grid.grid)]
         )
         cart_coord_grid = np.array(
-            [new_grid.cartesian_coordinate_at_index(index) for index in index_grid]
+            [new_grid.cartesian_coordinate_at_index(idx) for idx in index_grid]
         )
-        init_frac_coord_grid = np.array(
-            [old_cell.cartesian_to_fractional_coordinates(r) for r in cart_coord_grid]
-        )
-        frac_coord_grid = np.array(
-            [old_cell.inside_cell(r) for r in init_frac_coord_grid]
-        )
-        new_grid_data = np.array(
-            [
-                old_grid.interpolated_value_at_fractional_coordinate(r)
-                for r in frac_coord_grid
-            ]
-        )
+        init_frac_coord_grid = old_lattice.get_fractional_coords(cart_coord_grid)
+        frac_coord_grid = init_frac_coord_grid % 1.0
+        new_grid_data = np.array([
+            self.interpolated_value_at_fractional_coordinate(r)
+            for r in frac_coord_grid
+        ])
         new_grid.grid = new_grid_data.reshape(new_grid.dimensions)
         return new_grid

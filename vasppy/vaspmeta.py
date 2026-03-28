@@ -72,6 +72,10 @@ class VASPMeta:
             notes = data.get("notes")
             v_type = data.get("type")
             track = data.get("track")
+            if track is not None and not isinstance(track, dict):
+                raise ValueError(
+                    f"'track' in {filename} must be a mapping, got {type(track).__name__}"
+                )
             vaspmeta = VASPMeta(
                 data["title"],
                 data["description"],

@@ -409,7 +409,7 @@ class Doscar:
         if xrange:
             e_range = (self.energy >= xrange[0]) & (self.energy <= xrange[1])
         else:
-            e_range = np.ma.make_mask(self.energy)
+            e_range = np.ones(self.energy.shape, dtype=bool)
 
         auto_ymax = 0.0
 

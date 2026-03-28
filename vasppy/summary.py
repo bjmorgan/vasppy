@@ -279,9 +279,7 @@ class Summary:
         Raises:
             RuntimeError: If ``vasprun.xml`` could not be parsed.
         """
-        if self.vasprun is None:
-            raise RuntimeError("vasprun.xml could not be parsed")
-        return self.vasprun.final_structure.composition.get_el_amt_dict()
+        return self._vasprun.final_structure.composition.get_el_amt_dict()
 
     @property
     def functional(self) -> str:
@@ -293,9 +291,7 @@ class Summary:
         Raises:
             RuntimeError: If ``vasprun.xml`` could not be parsed.
         """
-        if self.vasprun is None:
-            raise RuntimeError("vasprun.xml could not be parsed")
-        return self.vasprun.run_type
+        return self._vasprun.run_type
 
     def potcars_are_pbe(self) -> bool:
         """Check whether all POTCARs are PBE type.
@@ -306,9 +302,7 @@ class Summary:
         Raises:
             RuntimeError: If ``vasprun.xml`` could not be parsed.
         """
-        if self.vasprun is None:
-            raise RuntimeError("vasprun.xml could not be parsed")
-        return all("PBE" in s for s in self.vasprun.potcar_symbols)
+        return all("PBE" in s for s in self._vasprun.potcar_symbols)
 
     def output(self, to_print: list[str]) -> None:
         """Write summary fields to stdout in YAML document format.

@@ -1,3 +1,10 @@
+"""Neighbour-list utilities following the scheme in Rabani et al.
+
+Reference:
+    Rabani et al. J. Chem. Phys. 1997
+    doi: https://doi.org/10.1063/1.474927
+"""
+
 from __future__ import annotations
 
 from pymatgen.core import Structure
@@ -6,28 +13,21 @@ from typing import Any, Type, cast
 import numpy as np
 from numpy.typing import NDArray
 
-"""
-This module provides a NeighbourList class following the scheme in
-Rabani et al. J. Chem. Phys. 1997
-doi: https://doi.org/10.1063/1.474927
-"""
 
-
-class NeighbourList(object):
-    """
-    Class for computing a set of neighbour lists.
+class NeighbourList:
+    """A set of neighbour lists for a collection of central atoms.
 
     Attributes:
-        vectors (np.ndarray): An array of M neighbour lists, with each list a 1D
-            vector over N potential neighbours, stored as a M x N numpy array.
-            Each neighbour list is constructed following the scheme in
-            Rabani et al. J. Chem. Phys. 1997
+        vectors: An M x N boolean-integer array of neighbour lists. Each row
+            corresponds to one central atom (from ``indices_i``) and each
+            column to one potential neighbour (from ``indices_j``). An entry
+            of 1 indicates a neighbour within the cutoff radius. Constructed
+            following Rabani et al. J. Chem. Phys. 1997
             doi: https://doi.org/10.1063/1.474927
-
     """
 
     vectors: NDArray[np.integer[Any]]
-    
+
     def __init__(
         self,
         structure: Structure,
@@ -35,15 +35,13 @@ class NeighbourList(object):
         indices_j: list[int],
         r_cut: float,
     ) -> None:
-        """
-        Initialise a NeighbourList instance.
+        """Initialise a NeighbourList instance.
 
         Args:
-            structure (pymatgen.Structure): Pymatgen Structure object to parse.
-            indices_i (list(int)): List of indices of central atoms.
-            indices_j (list(int)): List of indices of potential neighbour atoms.
-            r_cut (float): Neighbour cutoff distance.
-
+            structure: Pymatgen Structure object to parse.
+            indices_i: List of indices of central atoms.
+            indices_j: List of indices of potential neighbour atoms.
+            r_cut: Neighbour cutoff distance.
         """
         all_dr_ij = dr_ij(
             structure=structure,
@@ -55,20 +53,22 @@ class NeighbourList(object):
 
     @property
     def coordination_numbers(self) -> NDArray[np.integer[Any]]:
-        """
-        Return the coordination number of each site i.
-
-        Args:
-            None
+        """Return the coordination number of each central atom.
 
         Returns:
-            None
-
+            A 1D array of coordination numbers, one per site in ``indices_i``.
         """
-        return  cast(NDArray[np.integer[Any]], np.sum(self.vectors, axis=1))
+        return cast(NDArray[np.integer[Any]], np.sum(self.vectors, axis=1))
 
     def __eq__(self, other: object) -> bool:
-        """Test whether two NeighbourList objects have equal vectors."""
+        """Test whether two NeighbourList objects have equal vectors.
+
+        Args:
+            other: Object to compare against.
+
+        Returns:
+            ``True`` if the neighbour-list vectors are element-wise equal.
+        """
         if not isinstance(other, NeighbourList):
             return NotImplemented
         return bool((self.vectors == other.vectors).all())
@@ -81,18 +81,16 @@ class NeighbourList(object):
         species_j: str,
         r_cut: float,
     ) -> NeighbourList:
-        """
-        Initialise a NeighbourList instance by specifying species strings.
+        """Initialise a NeighbourList by specifying species strings.
 
         Args:
-            structure (pymatgen.Structure): A pymatgen Structure.
-            species_i (str): String for species i, e.g., ``"Na"``.
-            species_j (str): String for species j, e.g., ``"Cl"``.
-            r_cut (float): Neighbour cutoff radius.
+            structure: A pymatgen Structure.
+            species_i: String for species i, e.g. ``"Na"``.
+            species_j: String for species j, e.g. ``"Cl"``.
+            r_cut: Neighbour cutoff radius.
 
         Returns:
-            (NeighbourList)
-
+            A NeighbourList instance.
         """
         indices_i = [
             i for i, site in enumerate(structure) if site.species_string == species_i
@@ -108,99 +106,94 @@ class NeighbourList(object):
 def neighbour_list_correlation(
     nlist_i: NeighbourList, nlist_j: NeighbourList
 ) -> NDArray[np.floating[Any]]:
-    """
-    Compute the normalised correlation between two NeighbourList object.
+    """Compute the normalised correlation between two NeighbourList objects.
+
+    For each neighbour-list vector, computes (l_i · l_j) / (l_i · l_i).
+    See Rabani et al. J. Chem. Phys. 1997 doi:https://doi.org/10.1063/1.474927
+    Eqn. 7 for details.
 
     Args:
-        nlist_i (NeighbourList): A NeighbourList object.
-        nlist_j (NeighbourList): A NeighbourList object.
+        nlist_i: A NeighbourList object.
+        nlist_j: A NeighbourList object.
 
     Returns:
-        (np.ndarray(float)): A 1D array of normalised correlation terms.
+        A 1D array of normalised correlation terms.
 
     Raises:
-        ValueError: If the two NeighbourList objects have different numbers
-            of lengths of neighbour list vectors.
-
-    Note:
-        For each neighbour list vector, computes (l_i.l_j)/(l_i.l_i).
-        See Rabani et al. J. Chem. Phys. 1997 doi:https://doi.org/10.1063/1.474927
-        Eqn. 7 for details.
-
+        ValueError: If the two NeighbourList objects have different vector
+            shapes.
     """
     if nlist_i.vectors.shape != nlist_j.vectors.shape:
         raise ValueError(
-            f"NeighbourList vector shapes are not equal: {nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
+            f"NeighbourList vector shapes are not equal: "
+            f"{nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
         )
     return cast(
         NDArray[np.floating[Any]],
-        np.einsum("ij,ij->i", nlist_i.vectors, nlist_j.vectors) / np.einsum(
-            "ij,ij->i", nlist_i.vectors, nlist_i.vectors
-        )
+        np.einsum("ij,ij->i", nlist_i.vectors, nlist_j.vectors)
+        / np.einsum("ij,ij->i", nlist_i.vectors, nlist_i.vectors),
     )
 
 
-def neighbour_list_n_out(nlist_i: NeighbourList, nlist_j: NeighbourList) -> NDArray[np.floating[Any]]:
-    """
-    Compute n^out between two NeighbourList object.
+def neighbour_list_n_out(
+    nlist_i: NeighbourList, nlist_j: NeighbourList
+) -> NDArray[np.floating[Any]]:
+    """Compute n :sup:`out` between two NeighbourList objects.
+
+    For each neighbour-list vector, computes (l_i · l_i) - (l_i · l_j).
+    See Rabani et al. J. Chem. Phys. 1997 doi:https://doi.org/10.1063/1.474927
+    Eqn. 8 for details.
 
     Args:
-        nlist_i (NeighbourList): A NeighbourList object for neighbour lists at time 0.
-        nlist_j (NeighbourList): A NeighbourList object for neighbour lists at time t.
+        nlist_i: A NeighbourList object for neighbour lists at time 0.
+        nlist_j: A NeighbourList object for neighbour lists at time t.
 
     Returns:
-        (np.ndarray(float)): A 1D array of normalised correlation terms.
+        A 1D array of n :sup:`out` values.
 
     Raises:
-        ValueError: If the two NeighbourList objects have different numbers
-            of lengths of neighbour list vectors.
-
-    Note:
-        For each neighbour list vector, computes (l_i.l_i) - (l_i.l_j).
-        See Rabani et al. J. Chem. Phys. 1997 doi:https://doi.org/10.1063/1.474927
-        Eqn. 8 for details.
-
+        ValueError: If the two NeighbourList objects have different vector
+            shapes.
     """
     if nlist_i.vectors.shape != nlist_j.vectors.shape:
         raise ValueError(
-            f"NeighbourList vector shapes are not equal: {nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
+            f"NeighbourList vector shapes are not equal: "
+            f"{nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
         )
     return cast(
         NDArray[np.floating[Any]],
-        np.einsum("ij,ij->i", nlist_i.vectors, nlist_i.vectors) - np.einsum(
-            "ij,ij->i", nlist_i.vectors, nlist_j.vectors
-        )
+        np.einsum("ij,ij->i", nlist_i.vectors, nlist_i.vectors)
+        - np.einsum("ij,ij->i", nlist_i.vectors, nlist_j.vectors),
     )
 
 
-def neighbour_list_n_in(nlist_i: NeighbourList, nlist_j: NeighbourList) -> NDArray[np.floating[Any]]:
-    """
-    Compute n^in between two NeighbourList object.
+def neighbour_list_n_in(
+    nlist_i: NeighbourList, nlist_j: NeighbourList
+) -> NDArray[np.floating[Any]]:
+    """Compute n :sup:`in` between two NeighbourList objects.
+
+    For each neighbour-list vector, computes (l_j · l_j) - (l_i · l_j).
+    See Rabani et al. J. Chem. Phys. 1997 doi:https://doi.org/10.1063/1.474927
+    Eqn. 9 for details.
 
     Args:
-        nlist_i (NeighbourList): A NeighbourList object for neighbour lists at time 0.
-        nlist_j (NeighbourList): A NeighbourList object for neighbour lists at time t.
+        nlist_i: A NeighbourList object for neighbour lists at time 0.
+        nlist_j: A NeighbourList object for neighbour lists at time t.
 
     Returns:
-        (np.ndarray(float)): A 1D array of normalised correlation terms.
+        A 1D array of n :sup:`in` values.
 
     Raises:
-        ValueError: If the two NeighbourList objects have different numbers
-            of lengths of neighbour list vectors.
-
-    Note:
-        For each neighbour list vector, computes (l_j.l_j) - (l_i.l_j).
-        See Rabani et al. J. Chem. Phys. 1997 doi:https://doi.org/10.1063/1.474927
-        Eqn. 9 for details.
-
+        ValueError: If the two NeighbourList objects have different vector
+            shapes.
     """
     if nlist_i.vectors.shape != nlist_j.vectors.shape:
         raise ValueError(
-            f"NeighbourList vector shapes are not equal: {nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
+            f"NeighbourList vector shapes are not equal: "
+            f"{nlist_i.vectors.shape} != {nlist_j.vectors.shape}"
         )
     return cast(
         NDArray[np.floating[Any]],
-        np.einsum("ij,ij->i", nlist_j.vectors, nlist_j.vectors) - np.einsum(
-            "ij,ij->i", nlist_i.vectors, nlist_j.vectors
-        )
+        np.einsum("ij,ij->i", nlist_j.vectors, nlist_j.vectors)
+        - np.einsum("ij,ij->i", nlist_i.vectors, nlist_j.vectors),
     )

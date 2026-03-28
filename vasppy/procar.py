@@ -357,7 +357,6 @@ class Procar:
         new_procar._number_of_k_points = (
             self.number_of_k_points + other.number_of_k_points
         )
-        new_procar._bands = []
         new_procar._bands = np.ravel(np.concatenate([self.bands, other.bands], axis=1))
         new_procar._k_points = self._k_points + other._k_points
         for i, kp in enumerate(new_procar._k_points, 1):

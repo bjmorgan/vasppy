@@ -119,15 +119,15 @@ def _read_grid(
     """
     total_points = dimensions[0] * dimensions[1] * dimensions[2]
     grid_data_lines = math.ceil(total_points / 5)
-    grid_data = []
+    lines: list[str] = []
     with open(filename) as f:
         for i, line in enumerate(f):
             if (i > n_header_lines) and (
                 i <= n_header_lines + grid_data_lines
             ):
-                grid_data.append(line.strip())
-    grid_data = np.array(" ".join(grid_data).split(), dtype=float)
-    return grid_data.reshape(dimensions, order="F")
+                lines.append(line.strip())
+    values = np.array(" ".join(lines).split(), dtype=float)
+    return values.reshape(dimensions, order="F")
 
 
 class Grid:
@@ -288,9 +288,9 @@ class Grid:
         Returns:
             The interpolated value.
         """
-        point = np.multiply(np.array(self.dimensions), coord)
-        origin = [int(f) for f in point]
-        delta = [p - o for p, o in zip(point, origin)]
+        point = np.array(self.dimensions, dtype=float) * np.asarray(coord)
+        origin = point.astype(int)
+        delta = point - origin
         cube = self.cube_slice(*origin)
         return trilinear_interpolation(cube, delta)
 

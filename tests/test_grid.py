@@ -32,12 +32,12 @@ class TestTrilinearInterpolation:
 class TestGridInit:
     def test_default_dimensions(self):
         g = Grid()
-        assert g.dimensions == [1, 1, 1]
+        assert g.dimensions == (1, 1, 1)
         assert g.grid.shape == (1, 1, 1)
 
     def test_custom_dimensions(self):
         g = Grid(dimensions=(3, 4, 5))
-        assert g.dimensions == [3, 4, 5]
+        assert g.dimensions == (3, 4, 5)
         assert g.grid.shape == (3, 4, 5)
         np.testing.assert_array_equal(g.grid, np.zeros((3, 4, 5)))
 
@@ -57,7 +57,7 @@ class TestGridInit:
 class TestGridReadFromFilename:
     def test_reads_dimensions(self):
         g = Grid().read_from_filename(CHGCAR_MINIMAL)
-        assert g.dimensions == [2, 5, 2]
+        assert g.dimensions == (2, 5, 2)
 
     def test_reads_grid_data(self):
         g = Grid().read_from_filename(CHGCAR_MINIMAL)

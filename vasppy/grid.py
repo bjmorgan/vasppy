@@ -91,14 +91,14 @@ class Grid:
         projections: Mapping from axis labels to indices.
         filename: Path to the source file, or None.
         structure: pymatgen Structure from the POSCAR header, or None.
-        dimensions: Grid dimensions [nx, ny, nz].
+        dimensions: Grid dimensions (nx, ny, nz).
         spacing: Fractional spacing along each axis.
         grid: 3D numpy array of grid data.
     """
 
     projections: dict[str, int] = {"x": 0, "y": 1, "z": 2}
 
-    def __init__(self, dimensions: tuple[int, ...] = (1, 1, 1)) -> None:
+    def __init__(self, dimensions: tuple[int, int, int] = (1, 1, 1)) -> None:
         """Initialise a Grid object.
 
         Args:
@@ -107,11 +107,9 @@ class Grid:
         self.filename: str | None = None
         self.structure: Structure | None = None
         self.number_of_header_lines = 0
-        self.dimensions = list(dimensions)
-        self.spacing = np.array(
-            [1.0 / n for n in self.dimensions]
-        )
-        self.grid = np.zeros(self.dimensions)
+        self.dimensions = dimensions
+        self.spacing = np.array([1.0 / n for n in self.dimensions])
+        self.grid = np.zeros(self.dimensions, dtype=float)
 
     def read_from_filename(self, filename: str) -> Grid:
         """Read volumetric data from a VASP CHGCAR/LOCPOT file.
@@ -133,7 +131,12 @@ class Grid:
 
         Args:
             filename: Path to the output file.
+
+        Raises:
+            ValueError: If no structure has been loaded.
         """
+        if self.structure is None:
+            raise ValueError("Cannot write: no structure loaded. Call read_from_filename() first.")
         with open(filename, "w") as f:
             poscar_str = PmgPoscar(self.structure).get_str()
             f.write(poscar_str)
@@ -149,7 +152,7 @@ class Grid:
         with open(self.filename) as f:
             for i, line in enumerate(f):
                 if i == self.number_of_header_lines:
-                    self.dimensions = [int(x) for x in line.split()]
+                    self.dimensions = tuple(int(x) for x in line.split())
                     self.spacing = np.array(
                         [1.0 / n for n in self.dimensions]
                     )
@@ -166,8 +169,8 @@ class Grid:
                     i <= self.number_of_header_lines + grid_data_lines
                 ):
                     grid_data.append(line.strip())
-        grid_data = np.array([float(s) for s in " ".join(grid_data).split()])
-        self.grid = np.reshape(grid_data, tuple(self.dimensions), order="F")
+        grid_data = np.array(" ".join(grid_data).split(), dtype=float)
+        self.grid = grid_data.reshape(self.dimensions, order="F")
 
     def average(self, normal_axis_label: str) -> np.ndarray:
         """Calculate the planar average perpendicular to a given axis.
@@ -262,7 +265,7 @@ class Grid:
         return trilinear_interpolation(cube, delta)
 
     def interpolate_to_orthorhombic_grid(
-        self, dimensions: tuple[int, ...] | list[int],
+        self, dimensions: tuple[int, int, int],
     ) -> Grid:
         """Interpolate grid data onto an orthorhombic grid.
 

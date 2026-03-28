@@ -67,6 +67,8 @@ class VASPMeta:
         """
         with open(filename, "r") as stream:
             data = yaml.load(stream, Loader=yaml.SafeLoader)
+            if not isinstance(data, dict):
+                raise ValueError(f"{filename} does not contain a valid YAML mapping")
             notes = data.get("notes")
             v_type = data.get("type")
             track = data.get("track")

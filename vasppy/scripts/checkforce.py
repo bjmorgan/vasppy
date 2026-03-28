@@ -107,7 +107,7 @@ def get_forces_data(
         ForcesData object with forces and summary statistics.
 
     """
-    if not convergence:
+    if convergence is None:
         convergence = read_ediffg_from_outcar(outcar_filename)
     forces = forces_from_outcar(outcar_filename, last_one_only=True)
     forces_data = ForcesData(forces=forces, convergence=convergence)
@@ -128,7 +128,7 @@ def get_all_forces_data(
         ForcesData object for each ionic step.
 
     """
-    if not convergence:
+    if convergence is None:
         convergence = read_ediffg_from_outcar(outcar_filename)
     all_forces = forces_from_outcar(outcar_filename, last_one_only=False)
     for step_forces in all_forces:

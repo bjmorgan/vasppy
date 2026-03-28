@@ -52,7 +52,10 @@ def parse_structure(structure: etree.Element) -> StructureData:
     crystal = structure.find("crystal")
     if crystal is None:
         raise ValueError("Truncated vasprun.xml: missing <crystal> element in <structure>")
-    latt = parse_varray(crystal.find("varray"))
+    crystal_varray = crystal.find("varray")
+    if crystal_varray is None:
+        raise ValueError("Truncated vasprun.xml: missing <varray> in <crystal>")
+    latt = parse_varray(crystal_varray)
     pos_element = structure.find("varray")
     if pos_element is None:
         raise ValueError("Truncated vasprun.xml: missing <varray> element in <structure>")

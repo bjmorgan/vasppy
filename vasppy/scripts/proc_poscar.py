@@ -210,7 +210,7 @@ def main() -> None:
         if args.group:
             for i in args.supercell:
                 if i % 2 == 1 and i > 1:
-                    raise Exception(
+                    raise ValueError(
                         "odd supercell expansions != 1 are incompatible with automatic grouping"
                     )
         structure.make_supercell(args.supercell)

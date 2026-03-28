@@ -7,8 +7,6 @@ such as supercell generation, Bohr conversion, and coordinate
 type selection.
 """
 
-from __future__ import annotations
-
 import sys
 if sys.platform != "win32":
     from signal import signal, SIGPIPE, SIG_DFL

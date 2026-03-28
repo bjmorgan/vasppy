@@ -77,8 +77,11 @@ def read_data(verbose: bool = True) -> pd.DataFrame:
     for d in dir_list:
         converged = True
         try:
+            filename = match_filename(d + "vasprun.xml")
+            if filename is None:
+                continue
             with warnings.catch_warnings(record=True) as w:
-                vasprun = read_vasprun(match_filename(d + "vasprun.xml"))
+                vasprun = read_vasprun(filename)
                 for warning in w:
                     if isinstance(warning.message, UnconvergedVASPWarning):
                         converged = False
@@ -172,7 +175,7 @@ def lstsq_fit(
     e_min = energies.min()
     v_min = volumes[np.argwhere(energies == e_min)[0][0]]
     x0 = [e_min, 2.0, 10.0, v_min]  # initial guess of parameters
-    plsq = leastsq(objective, x0, args=(volumes, energies))
+    plsq = leastsq(objective, x0, args=(volumes, energies))  # type: ignore[arg-type]
     return plsq
 
 
@@ -213,9 +216,9 @@ def fit(verbose: bool = False, plot: bool = False) -> None:
     e0, b0, bp, v0 = lstsq_fit(np.array(df.volume), np.array(df.energy))[0]
     if plot:
         make_plot(df, (e0, b0, bp, v0))
-    print("E0: {:.4f}".format(e0))
-    print("V0: {:.4f}".format(v0))
-    print("opt. POSCAR volume: {:.4f}".format(v0 / df.volume_ratio.mean()))
+    print(f"E0: {e0:.4f}")
+    print(f"V0: {v0:.4f}")
+    print(f"opt. POSCAR volume: {v0 / df.volume_ratio.mean():.4f}")
 
 
 def main() -> None:

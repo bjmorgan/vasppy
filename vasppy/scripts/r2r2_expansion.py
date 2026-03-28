@@ -52,10 +52,10 @@ def sqrt2_by_sqrt2_expansion(
     Returns:
         A new Structure with the expanded orthorhombic cell.
     """
-    axis_vectors: dict[str, list[int]] = {
-        "x": [1, 0, 0],
-        "y": [0, 1, 0],
-        "z": [0, 0, 1],
+    axis_vectors: dict[str, np.ndarray] = {
+        "x": np.array([1, 0, 0]),
+        "y": np.array([0, 1, 0]),
+        "z": np.array([0, 0, 1]),
     }
     # Rotate the cell by 45 degrees about the chosen axis.
     cell = Cell(structure.lattice.matrix.copy())

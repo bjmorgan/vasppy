@@ -25,27 +25,13 @@ def poscar_to_xtl_output(filename: str) -> str:
     lines = []
     lines.append(structure.formula)
     lines.append("CELL")
-    lines.append(
-        "".join(
-            [
-                "   {: .8f}".format(v)
-                for v in (
-                    lattice.a,
-                    lattice.b,
-                    lattice.c,
-                    lattice.alpha,
-                    lattice.beta,
-                    lattice.gamma,
-                )
-            ]
-        )
-    )
+    params = [lattice.a, lattice.b, lattice.c, lattice.alpha, lattice.beta, lattice.gamma]
+    lines.append("".join(f"   {v: .8f}" for v in params))
     lines.append(" Symmetry label P1\n\nATOMS\nNAME      X       Y     Z")
 
     for site in structure:
-        label = site.species_string
         x, y, z = site.frac_coords
-        lines.append("{:<6}  {: .10f}  {: .10f}  {: .10f}".format(label, x, y, z))
+        lines.append(f"{site.species_string:<6}  {x: .10f}  {y: .10f}  {z: .10f}")
 
     return "\n".join(lines) + "\n"
 

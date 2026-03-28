@@ -11,30 +11,23 @@ specific pseudopotential set.
 """
 
 import argparse
-from typing import List
 
 from pymatgen.core import Structure
 
 from vasppy.summary import potcar_spec, potcar_sets
 
 
-def unique_species_from_structure(filename: str) -> List[str]:
+def unique_species_from_structure(filename: str) -> list[str]:
     """Return unique species labels from a POSCAR file, in order of appearance.
 
     Args:
         filename: Path to the VASP POSCAR file.
 
     Returns:
-        A list of element symbol strings, in the order they first appear in
-        the structure, with duplicates removed.
+        A list of element symbol strings, in the order they first appear.
     """
     structure = Structure.from_file(filename)
-    seen: List[str] = []
-    for site in structure:
-        label = site.species_string
-        if label not in seen:
-            seen.append(label)
-    return seen
+    return list(dict.fromkeys(site.species_string for site in structure))
 
 
 def parse_command_line_arguments() -> argparse.Namespace:
@@ -83,14 +76,10 @@ def main() -> None:
     ):
         if not name.startswith(sp):
             raise AttributeError(
-                "Species {} mismatch:\nPOSCAR contains {}\nPOTCAR contains {}".format(
-                    i, sp, name
-                )
+                f"Species {i} mismatch:\nPOSCAR contains {sp}\nPOTCAR contains {name}"
             )
         if args.ppset and args.ppset != dataset:
-            raise AttributeError(
-                "Pseudopotential set mismatch: {}".format(potcar_datasets)
-            )
+            raise AttributeError(f"Pseudopotential set mismatch: {potcar_datasets}")
 
 
 if __name__ == "__main__":

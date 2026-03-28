@@ -87,18 +87,6 @@ def parse_command_line_arguments() -> argparse.Namespace:
     return args
 
 
-def _species_labels(structure: Structure) -> list[str]:
-    """Return per-site species labels for a structure.
-
-    Args:
-        structure: A pymatgen Structure.
-
-    Returns:
-        List of species symbol strings, one per site.
-    """
-    return [str(site.specie) for site in structure]
-
-
 def _species_groups(structure: Structure) -> tuple[list[str], list[int]]:
     """Return species names and counts grouped by contiguous runs.
 
@@ -108,31 +96,19 @@ def _species_groups(structure: Structure) -> tuple[list[str], list[int]]:
     Returns:
         Tuple of (species names, atom counts) matching POSCAR format.
     """
-    labels = _species_labels(structure)
-    if not labels:
-        return [], []
-    species: list[str] = []
-    counts: list[int] = []
-    current = labels[0]
-    count = 1
-    for label in labels[1:]:
-        if label == current:
-            count += 1
-        else:
-            species.append(current)
-            counts.append(count)
-            current = label
-            count = 1
-    species.append(current)
-    counts.append(count)
+    from itertools import groupby
+
+    labels = [site.species_string for site in structure]
+    species = []
+    counts = []
+    for key, group in groupby(labels):
+        species.append(key)
+        counts.append(len(list(group)))
     return species, counts
 
 
-def _get_coordinates(
-    structure: Structure,
-    coordinate_type: str,
-) -> np.ndarray:
-    """Return coordinates as a numpy array for the given coordinate type.
+def _get_coordinates(structure: Structure, coordinate_type: str) -> np.ndarray:
+    """Return coordinates for the given coordinate type.
 
     Args:
         structure: A pymatgen Structure.
@@ -141,9 +117,7 @@ def _get_coordinates(
     Returns:
         Array of coordinates with shape (n_sites, 3).
     """
-    if coordinate_type == "Direct":
-        return np.array([site.frac_coords for site in structure])
-    return np.array([site.coords for site in structure])
+    return structure.frac_coords if coordinate_type == "Direct" else structure.cart_coords
 
 
 def _output_header(
@@ -168,7 +142,7 @@ def _output_header(
     if opts.get("orthorhombic"):
         matrix = matrix * np.eye(3)
     for row in matrix:
-        print("".join(["   {: .10f}".format(element) for element in row]))
+        print("".join(f"   {v: .10f}" for v in row))
     species, counts = _species_groups(structure)
     print(" ".join(species))
     print(" ".join(str(n) for n in counts))
@@ -190,39 +164,22 @@ def _output_coordinates(
         opts: Output options dictionary.
     """
     coords = _get_coordinates(structure, coordinate_type)
-    labels = _species_labels(structure)
+    labels = [site.species_string for site in structure]
     for i, (coord, label) in enumerate(zip(coords, labels)):
-        prefix_string = ""
-        suffix_string = ""
+        prefix = label.ljust(6) if opts.get("label") == 1 else ""
+        coord_str = "".join(f"  {v: .10f}" for v in coord)
+        suffix_parts: list[str] = []
         if opts.get("selective"):
-            if opts["selective"] == "T":
-                suffix_string += " T T T"
-            elif opts["selective"] == "F":
-                suffix_string += " F F F"
-            else:
-                raise ValueError
+            suffix_parts.append(f" {opts['selective']} {opts['selective']} {opts['selective']}")
         if opts.get("numbered"):
-            suffix_string += " {}".format(i + 1)
-        if opts.get("label"):
-            if opts["label"] == 1:
-                prefix_string += label.ljust(6)
-            elif opts["label"] == 4:
-                suffix_string += " {}".format(label)
-            else:
-                raise ValueError(opts["label"])
-        print(
-            prefix_string
-            + "".join(["  {: .10f}".format(element) for element in coord])
-            + suffix_string
-        )
+            suffix_parts.append(f" {i + 1}")
+        if opts.get("label") == 4:
+            suffix_parts.append(f" {label}")
+        print(f"{prefix}{coord_str}{''.join(suffix_parts)}")
 
 
 def _convert_to_bohr(structure: Structure) -> tuple[Structure, float]:
     """Convert a structure from Angstrom to Bohr units.
-
-    Returns a new structure whose lattice matrix is in Bohr, and a
-    scaling factor (the Bohr-to-Angstrom ratio) that reproduces the
-    original POSCAR ``in_bohr()`` output convention.
 
     Args:
         structure: A pymatgen Structure in Angstrom.
@@ -230,23 +187,14 @@ def _convert_to_bohr(structure: Structure) -> tuple[Structure, float]:
     Returns:
         Tuple of (new Structure with lattice in Bohr, scaling factor).
     """
-    new_matrix = np.array(structure.lattice.matrix) / angstrom_to_bohr
-    new_lattice = Lattice(new_matrix)
-    frac_coords = np.array([site.frac_coords for site in structure])
-    species = [site.specie for site in structure]
-    return Structure(new_lattice, species, frac_coords), angstrom_to_bohr
+    new_lattice = Lattice(structure.lattice.matrix / angstrom_to_bohr)
+    return Structure(new_lattice, structure.species, structure.frac_coords), angstrom_to_bohr
 
 
 def main() -> None:
     """Main entry point for the proc_poscar script."""
     args = parse_command_line_arguments()
-    coordinate_types = {
-        "d": "Direct",
-        "direct": "Direct",
-        "c": "Cartesian",
-        "cartesian": "Cartesian",
-    }
-    coordinate_type = coordinate_types[args.coordinate_type]
+    coordinate_type = "Cartesian" if args.coordinate_type[0].lower() == "c" else "Direct"
 
     poscar_data = PmgPoscar.from_file(args.poscar)
     structure = poscar_data.structure

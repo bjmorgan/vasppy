@@ -121,7 +121,6 @@ def _get_coordinates(structure: Structure, coordinate_type: str) -> np.ndarray:
 def _output_header(
     structure: Structure,
     title: str,
-    scaling: float,
     coordinate_type: str,
     opts: dict[str, object],
 ) -> None:
@@ -130,12 +129,11 @@ def _output_header(
     Args:
         structure: A pymatgen Structure.
         title: Title line for the POSCAR.
-        scaling: Scaling factor for the lattice.
         coordinate_type: Either 'Direct' or 'Cartesian'.
         opts: Output options dictionary.
     """
     print(title)
-    print(scaling)
+    print(1.0)
     matrix = np.array(structure.lattice.matrix)
     if opts.get("orthorhombic"):
         matrix = matrix * np.eye(3)
@@ -176,17 +174,17 @@ def _output_coordinates(
         print(f"{prefix}{coord_str}{''.join(suffix_parts)}")
 
 
-def _convert_to_bohr(structure: Structure) -> tuple[Structure, float]:
+def _convert_to_bohr(structure: Structure) -> Structure:
     """Convert a structure from Angstrom to Bohr units.
 
     Args:
         structure: A pymatgen Structure in Angstrom.
 
     Returns:
-        Tuple of (new Structure with lattice in Bohr, scaling factor).
+        A new Structure with the lattice in Bohr.
     """
     new_lattice = Lattice(structure.lattice.matrix / angstrom_to_bohr)
-    return Structure(new_lattice, structure.species, structure.frac_coords), angstrom_to_bohr
+    return Structure(new_lattice, structure.species, structure.frac_coords)
 
 
 def main() -> None:
@@ -197,10 +195,6 @@ def main() -> None:
     poscar_data = PmgPoscar.from_file(args.poscar)
     structure = poscar_data.structure
     title = poscar_data.comment
-    # pymatgen folds the POSCAR scaling factor into the lattice on
-    # read, so the output always uses scaling = 1.0.
-    scaling = 1.0
-
     if args.supercell:
         if args.group:
             for i in args.supercell:
@@ -211,7 +205,7 @@ def main() -> None:
         structure.make_supercell(args.supercell)
 
     if args.bohr:
-        structure, scaling = _convert_to_bohr(structure)
+        structure = _convert_to_bohr(structure)
 
     output_opts: dict[str, object] = {
         "label": args.label,
@@ -224,7 +218,6 @@ def main() -> None:
         _output_header(
             structure,
             title=title,
-            scaling=scaling,
             coordinate_type=coordinate_type,
             opts=output_opts,
         )

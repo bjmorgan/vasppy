@@ -267,6 +267,11 @@ class TestPdosSelect(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.doscar.pdos_select(spin="invalid")
 
+    def test_select_spin_raises_for_non_spin_polarised(self):
+        doscar = _create_doscar(n_atoms=2, n_points=3, ispin=1)
+        with self.assertRaises(ValueError):
+            doscar.pdos_select(spin="up")
+
     def test_select_s_orbital(self):
         result = self.doscar.pdos_select(l="s")
         self.assertEqual(result.shape[2], 1)

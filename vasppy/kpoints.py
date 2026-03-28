@@ -1,4 +1,7 @@
+"""Classes and functions for VASP KPOINTS generation and convergence testing."""
+
 import numpy as np
+
 
 class AutoKPoints:
     """Class for automatic k-point generation data in KPOINTS."""
@@ -31,7 +34,10 @@ class AutoKPoints:
         """
         accepted_grid_centerings = ["G", "MP"]
         if grid_centering not in accepted_grid_centerings:
-            raise ValueError
+            raise ValueError(
+                f"Unrecognised grid-centering option: '{grid_centering}'. "
+                f"Expected one of {accepted_grid_centerings}."
+            )
         self.title = title
         self.grid_centering = grid_centering
         self.subdivisions = subdivisions

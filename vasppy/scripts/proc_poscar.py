@@ -48,9 +48,6 @@ def parse_command_line_arguments() -> argparse.Namespace:
         help="specify coordinate type for output {(c)artesian|(d)irect} [default = (d)irect]",
     )
     parser.add_argument(
-        "-g", "--group", help="group atoms within supercell", action="store_true"
-    )
-    parser.add_argument(
         "-s",
         "--supercell",
         type=int,
@@ -196,12 +193,6 @@ def main() -> None:
     structure = poscar_data.structure
     title = poscar_data.comment
     if args.supercell:
-        if args.group:
-            for i in args.supercell:
-                if i % 2 == 1 and i > 1:
-                    raise ValueError(
-                        "odd supercell expansions != 1 are incompatible with automatic grouping"
-                    )
         structure.make_supercell(args.supercell)
 
     if args.bohr:

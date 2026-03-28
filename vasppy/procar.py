@@ -440,17 +440,15 @@ class Procar:
             r"band\s*(\d+)\s*#\s*energy\s*([-.\d]+)\s?\s*#\s*occ.\s*([-.\d]+)",
             read_in,
         )
-        bands = np.array(
-            [
-                Band(
-                    float(i),
-                    float(e),
-                    float(o),
-                    negative_occupancies=negative_occupancies,
-                )
-                for i, e, o in band_data
-            ]
-        )
+        bands = np.array([
+            Band(
+                index=int(index),
+                energy=float(energy),
+                occupancy=float(occupancy),
+                negative_occupancies=negative_occupancies,
+            )
+            for index, energy, occupancy in band_data
+        ])
 
         # Parse projections and determine calculation type
         projection_data = projections_parser(read_in)

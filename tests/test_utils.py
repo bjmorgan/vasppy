@@ -37,6 +37,10 @@ class UtilsTestCase(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     validate_checksum(filename="foo", md5sum="abcdef")
 
+    def test_validate_checksum_raises_if_file_not_found(self):
+        with self.assertRaises(FileNotFoundError):
+            validate_checksum(filename="nonexistent_file_xyz", md5sum="abc")
+
 
 class Test_drij(unittest.TestCase):
     def test_dr_ij_default(self):

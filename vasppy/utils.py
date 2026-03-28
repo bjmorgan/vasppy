@@ -95,9 +95,12 @@ def validate_checksum(filename: str, md5sum: str) -> None:
         md5sum: The expected hex checksum.
 
     Raises:
+        FileNotFoundError: If the file is not found.
         ValueError: If the calculated and expected checksums do not match.
     """
     actual_filename = match_filename(filename)
+    if actual_filename is None:
+        raise FileNotFoundError(f"File not found: {filename}")
     md5_hash = file_md5(filename=actual_filename)
     if md5_hash != md5sum:
         raise ValueError(f"md5 checksums are inconsistent: {actual_filename}")

@@ -24,7 +24,10 @@ def reciprocal_lattice_from_outcar(
     with open(filename) as f:
         outcar = f.read()
     # just keeping the last component
-    rec_lat = _RECIP_LAT_RE.findall(outcar)[-1]
+    matches = _RECIP_LAT_RE.findall(outcar)
+    if not matches:
+        raise ValueError(f"Reciprocal lattice vectors not found in {filename}")
+    rec_lat = matches[-1]
     rec_lat = rec_lat.split()
     rec_lat = np.array(rec_lat, dtype=float)
     # up to now we have both direct and reciprocal lattices (3+3=6 columns)
@@ -46,7 +49,10 @@ def final_energy_from_outcar(filename: str = "OUTCAR") -> float:
     """
     with open(filename) as f:
         outcar = f.read()
-    energy = float(_ENERGY_RE.findall(outcar)[-1])
+    matches = _ENERGY_RE.findall(outcar)
+    if not matches:
+        raise ValueError(f"Energy not found in {filename}")
+    energy = float(matches[-1])
     return energy
 
 

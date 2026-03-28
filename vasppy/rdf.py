@@ -52,7 +52,7 @@ class RadialDistributionFunction:
             indices_i = indices_i.tolist()
         if indices_j is not None and isinstance(indices_j, np.ndarray):
             indices_j = indices_j.tolist()
-        if weights:
+        if weights is not None:
             if len(weights) != len(structures):
                 raise ValueError(
                     "List of structure weights needs to be the same length"
@@ -60,9 +60,9 @@ class RadialDistributionFunction:
                 )
         else:
             weights = [1.0] * len(structures)
-        if not indices_j:
+        self.self_reference = indices_j is None
+        if indices_j is None:
             indices_j = indices_i
-        self.self_reference = (indices_j == indices_i)
         self.indices_i = indices_i
         self.indices_j = indices_j
         self.nbins = nbins
@@ -146,7 +146,7 @@ class RadialDistributionFunction:
 
         if not indices_i:
             raise ValueError("Species i not found.")
-        if not indices_j:
+        if indices_j is not None and not indices_j:
             raise ValueError("Species j not found.")
 
         return cls(

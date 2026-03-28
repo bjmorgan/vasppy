@@ -231,11 +231,11 @@ class Summary:
             "track": self.print_file_tracking,
             "nelect": self.print_nelect,
         }
-        if not set(self.print_methods.keys()) == set(self.supported_flags):
-            print(set(self.print_methods.keys()))
-            print("--------------")
-            print(set(self.supported_flags.keys()))
-            raise (ValueError)
+        if set(self.print_methods.keys()) != set(self.supported_flags):
+            raise ValueError(
+                f"print_methods keys do not match supported_flags: "
+                f"{set(self.print_methods.keys()) ^ set(self.supported_flags.keys())}"
+            )
 
     def parse_vasprun(self) -> None:
         """Read ``vasprun.xml`` as a pymatgen Vasprun object.

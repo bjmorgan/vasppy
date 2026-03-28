@@ -403,12 +403,11 @@ class TestPdosSelectNoPdos(unittest.TestCase):
 
 
 class TestPdosSelectAtomsList(unittest.TestCase):
-    """Test that non-list atoms argument raises TypeError."""
 
-    def test_atom_as_int_raises_typeerror(self):
+    def test_atom_as_int_selects_single_atom(self):
         doscar = _create_doscar(n_atoms=2)
-        with self.assertRaises(TypeError):
-            doscar.pdos_select(atoms=1)
+        result = doscar.pdos_select(atoms=1)
+        self.assertEqual(result.shape[0], 1)
 
 
 class TestPdosSelectFOrbitals(unittest.TestCase):

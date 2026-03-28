@@ -5,7 +5,7 @@ from matplotlib.axes import Axes  # type: ignore
 from matplotlib.figure import Figure  # type: ignore
 import matplotlib._color_data as mcd  # type: ignore
 from typing import ClassVar, Literal
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 
 TABLEAU_GREY: str = "#bab0ac"
@@ -217,7 +217,7 @@ class Doscar:
 
     def pdos_select(
         self,
-        atoms: list[int] | None = None,
+        atoms: int | Sequence[int] | None = None,
         spin: str | None = None,
         l: str | None = None,
         m: list[str] | None = None,
@@ -260,14 +260,36 @@ class Doscar:
         channel_idx = self._resolve_channel_idx(l, m)
         return self.pdos[atom_idx, :, :, :][:, :, channel_idx, :][:, :, :, spin_idx]
 
-    def _resolve_atom_idx(self, atoms: list[int] | None) -> list[int]:
+    def _resolve_atom_idx(self, atoms: int | Sequence[int] | None) -> list[int]:
+        """Resolve the atoms argument to a list of atom indices.
+
+        Args:
+            atoms: A single atom index, a sequence of indices, or None to
+                select all atoms.
+
+        Returns:
+            List of atom indices.
+        """
         if atoms is None:
             return list(range(self.number_of_atoms))
-        if not isinstance(atoms, list):
-            raise TypeError("atoms must be a list of integers")
-        return atoms
+        if isinstance(atoms, int):
+            return [atoms]
+        return list(atoms)
 
     def _resolve_spin_idx(self, spin: str | None) -> list[int]:
+        """Resolve the spin argument to a list of spin channel indices.
+
+        Args:
+            spin: One of ``'up'``, ``'down'``, ``'both'``, or None to select
+                all available spin channels.
+
+        Returns:
+            List of spin channel indices.
+
+        Raises:
+            ValueError: If ``spin`` is specified for a non-spin-polarised calculation.
+            ValueError: If ``spin`` is not a recognised value.
+        """
         if spin is None:
             return list(range(self.ispin))
         if self.ispin == 1:
@@ -277,6 +299,20 @@ class Doscar:
         return self._spin_map[spin]
 
     def _resolve_channel_idx(self, l: str | None, m: list[str] | None) -> list[int]:
+        """Resolve the l and m arguments to a list of channel indices.
+
+        Args:
+            l: Angular momentum label (``'s'``, ``'p'``, ``'d'``, ``'f'``),
+                or None to select all channels.
+            m: List of m-value strings to sub-select within ``l``. Ignored
+                for ``l='s'``. Pass None to select all projections for ``l``.
+
+        Returns:
+            List of channel indices.
+
+        Raises:
+            ValueError: If ``l`` is not a recognised angular momentum label.
+        """
         if l is None:
             return list(range(self.number_of_channels))
         if l not in self._l_offsets:
@@ -288,7 +324,7 @@ class Doscar:
 
     def pdos_sum(
         self,
-        atoms: list[int] | None = None,
+        atoms: int | Sequence[int] | None = None,
         spin: str | None = None,
         l: str | None = None,
         m: list[str] | None = None,

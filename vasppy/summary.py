@@ -14,9 +14,11 @@ from vasppy.outcar import (
 from vasppy.data.potcar_data import potcar_md5sum_data
 from vasppy.utils import file_md5, md5sum, match_filename, cd
 from xml.etree import ElementTree as ET
-import yaml # type: ignore
 import glob
 import re
+import warnings
+
+import yaml # type: ignore
 
 potcar_sets = [
     "PBE",
@@ -256,6 +258,10 @@ class Summary:
                 self.vasprun_filename, parse_potcar_file=False, parse_dos=False
             )
         except ET.ParseError:
+            warnings.warn(
+                f"Could not parse {self.vasprun_filename} in {self.directory}; "
+                "summary output will be incomplete"
+            )
             self.vasprun = None
 
     @property

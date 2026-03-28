@@ -4,6 +4,7 @@
 
 import argparse
 import warnings
+import xml.etree.ElementTree as ET
 
 import matplotlib  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
@@ -18,7 +19,6 @@ from scipy.optimize import leastsq
 from vasppy.summary import find_vasp_calculations
 from vasppy.utils import match_filename
 
-warnings.filterwarnings("ignore", category=UserWarning, module="pymatgen")
 matplotlib.use("agg")
 
 
@@ -87,7 +87,8 @@ def read_data(verbose: bool = True) -> pd.DataFrame:
                         converged = False
                     else:
                         print(warning.message)
-        except Exception:
+        except (ET.ParseError, FileNotFoundError) as e:
+            warnings.warn(f"Skipping {d}: {e}")
             continue
         poscar_structure = Structure.from_file(d + "POSCAR")
         data.append(

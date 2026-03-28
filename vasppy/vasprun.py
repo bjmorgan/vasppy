@@ -26,7 +26,7 @@ def parse_varray(
     """
     m: list[list[int]] | list[list[float]] | list[list[bool]]
     varray_type = varray.get("type", None)
-    v_list = [v.text.split() for v in varray.findall("v")]
+    v_list = [v.text.split() for v in varray.findall("v") if v.text is not None]
     if varray_type == "int":
         m = [[int(number) for number in v] for v in v_list]
     elif varray_type == "logical":
@@ -49,8 +49,14 @@ def parse_structure(structure: etree.Element) -> StructureData:
         - ``frac_coords``: atom fractional coordinates (list[list[float]]).
         - ``selective_dynamics``: selective dynamics (list[list[bool]] or None).
     """
-    latt = parse_varray(structure.find("crystal").find("varray"))
-    pos = parse_varray(structure.find("varray"))
+    crystal = structure.find("crystal")
+    if crystal is None:
+        raise ValueError("Truncated vasprun.xml: missing <crystal> element in <structure>")
+    latt = parse_varray(crystal.find("varray"))
+    pos_element = structure.find("varray")
+    if pos_element is None:
+        raise ValueError("Truncated vasprun.xml: missing <varray> element in <structure>")
+    pos = parse_varray(pos_element)
     sdyn = structure.find("varray/[@name='selective']")
     if sdyn is not None:
         sdyn = parse_varray(sdyn)

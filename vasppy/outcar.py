@@ -80,10 +80,15 @@ def potcar_eatom_list_from_outcar(filename: str = "OUTCAR") -> list[float]:
 
     Returns:
         A list of EATOM values, in the order they appear in the OUTCAR.
+
+    Raises:
+        ValueError: If no EATOM values are found in the file.
     """
     with open(filename) as f:
         outcar = f.read()
     eatom = [float(e) for e in _EATOM_RE.findall(outcar)]
+    if not eatom:
+        raise ValueError(f"No EATOM values found in {filename}")
     return eatom
 
 

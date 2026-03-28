@@ -258,18 +258,15 @@ class Doscar:
                 raise TypeError("atoms must be a list of integers")
             atom_idx = atoms
         to_return = self.pdos[atom_idx, :, :, :]
-        if spin is not None and self.ispin == 1:
-            raise ValueError("spin selection is not available for non-spin-polarised calculations")
         _spin_map: dict[str, list[int]] = {"up": [0], "down": [1], "both": [0, 1]}
-        _default_spin_idx: dict[int, list[int]] = {1: [0], 2: [0, 1]}
         if spin is None:
-            spin_idx = _default_spin_idx[self.ispin]
-        elif spin in _spin_map:
-            spin_idx = _spin_map[spin]
+            spin_idx = list(range(self.ispin))
         else:
-            raise ValueError(
-                "valid spin values are 'up', 'down', and 'both'. The default is 'both'"
-            )
+            if self.ispin == 1:
+                raise ValueError("spin selection is not available for non-spin-polarised calculations")
+            if spin not in _spin_map:
+                raise ValueError(f"'{spin}' is not a valid spin value; use 'up', 'down', or 'both'")
+            spin_idx = _spin_map[spin]
         to_return = to_return[:, :, :, spin_idx]
         _l_offsets: dict[str, int] = {"s": 0, "p": 1, "d": 4, "f": 9}
         _l_widths: dict[str, int] = {"s": 1, "p": 3, "d": 5, "f": 7}

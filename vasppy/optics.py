@@ -1,6 +1,8 @@
 """Functions for working with optical properties from vasprun.xml."""
 
 from math import pi
+from typing import cast
+
 import numpy as np
 from scipy.constants import physical_constants, speed_of_light  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
@@ -77,8 +79,8 @@ def plot_dielectric_functions(
         dielectric[0], np.mean(real_dielectric, axis=1), "-", zorder=2
     )  # better to pass in v.dielectric
     ax.plot(dielectric[0], np.mean(imag_dielectric, axis=1), "-", zorder=2)
-    ax.set_xlim([0, 8])
-    ax.set_ylim([0, 5])
+    ax.set_xlim((0, 8))
+    ax.set_ylim((0, 5))
     return fig
 
 
@@ -128,11 +130,12 @@ def absorption_coefficient(dielectric: list) -> np.ndarray:
     imag_dielectric = parse_dielectric_data(dielectric[2])
     epsilon_1 = np.mean(real_dielectric, axis=1)
     epsilon_2 = np.mean(imag_dielectric, axis=1)
-    return (
+    return cast(
+        np.ndarray,
         2.0
         * np.sqrt(2.0)
         * pi
         * eV_to_recip_cm
         * energies_in_eV
-        * np.sqrt(-epsilon_1 + np.sqrt(epsilon_1**2 + epsilon_2**2))
+        * np.sqrt(-epsilon_1 + np.sqrt(epsilon_1**2 + epsilon_2**2)),
     )

@@ -70,15 +70,12 @@ class VASPMeta:
             notes = data.get("notes")
             v_type = data.get("type")
             track = data.get("track")
-            xargs: dict = {}
-            if track:
-                xargs["track"] = track
             vaspmeta = VASPMeta(
                 data["title"],
                 data["description"],
                 data["status"],
                 notes=notes,
                 type=v_type,
-                **xargs,
+                track=track,
             )
         return vaspmeta

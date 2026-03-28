@@ -82,7 +82,7 @@ status: finished\
             with patch("builtins.open", mock_open(read_data=example_file), create=True):
                 vaspmeta = VASPMeta.from_file(example_file)
         mock_VASPMeta.assert_called_with(
-            "title", "description", "finished", notes="notes", type=None
+            "title", "description", "finished", notes="notes", type=None, track=None
         )
         self.assertEqual(vaspmeta, mock_VASPMeta.return_value)
 
@@ -97,7 +97,7 @@ status: finished\
             with patch("builtins.open", mock_open(read_data=example_file), create=True):
                 vaspmeta = VASPMeta.from_file(example_file)
         mock_VASPMeta.assert_called_with(
-            "title", "description", "finished", notes=None, type=None
+            "title", "description", "finished", notes=None, type=None, track=None
         )
         self.assertEqual(vaspmeta, mock_VASPMeta.return_value)
 
@@ -112,7 +112,7 @@ type: single-point\
             with patch("builtins.open", mock_open(read_data=example_file), create=True):
                 vaspmeta = VASPMeta.from_file(example_file)
         mock_VASPMeta.assert_called_with(
-            "title", "description", "finished", notes=None, type="single-point"
+            "title", "description", "finished", notes=None, type="single-point", track=None
         )
         self.assertEqual(vaspmeta, mock_VASPMeta.return_value)
 

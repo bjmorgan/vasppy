@@ -81,7 +81,7 @@ def delta_E(
     """
     if check_balance:
         imbalance = delta_stoichiometry(reactants, products)
-        if imbalance != {}:
+        if imbalance:
             raise ValueError(
                 f"reaction is not balanced: {imbalance}"
             )

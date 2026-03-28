@@ -2,6 +2,11 @@ import numpy as np
 import re
 from pymatgen.io.vasp.outputs import Outcar
 
+_RECIP_LAT_RE = re.compile(r"reciprocal\s*lattice\s*vectors\s*([-.\s\d]*)")
+_ENERGY_RE = re.compile(r"energy\(sigma->0\) =\s+([-\d\.]+)")
+_EATOM_RE = re.compile(r"energy of atom\s+\d+\s+EATOM=\s*([-\d\.]+)")
+_FERMI_RE = re.compile(r"E-fermi\s*:\s*([-.\d]*)")
+
 
 def reciprocal_lattice_from_outcar(
     filename: str,
@@ -19,7 +24,7 @@ def reciprocal_lattice_from_outcar(
     with open(filename) as f:
         outcar = f.read()
     # just keeping the last component
-    rec_lat = re.findall(r"reciprocal\s*lattice\s*vectors\s*([-.\s\d]*)", outcar)[-1]
+    rec_lat = _RECIP_LAT_RE.findall(outcar)[-1]
     rec_lat = rec_lat.split()
     rec_lat = np.array(rec_lat, dtype=float)
     # up to now we have both direct and reciprocal lattices (3+3=6 columns)
@@ -41,8 +46,7 @@ def final_energy_from_outcar(filename: str = "OUTCAR") -> float:
     """
     with open(filename) as f:
         outcar = f.read()
-    energy_re = re.compile(r"energy\(sigma->0\) =\s+([-\d\.]+)")
-    energy = float(energy_re.findall(outcar)[-1])
+    energy = float(_ENERGY_RE.findall(outcar)[-1])
     return energy
 
 
@@ -73,8 +77,7 @@ def potcar_eatom_list_from_outcar(filename: str = "OUTCAR") -> list[float]:
     """
     with open(filename) as f:
         outcar = f.read()
-    eatom_re = re.compile(r"energy of atom\s+\d+\s+EATOM=\s*([-\d\.]+)")
-    eatom = [float(e) for e in eatom_re.findall(outcar)]
+    eatom = [float(e) for e in _EATOM_RE.findall(outcar)]
     return eatom
 
 
@@ -90,7 +93,7 @@ def fermi_energy_from_outcar(filename: str = "OUTCAR") -> float:
     with open(filename) as f:
         outcar = f.read()
     # returns a match object
-    fermi_energy_match = re.search(r"E-fermi\s*:\s*([-.\d]*)", outcar)
+    fermi_energy_match = _FERMI_RE.search(outcar)
     if fermi_energy_match is None:
         raise ValueError("Fermi energy not found in OUTCAR file.")
     # take the first group — group(0) contains the entire match

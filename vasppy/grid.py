@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import cast
+from typing import ClassVar, cast
 
 import numpy as np
 from pymatgen.core import Lattice, Structure
@@ -145,7 +145,7 @@ class Grid:
         grid: 3D numpy array of grid data.
     """
 
-    projections: dict[str, int] = {"x": 0, "y": 1, "z": 2}
+    projections: ClassVar[dict[str, int]] = {"x": 0, "y": 1, "z": 2}
 
     def __init__(
         self,

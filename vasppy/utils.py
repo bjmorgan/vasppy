@@ -137,11 +137,7 @@ def dr_ij(
     # If indices_i and indices_j share common elements and self_reference is False,
     # mask out the i==j dr=0 terms.
     if (np.intersect1d(indices_i, indices_j).size > 0) and not self_reference:
-        mask = np.ones_like(dr_ij_array, dtype=bool)
-        for i_loc, i in enumerate(indices_i):
-            for j_loc, j in enumerate(indices_j):
-                if i == j:
-                    mask[i_loc, j_loc] = 0
+        mask = np.array(indices_i)[:, None] != np.array(indices_j)[None, :]
         to_return = dr_ij_array[mask].reshape(len(indices_i), -1)
     else:
         to_return = dr_ij_array

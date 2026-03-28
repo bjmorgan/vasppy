@@ -147,7 +147,7 @@ class Cell:
         Returns:
             List of cell angles [alpha, beta, gamma].
         """
-        (a, b, c) = [row for row in self.matrix]
+        a, b, c = self.matrix
         return [angle(b, c), angle(a, c), angle(a, b)]
 
     def cartesian_to_fractional_coordinates(self, coordinates: np.ndarray) -> np.ndarray:

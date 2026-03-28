@@ -58,14 +58,10 @@ def get_subdivisions_from_kspacing(kspacing: float,
     Returns:
         tuple[int, ...]: The subdivisions along each reciprocal lattice vector.
     """
-    subdivisions = []
-    for row in reciprocal_lattice_vectors:
-        magnitude = np.linalg.norm(row)
-        subdivision = np.max([1, np.ceil((magnitude * 2 * np.pi) / kspacing)])
-
-        subdivisions.append(int(subdivision))
-
-    return tuple(subdivisions)
+    return tuple(
+        int(np.max([1, np.ceil(np.linalg.norm(row) * 2 * np.pi / kspacing)]))
+        for row in reciprocal_lattice_vectors
+    )
 
 def get_convergence_testing_kspacing(reciprocal_lattice_vectors: np.ndarray,
                                      kspacing_range: tuple[float, float]=(0.1, 0.8),

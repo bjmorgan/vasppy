@@ -258,14 +258,11 @@ class Doscar:
                 raise TypeError("atoms must be a list of integers")
             atom_idx = atoms
         to_return = self.pdos[atom_idx, :, :, :]
+        _spin_map: dict[str, list[int]] = {"up": [0], "down": [1], "both": [0, 1]}
         if not spin:
             spin_idx = list(range(self.ispin))
-        elif spin == "up":
-            spin_idx = [0]
-        elif spin == "down":
-            spin_idx = [1]
-        elif spin == "both":
-            spin_idx = [0, 1]
+        elif spin in _spin_map:
+            spin_idx = _spin_map[spin]
         else:
             raise ValueError(
                 "valid spin values are 'up', 'down', and 'both'. The default is 'both'"

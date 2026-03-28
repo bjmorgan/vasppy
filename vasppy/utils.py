@@ -134,9 +134,9 @@ def dr_ij(
     i_frac_coords = structure.frac_coords[indices_i]
     j_frac_coords = structure.frac_coords[indices_j]
     dr_ij_array = lattice.get_all_distances(i_frac_coords, j_frac_coords)
-    # If indices_i and indices_j share common elements and self_reference is False,
-    # mask out the i==j dr=0 terms.
-    if (np.intersect1d(indices_i, indices_j).size > 0) and not self_reference:
+    # When computing self-referencing distances (indices_i == indices_j),
+    # mask out the i==j dr=0 diagonal terms.
+    if list(indices_i) == list(indices_j) and not self_reference:
         mask = np.array(indices_i)[:, None] != np.array(indices_j)[None, :]
         to_return = dr_ij_array[mask].reshape(len(indices_i), -1)
     else:

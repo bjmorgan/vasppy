@@ -77,11 +77,6 @@ def parse_command_line_arguments() -> argparse.Namespace:
         help="force orthorhombic cell matrix (set off-diagonal elements to zero)",
     )
     parser.add_argument(
-        "--scale",
-        action="store_true",
-        help="scale the lattice parameters by the scaling factor",
-    )
-    parser.add_argument(
         "--selective",
         choices=["T", "F"],
         help="generate Selective Dynamics POSCAR with all values set to T / F",
@@ -202,8 +197,8 @@ def main() -> None:
     poscar_data = PmgPoscar.from_file(args.poscar)
     structure = poscar_data.structure
     title = poscar_data.comment
-    # pymatgen already applies the scaling factor when reading,
-    # so we track it separately for output formatting.
+    # pymatgen folds the POSCAR scaling factor into the lattice on
+    # read, so the output always uses scaling = 1.0.
     scaling = 1.0
 
     if args.supercell:

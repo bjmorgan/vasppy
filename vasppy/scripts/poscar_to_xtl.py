@@ -1,6 +1,11 @@
 #! /usr/bin/env python3
 """Convert a VASP POSCAR file to the XTL file format."""
 
+import sys
+if sys.platform != "win32":
+    from signal import signal, SIGPIPE, SIG_DFL
+    signal(SIGPIPE, SIG_DFL)
+
 import argparse
 
 from pymatgen.core import Structure

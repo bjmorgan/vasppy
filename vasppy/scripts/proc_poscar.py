@@ -9,6 +9,11 @@ type selection.
 
 from __future__ import annotations
 
+import sys
+if sys.platform != "win32":
+    from signal import signal, SIGPIPE, SIG_DFL
+    signal(SIGPIPE, SIG_DFL)
+
 import argparse
 
 import numpy as np

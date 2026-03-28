@@ -10,6 +10,11 @@ The ``-p`` flag additionally checks that all pseudopotentials belong to a
 specific pseudopotential set.
 """
 
+import sys
+if sys.platform != "win32":
+    from signal import signal, SIGPIPE, SIG_DFL
+    signal(SIGPIPE, SIG_DFL)
+
 import argparse
 
 from pymatgen.core import Structure

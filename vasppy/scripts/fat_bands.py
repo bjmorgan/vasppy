@@ -1,5 +1,10 @@
 #! /usr/bin/env python3
 
+import sys
+if sys.platform != "win32":
+    from signal import signal, SIGPIPE, SIG_DFL
+    signal(SIGPIPE, SIG_DFL)
+
 from vasppy import procar
 from vasppy.outcar import reciprocal_lattice_from_outcar
 import argparse

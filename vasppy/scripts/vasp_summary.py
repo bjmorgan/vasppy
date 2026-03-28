@@ -1,6 +1,9 @@
 #! /usr/bin/env python3
 
 import sys
+if sys.platform != "win32":
+    from signal import signal, SIGPIPE, SIG_DFL
+    signal(SIGPIPE, SIG_DFL)
 from pathlib import Path
 import yaml # type: ignore
 import tqdm  # type: ignore

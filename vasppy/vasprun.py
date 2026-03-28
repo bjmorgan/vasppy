@@ -1,22 +1,20 @@
 from lxml import etree  # type: ignore
-from typing import List, Union, Optional, Any, Dict
-from pymatgen.core import Structure # type: ignore
+from pymatgen.core import Structure  # type: ignore
 import numpy as np
 
 
 def parse_varray(
     varray: etree.Element,
-) -> Union[List[List[float]], List[List[int]], List[List[bool]]]:
-    """Parse <varray> data.
+) -> list[list[float]] | list[list[int]] | list[list[bool]]:
+    """Parse ``<varray>`` data.
 
     Args:
-        varray (etree.Element): xml <varray> element.
+        varray: xml ``<varray>`` element.
 
     Returns:
-        (list(list): A nested list of either float, int, or bool.
-
+        A nested list of either float, int, or bool.
     """
-    m: Union[List[List[int]], List[List[float]], List[List[bool]]]
+    m: list[list[int]] | list[list[float]] | list[list[bool]]
     varray_type = varray.get("type", None)
     v_list = [v.text.split() for v in varray.findall("v")]
     if varray_type == "int":
@@ -28,41 +26,46 @@ def parse_varray(
     return m
 
 
-def parse_structure(structure: etree.Element) -> Dict[str, Any]:
-    """Parse <structure> data..
+def parse_structure(structure: etree.Element) -> dict[str, object]:
+    """Parse ``<structure>`` data.
 
     Args:
-        structure (etree.Element): xml <structure> element.
+        structure: xml ``<structure>`` element.
 
     Returns:
-        (dict): Dictionary of structure data:
-            `lattice`: cell matrix (list(list(float))..
-            `frac_coords`: atom fractional coordinates (list(list(float)).
-            `selective_dynamics`: selective dynamics (list(bool)|None).
+        Dictionary of structure data with the following keys:
 
+        - ``lattice``: cell matrix (list[list[float]]).
+        - ``frac_coords``: atom fractional coordinates (list[list[float]]).
+        - ``selective_dynamics``: selective dynamics (list[bool] or None).
     """
     latt = parse_varray(structure.find("crystal").find("varray"))
     pos = parse_varray(structure.find("varray"))
     sdyn = structure.find("varray/[@name='selective']")
-    if sdyn:
+    if sdyn is not None:
         sdyn = parse_varray(sdyn)
-    structure_dict = {"lattice": latt, "frac_coords": pos, "selective_dynamics": sdyn}
+    structure_dict: dict[str, object] = {
+        "lattice": latt,
+        "frac_coords": pos,
+        "selective_dynamics": sdyn,
+    }
     return structure_dict
 
 
 def structure_from_structure_data(
-    lattice: List[List[float]], atom_names: List[str], frac_coords: List[List[float]]
+    lattice: list[list[float]],
+    atom_names: list[str],
+    frac_coords: list[list[float]],
 ) -> Structure:
     """Generate a pymatgen Structure.
 
     Args:
-        lattice (list(list(float)): 3x3 cell matrix.
-        atom_names (list(str)): list of atom name strings.
-        frac_coords (list(list(float): Nx3 list of fractional coordinates.
+        lattice: 3x3 cell matrix.
+        atom_names: List of atom name strings.
+        frac_coords: Nx3 list of fractional coordinates.
 
     Returns:
-        (pymatgen.Structure)
-
+        A pymatgen Structure object.
     """
     structure = Structure(
         lattice=lattice,
@@ -77,80 +80,73 @@ class Vasprun:
     """Object for parsing vasprun.xml data.
 
     Attributes:
-        atom_names (list(str)): List of atom name strings.
-        structures (list(pymatgen.Structure): List of structures as pymatgen Structure objects.
-        frac_coords (np.array): timesteps x atoms x 3 numpy array of fractional coordinates.
-        cart_coords (np.array): timesteps x atoms x 3 numpy array of cartesian coordinates.
-        forces (:obj:`np.array`, optional): timesteps x atoms x 3 numpy array of forces.
+        atom_names: List of atom name strings.
+        structures: List of structures as pymatgen Structure objects.
+        frac_coords: timesteps x atoms x 3 numpy array of fractional coordinates.
+        cart_coords: timesteps x atoms x 3 numpy array of Cartesian coordinates.
+        forces: timesteps x atoms x 3 numpy array of forces (if present).
 
     Examples:
         >>> vasprun = Vasprun('vasprun.xml')
         >>> cart_coords = vasprun.cart_coords
         >>> forces = vasprun.forces
-
     """
 
     def __init__(self, filename: str) -> None:
         """Initialise a Vasprun object from a vasprun.xml file.
 
         Args:
-            filename (str): The vasprun.xml filename.
-
-        Returns:
-            None
-
+            filename: The vasprun.xml filename.
         """
         doc = etree.parse(filename)
         self.doc = doc.getroot()
-        self._atom_names = None  # type: Optional[List[str]]
-        self._structures = None  # type: Optional[List[Structure]]
+        self._atom_names: list[str] | None = None
+        self._structures: list[Structure] | None = None
 
     @property
-    def structures(self) -> List[Structure]:
-        """Getter for structures attribut.
+    def structures(self) -> list[Structure]:
+        """Getter for the structures attribute.
 
         Returns:
-            (list(pymatgen.Structure)): A list of pymatgen Structure objects.
+            A list of pymatgen Structure objects.
 
-        Notes:
-            When first called this parses the vasprun XML data and
-            caches the result.
-
+        Note:
+            When first called this parses the vasprun XML data and caches the
+            result.
         """
         if not self._structures:
             self._structures = self.parse_structures()
         return self._structures
 
     @property
-    def atom_names(self) -> List[str]:
-        """Getter for atom_names attribute.
+    def atom_names(self) -> list[str]:
+        """Getter for the atom_names attribute.
 
         Returns:
-            (list(str)): A list of atom name strings.
+            A list of atom name strings.
 
-        Notes:
-            When first called this parses the vasprun XML data and
-            caches the result.
-
+        Note:
+            When first called this parses the vasprun XML data and caches the
+            result.
         """
         if not self._atom_names:
             self._atom_names = self.parse_atom_names()
         return self._atom_names
 
-    def parse_atom_names(self) -> List[str]:
+    def parse_atom_names(self) -> list[str]:
         """Return a list of atom names for the atoms in this calculation.
 
-        Args:
-            None
-
         Returns:
-            (list(str))
+            A list of atom name strings.
 
+        Raises:
+            ValueError: If no atominfo element is found in the file.
+            ValueError: If no atom names are found in the atominfo element.
         """
         atominfo = self.doc.find("atominfo")
         if atominfo is None:
             raise ValueError("No atominfo found in file")
-        atom_names = []
+        atom_names: list[str] = []
         for array in atominfo.findall("array"):
             if array.attrib["name"] == "atoms":
                 atom_names = [rc.find("c").text.strip() for rc in array.find("set")]
@@ -158,17 +154,13 @@ class Vasprun:
             raise ValueError("No atomname found in file")
         return atom_names
 
-    def parse_structures(self) -> List[Structure]:
-        """Returns a list of pymatgen Structures for this calculation.
-
-        Args:
-            None
+    def parse_structures(self) -> list[Structure]:
+        """Return a list of pymatgen Structures for this calculation.
 
         Returns:
-            (list(pymatgen.Structure))
-
+            A list of pymatgen Structure objects.
         """
-        structures = []
+        structures: list[Structure] = []
         for child in self.doc.iterfind("calculation"):
             elem = child.find("structure")
             structure_data = parse_structure(elem)
@@ -185,12 +177,8 @@ class Vasprun:
     def frac_coords(self) -> np.ndarray:
         """Fractional coordinates from each calculation structure.
 
-        Args:
-            None
-
         Returns:
-            (np.ndarray): timesteps x atoms x 3 numpy array of fractional coordinates.
-
+            timesteps x atoms x 3 numpy array of fractional coordinates.
         """
         frac_coords = np.array([s.frac_coords for s in self.structures])
         return frac_coords
@@ -199,28 +187,19 @@ class Vasprun:
     def cart_coords(self) -> np.ndarray:
         """Cartesian coordinates from each calculation structure.
 
-        Args:
-            None
-
         Returns:
-            (np.ndarray): timesteps x atoms x 3 numpy array of cartesian coordinates.
-
+            timesteps x atoms x 3 numpy array of Cartesian coordinates.
         """
         cart_coords = np.array([s.cart_coords for s in self.structures])
         return cart_coords
 
     @property
-    def forces(self) -> Optional[np.ndarray]:
-        """Cartesian forces from each calculation structure
-           (if present in the vasprun XML).
-
-        Args:
-            None
+    def forces(self) -> np.ndarray | None:
+        """Cartesian forces from each calculation structure (if present in the vasprun XML).
 
         Returns:
-            (np.ndarray|None): timesteps x atoms x 3 numpy array of cartesian forces
-                if forces are included in the vasprun XML. If not, returns None.
-
+            timesteps x atoms x 3 numpy array of Cartesian forces if forces are
+            included in the vasprun XML, otherwise ``None``.
         """
         forces = []
         for child in self.doc.iterfind("calculation"):

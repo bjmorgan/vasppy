@@ -3,18 +3,19 @@
 import yaml
 import re
 from collections import Counter
+from collections.abc import Mapping
 
 
 class Calculation:
     """Represents a single VASP calculation with a title, energy, and stoichiometry."""
 
-    def __init__(self, title: str, energy: float, stoichiometry: dict[str, int | float]) -> None:
+    def __init__(self, title: str, energy: float, stoichiometry: Mapping[str, int | float]) -> None:
         """Initialise a Calculation object.
 
         Args:
             title: The title string for this calculation.
             energy: Final energy in eV.
-            stoichiometry: A dict describing the calculation stoichiometry,
+            stoichiometry: A Mapping describing the calculation stoichiometry,
                 e.g. ``{'Ti': 1, 'O': 2}``.
         """
         self.title = title
@@ -116,9 +117,15 @@ def energy_string_to_float(string: str) -> float:
 
     Returns:
         The numeric energy value.
+
+    Raises:
+        ValueError: If the string does not contain a valid energy value.
     """
     energy_re = re.compile(r"(-?\d+\.\d+)")
-    return float(energy_re.match(string).group(0))
+    match = energy_re.match(string)
+    if match is None:
+        raise ValueError(f"Could not parse energy from string: {string!r}")
+    return float(match.group(0))
 
 
 def import_calculations_from_file(

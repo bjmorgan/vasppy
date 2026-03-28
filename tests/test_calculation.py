@@ -58,6 +58,15 @@ class CalculationTestCase(unittest.TestCase):
         )
         self.assertEqual(calculation.scale_stoichiometry(2), {"B": 2, "C": 4})
 
+    def test_energy_string_to_float_raises_on_no_match(self):
+        with self.assertRaises(ValueError):
+            energy_string_to_float("not a number")
+
+    def test_calculation_accepts_counter_stoichiometry(self):
+        # Counter is a Mapping — should be accepted without runtime error.
+        calc = Calculation(title="X", energy=-1.0, stoichiometry=Counter({"A": 1}))
+        self.assertEqual(calc.stoichiometry["A"], 1)
+
 
 class CalculationSupportFunctionsTestCase(unittest.TestCase):
     def test_delta_E(self):

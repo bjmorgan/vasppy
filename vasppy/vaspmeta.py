@@ -1,31 +1,38 @@
-import yaml # type: ignore
+"""Class for storing additional VASP calculation metadata from a YAML file."""
+
+import yaml  # type: ignore
 
 
 class VASPMeta:
-    """
-    VASPMeta class for storing additional VASP calculation metadata
-    """
+    """Stores additional metadata for a VASP calculation directory."""
 
-    def __init__(self, title, description, status, notes=None, type=None, track=None):
-        """
-        Initialise a VASPMeta object.
+    def __init__(
+        self,
+        title: str,
+        description: str,
+        status: str,
+        notes: str | None = None,
+        type: str | None = None,
+        track: list[str] | None = None,
+    ) -> None:
+        """Initialise a VASPMeta object.
 
         Args:
-            title (Str): The title string for this calculation
-            description (Str): Long description
-            status (Str): Current status of the calculation.
-                Expected strings are (to-run, incomplete, finished, dropped)
-            notes (:obj:Str, optional): Any additional notes. Defaults to None.
-            type  (:obj:Str, optional): Can be used to describe the calculation type.
+            title: The title string for this calculation.
+            description: Long description of the calculation.
+            status: Current status. Must be one of ``'to-run'``,
+                ``'incomplete'``, ``'finished'``, or ``'dropped'``.
+            notes: Any additional notes. Defaults to None.
+            type: Optional calculation type descriptor. Must be one of
+                ``'single-point'`` or ``'neb'`` if provided.
                 Defaults to None.
-            track (:obj:dict(str: str), optional): An optional dict of pairs of filenames
-                for files to track. For each key: value pair, the key is the current filename
-                in the directory. The value is the new filename that list of filenames to calculate md5 hashes
-                files to calculate hashes for when summarising the calculation output.
+            track: Optional list of filenames whose md5 checksums are
+                computed when summarising the calculation output.
                 Defaults to None.
 
-        Returns:
-            None
+        Raises:
+            ValueError: If *status* is not one of the expected values.
+            ValueError: If *type* is provided but not one of the expected values.
         """
         self.title = title
         self.description = description
@@ -33,7 +40,7 @@ class VASPMeta:
         expected_status = ["to-run", "incomplete", "finished", "dropped"]
         if status not in expected_status:
             raise ValueError(
-                f'Unexpected calculations status: "{status}"'
+                f'Unexpected calculation status: "{status}"'
                 f" for calculation {title}"
             )
         self.status = status
@@ -41,30 +48,30 @@ class VASPMeta:
         if type:
             if type not in expected_types:
                 raise ValueError(
-                    f'Unexpected calculation type: "{type}"' f" for calculation {title}"
+                    f'Unexpected calculation type: "{type}"'
+                    f" for calculation {title}"
                 )
-            self.type = type
+            self.type: str | None = type
         else:
             self.type = None
         self.track = track
 
     @classmethod
-    def from_file(cls, filename):
-        """
-        Create a VASPMeta object by reading a `vaspmeta.yaml` file
+    def from_file(cls, filename: str) -> "VASPMeta":
+        """Create a VASPMeta object by reading a ``vaspmeta.yaml`` file.
 
         Args:
-            filename (Str): filename to read in.
+            filename: Path of the YAML file to read.
 
         Returns:
-            (vasppy.VASPMeta): the VASPMeta object
+            The populated VASPMeta object.
         """
         with open(filename, "r") as stream:
             data = yaml.load(stream, Loader=yaml.SafeLoader)
             notes = data.get("notes")
             v_type = data.get("type")
             track = data.get("track")
-            xargs = {}
+            xargs: dict = {}
             if track:
                 if isinstance(track, str):
                     track = [track]

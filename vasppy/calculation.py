@@ -1,138 +1,134 @@
+"""Classes and functions for representing and manipulating VASP calculations."""
+
 import yaml
 import re
 from collections import Counter
 
 
 class Calculation:
-    """
-    Class describing a single VASP calculation
-    """
+    """Represents a single VASP calculation with a title, energy, and stoichiometry."""
 
-    def __init__(self, title, energy, stoichiometry):
-        """
-        Initialise a Calculation object
+    def __init__(self, title: str, energy: float, stoichiometry: dict[str, int | float]) -> None:
+        """Initialise a Calculation object.
 
         Args:
-            title (Str): The title string for this calculation.
-            energy (Float): Final energy in eV.
-            stoichiometry (Dict{Str:Int}): A dict desribing the calculation stoichiometry,
-                e.g. { 'Ti': 1, 'O': 2 }
-
-        Returns:
-            None
+            title: The title string for this calculation.
+            energy: Final energy in eV.
+            stoichiometry: A dict describing the calculation stoichiometry,
+                e.g. ``{'Ti': 1, 'O': 2}``.
         """
         self.title = title
         self.energy = energy
         self.stoichiometry = Counter(stoichiometry)
 
-    def __mul__(self, scaling):
-        """
-        "Multiply" this Calculation by a scaling factor.
-        Returns a new Calculation with the same title, but scaled energy and stoichiometry.
+    def __mul__(self, scaling: float) -> "Calculation":
+        """Return a new Calculation with scaled energy and stoichiometry.
 
         Args:
-            scaling (float): The scaling factor.
+            scaling: The scaling factor.
 
         Returns:
-            (vasppy.Calculation): The scaled Calculation.
+            The scaled Calculation.
         """
-        new_calculation = Calculation(
+        return Calculation(
             title=self.title,
             energy=self.energy * scaling,
             stoichiometry=self.scale_stoichiometry(scaling),
         )
-        return new_calculation
 
-    def __truediv__(self, scaling):
-        """
-        Implements division by a scaling factor.
-        Returns a new Calculation with the same title, but scaled energy and stoichiometry.
+    def __truediv__(self, scaling: float) -> "Calculation":
+        """Return a new Calculation divided by a scaling factor.
 
         Args:
-            scaling (float): The scaling factor.
+            scaling: The scaling factor.
 
         Returns:
-            (vasppy.Calculation): The scaled Calculation.
+            The scaled Calculation.
         """
         return self * (1 / scaling)
 
-    def scale_stoichiometry(self, scaling):
-        """
-        Scale the Calculation stoichiometry
-        Returns the stoichiometry, scaled by the argument scaling.
+    def scale_stoichiometry(self, scaling: float) -> dict[str, float]:
+        """Return the stoichiometry scaled by *scaling*.
 
         Args:
-            scaling (float): The scaling factor.
+            scaling: The scaling factor.
 
         Returns:
-            (Counter(Str:Int)): The scaled stoichiometry as a :obj:`Counter` of ``label: stoichiometry`` pairs
+            The scaled stoichiometry as a dict of ``{label: count}`` pairs.
         """
         return {k: v * scaling for k, v in self.stoichiometry.items()}
 
 
-def delta_E(reactants, products, check_balance=True):
-    """
-    Calculate the change in energy for reactants --> products.
+def delta_E(
+    reactants: list["Calculation"],
+    products: list["Calculation"],
+    check_balance: bool = True,
+) -> float:
+    """Calculate the change in energy for reactants --> products.
 
     Args:
-        reactants (list(:obj:`vasppy.Calculation`)): A `list` of :obj:`vasppy.Calculation` objects. The initial state.
-        products  (list(:obj:`vasppy.Calculation`)): A `list` of :obj:`vasppy.Calculation` objects. The final state.
-        check_balance (:obj:`bool`, optional): Check that the reaction stoichiometry is balanced. Default is ``True``.
+        reactants: A list of Calculation objects representing the initial state.
+        products: A list of Calculation objects representing the final state.
+        check_balance: Check that the reaction stoichiometry is balanced.
+            Defaults to True.
 
     Returns:
-        (float) The change in energy.
+        The change in energy in eV.
+
+    Raises:
+        ValueError: If *check_balance* is True and the reaction is not balanced.
     """
     if check_balance:
-        if delta_stoichiometry(reactants, products) != {}:
+        imbalance = delta_stoichiometry(reactants, products)
+        if imbalance != {}:
             raise ValueError(
-                "reaction is not balanced: {}".format(
-                    delta_stoichiometry(reactants, products)
-                )
+                f"reaction is not balanced: {imbalance}"
             )
-    return sum([r.energy for r in products]) - sum([r.energy for r in reactants])
+    return sum(r.energy for r in products) - sum(r.energy for r in reactants)
 
 
-def delta_stoichiometry(reactants, products):
-    """
-    Calculate the change in stoichiometry for reactants --> products.
+def delta_stoichiometry(
+    reactants: list["Calculation"],
+    products: list["Calculation"],
+) -> dict[str, float]:
+    """Calculate the change in stoichiometry for reactants --> products.
 
     Args:
-        reactants (list(:obj:`vasppy.Calculation`): A `list` of :obj:`vasppy.Calculation objects.` The initial state.
-        products  (list(:obj:`vasppy.Calculation`): A `list` of :obj:`vasppy.Calculation objects.` The final state.
+        reactants: A list of Calculation objects representing the initial state.
+        products: A list of Calculation objects representing the final state.
 
     Returns:
-        (Counter): The change in stoichiometry.
+        A dict of non-zero stoichiometry changes, keyed by species label.
     """
-    totals = Counter()
+    totals: Counter = Counter()
     for r in reactants:
         totals.update((r * -1.0).stoichiometry)
     for p in products:
         totals.update(p.stoichiometry)
-    to_return = {}
-    for c in totals:
-        if totals[c] != 0:
-            to_return[c] = totals[c]
-    return to_return
+    return {c: totals[c] for c in totals if totals[c] != 0}
 
 
-def energy_string_to_float(string):
-    """
-    Convert a string of a calculation energy, e.g. '-1.2345 eV' to a float.
+def energy_string_to_float(string: str) -> float:
+    """Convert an energy string such as ``'-1.2345 eV'`` to a float.
 
     Args:
-        string (str): The string to convert.
+        string: The string to convert.
 
-    Return
-        (float)
+    Returns:
+        The numeric energy value.
     """
     energy_re = re.compile(r"(-?\d+\.\d+)")
     return float(energy_re.match(string).group(0))
 
 
-def import_calculations_from_file(filename, skip_incomplete_records=False):
-    """
-    Construct a list of :obj:`Calculation` objects by reading a YAML file.
-    Each YAML document should include ``title``, ``stoichiometry``, and ``energy`` fields, e.g.::
+def import_calculations_from_file(
+    filename: str,
+    skip_incomplete_records: bool = False,
+) -> dict[str, "Calculation"]:
+    """Construct a dict of Calculation objects by reading a YAML file.
+
+    Each YAML document should include ``title``, ``stoichiometry``, and
+    ``energy`` fields, e.g.::
 
         title: my calculation
         stoichiometry:
@@ -140,17 +136,22 @@ def import_calculations_from_file(filename, skip_incomplete_records=False):
             - B: 2
         energy: -0.1234 eV
 
-    Separate calculations should be distinct YAML documents, separated by `---`
+    Separate calculations should be distinct YAML documents, separated by ``---``.
 
     Args:
-        filename (str): Name of the YAML file to read.
-        skip_incomplete_records (bool): Do not parse YAML documents missing one or more of
-            the required keys. Default is ``False``.
+        filename: Path of the YAML file to read.
+        skip_incomplete_records: Skip YAML documents that are missing one or
+            more of the required keys. Defaults to False.
 
     Returns:
-        (dict(vasppy.Calculation)): A dictionary of :obj:`Calculation` objects. For each :obj:`Calculation` object, the ``title`` field from the YAML input is used as the dictionary key.
+        A dict mapping each calculation title to its Calculation object.
+
+    Raises:
+        ValueError: If a document lacks a ``stoichiometry`` field (and
+            *skip_incomplete_records* is False).
+        ValueError: If more than one calculation shares the same title.
     """
-    calcs = {}
+    calcs: dict[str, Calculation] = {}
     with open(filename, "r") as stream:
         docs = yaml.load_all(stream, Loader=yaml.SafeLoader)
         for d in docs:
@@ -162,13 +163,15 @@ def import_calculations_from_file(filename, skip_incomplete_records=False):
                 ):
                     continue
             if "stoichiometry" in d:
-                stoichiometry = Counter()
+                stoichiometry: Counter = Counter()
                 for s in d["stoichiometry"]:
                     stoichiometry.update(s)
             else:
                 raise ValueError(f'stoichiometry not found for "{d["title"]}"')
             if d["title"] in calcs:
-                raise ValueError(f'More than one calculation has the same title: {d["title"]}')
+                raise ValueError(
+                    f'More than one calculation has the same title: {d["title"]}'
+                )
             calcs[d["title"]] = Calculation(
                 title=d["title"],
                 stoichiometry=stoichiometry,

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt  # type: ignore
 from matplotlib.axes import Axes  # type: ignore
 from matplotlib.figure import Figure  # type: ignore
 import matplotlib._color_data as mcd  # type: ignore
-from typing import Literal
+from typing import ClassVar, Literal
 from collections.abc import Iterable
 
 
@@ -59,6 +59,15 @@ class Doscar:
     """Contains all the data in a VASP DOSCAR file and methods for manipulating it."""
 
     number_of_header_lines: int = 6
+    _spin_map: ClassVar[dict[str, list[int]]] = {"up": [0], "down": [1], "both": [0, 1]}
+    _valid_m_values: ClassVar[dict[str, list[str]]] = {
+        "s": [],
+        "p": ["y", "z", "x"],
+        "d": ["xy", "yz", "z2-r2", "xz", "x2-y2"],
+        "f": ["y(3x2-y2)", "xyz", "yz2", "z3", "xz2", "z(x2-y2)", "x(x2-3y2)"],
+    }
+    _l_offsets: ClassVar[dict[str, int]] = {"s": 0, "p": 1, "d": 4, "f": 9}
+    _l_widths: ClassVar[dict[str, int]] = {"s": 1, "p": 3, "d": 5, "f": 7}
 
     def __init__(
         self,
@@ -208,7 +217,7 @@ class Doscar:
 
     def pdos_select(
         self,
-        atoms: int | list[int] | None = None,
+        atoms: list[int] | None = None,
         spin: str | None = None,
         l: str | None = None,
         m: list[str] | None = None,
@@ -239,52 +248,47 @@ class Doscar:
             ``[atom_no, energy_value, lm-projection, spin]``.
 
         Raises:
-            TypeError: If ``self.pdos`` is not a numpy array.
+            TypeError: If pDOS data has not been loaded.
+            TypeError: If ``atoms`` is not a list.
             ValueError: If ``spin`` is not a recognised value.
             ValueError: If ``l`` is not a recognised value.
         """
-        if not isinstance(self.pdos, np.ndarray):
+        if self.pdos is None:
             raise TypeError("pdos data is not available; ensure read_pdos=True and the file contains pDOS data")
-        valid_m_values: dict[str, list[str]] = {
-            "s": [],
-            "p": ["y", "z", "x"],
-            "d": ["xy", "yz", "z2-r2", "xz", "x2-y2"],
-            "f": ["y(3x2-y2)", "xyz", "yz2", "z3", "xz2", "z(x2-y2)", "x(x2-3y2)"],
-        }
-        if not atoms:
-            atom_idx = list(range(self.number_of_atoms))
-        else:
-            if not isinstance(atoms, list):
-                raise TypeError("atoms must be a list of integers")
-            atom_idx = atoms
-        to_return = self.pdos[atom_idx, :, :, :]
-        _spin_map: dict[str, list[int]] = {"up": [0], "down": [1], "both": [0, 1]}
+        atom_idx = self._resolve_atom_idx(atoms)
+        spin_idx = self._resolve_spin_idx(spin)
+        channel_idx = self._resolve_channel_idx(l, m)
+        return self.pdos[atom_idx, :, :, :][:, :, channel_idx, :][:, :, :, spin_idx]
+
+    def _resolve_atom_idx(self, atoms: list[int] | None) -> list[int]:
+        if atoms is None:
+            return list(range(self.number_of_atoms))
+        if not isinstance(atoms, list):
+            raise TypeError("atoms must be a list of integers")
+        return atoms
+
+    def _resolve_spin_idx(self, spin: str | None) -> list[int]:
         if spin is None:
-            spin_idx = list(range(self.ispin))
-        else:
-            if self.ispin == 1:
-                raise ValueError("spin selection is not available for non-spin-polarised calculations")
-            if spin not in _spin_map:
-                raise ValueError(f"'{spin}' is not a valid spin value; use 'up', 'down', or 'both'")
-            spin_idx = _spin_map[spin]
-        to_return = to_return[:, :, :, spin_idx]
-        _l_offsets: dict[str, int] = {"s": 0, "p": 1, "d": 4, "f": 9}
-        _l_widths: dict[str, int] = {"s": 1, "p": 3, "d": 5, "f": 7}
+            return list(range(self.ispin))
+        if self.ispin == 1:
+            raise ValueError("spin selection is not available for non-spin-polarised calculations")
+        if spin not in self._spin_map:
+            raise ValueError(f"'{spin}' is not a valid spin value; use 'up', 'down', or 'both'")
+        return self._spin_map[spin]
+
+    def _resolve_channel_idx(self, l: str | None, m: list[str] | None) -> list[int]:
         if l is None:
-            channel_idx = list(range(self.number_of_channels))
-        elif l not in _l_offsets:
+            return list(range(self.number_of_channels))
+        if l not in self._l_offsets:
             raise ValueError(f"'{l}' is not a valid angular momentum label; use 's', 'p', 'd', or 'f'")
-        else:
-            offset = _l_offsets[l]
-            if m is None or not valid_m_values[l]:
-                channel_idx = list(range(offset, offset + _l_widths[l]))
-            else:
-                channel_idx = [offset + i for i, v in enumerate(valid_m_values[l]) if v in m]
-        return to_return[:, :, channel_idx, :]
+        offset = self._l_offsets[l]
+        if m is None or not self._valid_m_values[l]:
+            return list(range(offset, offset + self._l_widths[l]))
+        return [offset + i for i, v in enumerate(self._valid_m_values[l]) if v in m]
 
     def pdos_sum(
         self,
-        atoms: int | list[int] | None = None,
+        atoms: list[int] | None = None,
         spin: str | None = None,
         l: str | None = None,
         m: list[str] | None = None,

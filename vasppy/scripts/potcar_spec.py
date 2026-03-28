@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+"""Generate a POTCAR specification based on hashing individual pseudopotential strings."""
 
 import sys
 if sys.platform != "win32":
@@ -9,7 +10,12 @@ from vasppy.summary import potcar_spec
 import argparse
 
 
-def parse_command_line_arguments():
+def parse_command_line_arguments() -> argparse.Namespace:
+    """Parse command-line arguments.
+
+    Returns:
+        Parsed argument namespace with ``potcar`` filename and ``hash`` flag.
+    """
     parser = argparse.ArgumentParser(
         description="Generate POTCAR specification based on hashing individual pseudopotential strings"
     )
@@ -24,11 +30,11 @@ def parse_command_line_arguments():
         help="return the md5 hashes of the individual pseudopotential strings",
         action="store_true",
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """Entry point for the potcar_spec command-line script."""
     args = parse_command_line_arguments()
     names, datasets = potcar_spec(args.potcar)
     if args.hash:

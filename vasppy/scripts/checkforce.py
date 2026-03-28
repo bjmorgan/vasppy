@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+"""Check force convergence of VASP geometry optimisations."""
 
 import sys
 if sys.platform != "win32":
@@ -7,6 +8,7 @@ if sys.platform != "win32":
 
 import argparse
 import re
+from collections.abc import Iterator
 import numpy as np
 from dataclasses import dataclass, field
 
@@ -114,7 +116,7 @@ def get_forces_data(
 def get_all_forces_data(
     outcar_filename: str = "OUTCAR",
     convergence: float | None = None,
-):
+) -> Iterator[ForcesData]:
     """Parse an OUTCAR file and yield forces data for all ionic steps.
 
     Args:

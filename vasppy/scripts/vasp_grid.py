@@ -1,11 +1,17 @@
 #! /usr/bin/env python3
+"""z-projection of a VASP grid format file."""
 
 from vasppy import grid
 import argparse
 
 
-def parse_command_line_arguments():
-    # command line arguments
+def parse_command_line_arguments() -> argparse.Namespace:
+    """Parse command-line arguments.
+
+    Returns:
+        Parsed argument namespace with ``gridfile``, ``projection``,
+        and ``orthorhombic`` attributes.
+    """
     parser = argparse.ArgumentParser(
         description="z-projection of a VASP (grid format) file"
     )
@@ -24,11 +30,11 @@ def parse_command_line_arguments():
         help="map grid points onto an orthorhombic (non-space filling) grid",
         action="store_true",
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """Entry point for the vasp_grid command-line script."""
     args = parse_command_line_arguments()
     vgrid = grid.Grid.from_file(args.gridfile)
     if args.orthorhombic:
@@ -36,10 +42,8 @@ def main():
     if args.projection:
         index = grid.Grid.projections[args.projection]
         grid_spacing = vgrid.structure.lattice.lengths[index] / vgrid.dimensions[index]
-        [
+        for i, av in enumerate(vgrid.average(normal_axis_label=args.projection)):
             print(i * grid_spacing, av)
-            for i, av in enumerate(vgrid.average(normal_axis_label=args.projection))
-        ]
 
 
 if __name__ == "__main__":

@@ -1,22 +1,22 @@
 """Generate a series of VASP inputs for convergence testing."""
 import argparse
-import os
-import numpy as np
 import shutil
+from typing import Any
+
+import numpy as np
 from pymatgen.core import Structure
 from pymatgen.io.vasp import Incar, Potcar
-from vasppy.kpoints import get_convergence_testing_kspacing
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Any
+
+from vasppy.kpoints import get_convergence_testing_kspacing
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command line arguments.
-    
+    """Parse command-line arguments.
+
     Returns:
-        Parsed command line arguments.
-        
+        Parsed command-line arguments.
     """
     parser = argparse.ArgumentParser(
         description='Generate a series of VASP inputs for convergence testing. '
@@ -72,262 +72,236 @@ def parse_args() -> argparse.Namespace:
     args.kspacing = tuple(args.kspacing)
     return args
 
+
 @dataclass
 class ConvergenceTarget:
     """Represents a single convergence test calculation.
-    
+
     Attributes:
         path: Directory path for this calculation.
         encut: ENCUT value to test (None if not varying).
         kspacing: KSPACING value to test (None if not varying).
         base_incar: Base INCAR parameters shared across tests.
-        
     """
+
     path: Path
     encut: int | None
     kspacing: float | None
     base_incar: dict[str, Any]
-    
+
     # Parameters that should be included in INCAR
     CONVERGENCE_PARAMS = ['encut', 'kspacing']
-    
-    def __post_init__(self):
-        """Validate that at least one parameter is set."""
+
+    def __post_init__(self) -> None:
+        """Validate that at least one convergence parameter is set."""
         if self.encut is None and self.kspacing is None:
             raise ValueError(
                 "At least one of encut or kspacing must be set for a convergence test"
             )
-    
+
     @property
     def incar_params(self) -> dict[str, Any]:
         """Get complete INCAR parameters for writing.
-        
+
         Returns:
             Dictionary of INCAR parameters including base params and test values.
-            
         """
         params = self.base_incar.copy()
-        
         for param_name in self.CONVERGENCE_PARAMS:
             value = getattr(self, param_name)
             if value is not None:
                 params[param_name.upper()] = value
-        
         return params
-            
+
+
 def create_directory_structure(base_dir: str | Path) -> None:
     """Create the base directory structure for convergence testing.
-    
+
     Args:
         base_dir: Base directory path for convergence tests.
-        
     """
     base_path = Path(base_dir)
-    os.mkdir(str(base_path))
-    os.mkdir(str(base_path / 'ENCUT'))
-    os.mkdir(str(base_path / 'KSPACING'))
-    
-    
+    base_path.mkdir()
+    (base_path / 'ENCUT').mkdir()
+    (base_path / 'KSPACING').mkdir()
+
+
 def write_vasp_input_files(
     directory: str | Path,
-    incar_params: dict,
+    incar_params: dict[str, Any],
     structure: Structure,
     potcar: Potcar,
-    job_script: str | None = None
+    job_script: str | None = None,
 ) -> None:
     """Write VASP input files to a directory.
-    
+
     Args:
         directory: Directory path to write files to.
         incar_params: Dictionary of INCAR parameters.
         structure: Pymatgen Structure object.
         potcar: Potcar object.
         job_script: Optional path to job script file to copy.
-        
     """
     dir_path = Path(directory)
-    incar = Incar.from_dict(incar_params)
+    incar = Incar(incar_params)
     incar.write_file(str(dir_path / 'INCAR'))
     structure.to(fmt='poscar', filename=str(dir_path / 'POSCAR'))
     potcar.write_file(str(dir_path / 'POTCAR'))
-    
     if job_script is not None:
         shutil.copy2(job_script, str(dir_path / Path(job_script).name))
-    
+
+
 def calculate_encut_targets(
     base_dir: str | Path,
     encut_values: np.ndarray,
     base_kspacing: float,
-    incar_dict: dict
+    incar_dict: dict[str, Any],
 ) -> list[ConvergenceTarget]:
     """Calculate convergence test targets for ENCUT.
-    
+
     Args:
         base_dir: Base directory for convergence tests.
         encut_values: Array of ENCUT values to test.
         base_kspacing: Fixed KSPACING value to use.
         incar_dict: Base INCAR parameters dictionary.
-        
+
     Returns:
         List of ConvergenceTarget objects for ENCUT tests.
-        
     """
     base_path = Path(base_dir)
-    targets = []
-    
-    # Add base KSPACING to base_incar for these tests
-    base_incar_with_kspacing = incar_dict.copy()
-    base_incar_with_kspacing['KSPACING'] = base_kspacing
-    
-    for energy_cutoff in encut_values:
-        path = base_path / 'ENCUT' / str(energy_cutoff)
-        target = ConvergenceTarget(
-            path=path,
+    base_incar_with_kspacing = {**incar_dict, 'KSPACING': base_kspacing}
+    return [
+        ConvergenceTarget(
+            path=base_path / 'ENCUT' / str(energy_cutoff),
             encut=int(energy_cutoff),
             kspacing=None,
-            base_incar=base_incar_with_kspacing
+            base_incar=base_incar_with_kspacing,
         )
-        targets.append(target)
-    
-    return targets
+        for energy_cutoff in encut_values
+    ]
 
 
 def calculate_kspacing_targets(
     base_dir: str | Path,
     kspacing_values: tuple[float, ...],
     base_encut: int,
-    incar_dict: dict
+    incar_dict: dict[str, Any],
 ) -> list[ConvergenceTarget]:
     """Calculate convergence test targets for KSPACING.
-    
+
     Args:
         base_dir: Base directory for convergence tests.
         kspacing_values: Tuple of KSPACING values to test.
         base_encut: Fixed ENCUT value to use.
         incar_dict: Base INCAR parameters dictionary.
-        
+
     Returns:
         List of ConvergenceTarget objects for KSPACING tests.
-        
     """
     base_path = Path(base_dir)
-    targets = []
-    
-    # Add base ENCUT to base_incar for these tests
-    base_incar_with_encut = incar_dict.copy()
-    base_incar_with_encut['ENCUT'] = base_encut
-    
-    for minimum_distance in kspacing_values:
-        path = base_path / 'KSPACING' / str(minimum_distance)
-        target = ConvergenceTarget(
-            path=path,
+    base_incar_with_encut = {**incar_dict, 'ENCUT': base_encut}
+    return [
+        ConvergenceTarget(
+            path=base_path / 'KSPACING' / str(minimum_distance),
             encut=None,
             kspacing=minimum_distance,
-            base_incar=base_incar_with_encut
+            base_incar=base_incar_with_encut,
         )
-        targets.append(target)
-    
-    return targets 
+        for minimum_distance in kspacing_values
+    ]
+
 
 def execute_targets(
     targets: list[ConvergenceTarget],
     structure: Structure,
     potcar: Potcar,
-    job_script: str | None = None
+    job_script: str | None = None,
 ) -> None:
     """Execute convergence test targets by creating directories and writing files.
-    
+
     Args:
         targets: List of ConvergenceTarget objects to execute.
         structure: Pymatgen Structure object.
         potcar: Potcar object.
         job_script: Optional path to job script file to copy.
-        
     """
     for target in targets:
-        os.mkdir(str(target.path))
+        target.path.mkdir()
         write_vasp_input_files(target.path, target.incar_params, structure, potcar, job_script)
+
 
 def validate_inputs(
     poscar_path: str,
     incar_path: str,
     output_dir: str,
-    job_script: str | None = None
+    job_script: str | None = None,
 ) -> None:
     """Validate input files and output directory before starting work.
-    
+
     Args:
         poscar_path: Path to POSCAR file.
         incar_path: Path to INCAR file.
         output_dir: Path to output directory.
         job_script: Optional path to job script file.
-        
+
     Raises:
-        FileNotFoundError: If POSCAR, INCAR, or job script file doesn't exist.
+        FileNotFoundError: If POSCAR, INCAR, or job script file does not exist.
         FileExistsError: If output directory already exists.
-        
     """
-    # Check POSCAR exists
-    if not os.path.isfile(poscar_path):
+    if not Path(poscar_path).is_file():
         raise FileNotFoundError(
             f"POSCAR file not found: {poscar_path}\n"
             f"Please provide a valid POSCAR file using the -p/--poscar argument."
         )
-    
-    # Check INCAR exists
-    if not os.path.isfile(incar_path):
+    if not Path(incar_path).is_file():
         raise FileNotFoundError(
             f"INCAR file not found: {incar_path}\n"
             f"Please provide a valid INCAR file using the -i/--incar argument."
         )
-    
-    # Check job script exists if provided
-    if job_script is not None and not os.path.isfile(job_script):
+    if job_script is not None and not Path(job_script).is_file():
         raise FileNotFoundError(
             f"Job script file not found: {job_script}\n"
             f"Please provide a valid job script file using the --job-script argument."
         )
-    
-    # Check output directory doesn't exist
-    if os.path.exists(output_dir):
+    if Path(output_dir).exists():
         raise FileExistsError(
             f"Output directory already exists: {output_dir}\n"
             f"Please choose a different directory using the -d/--directory argument."
         )
-            
-def load_inputs(poscar_path: str, incar_path: str) -> tuple[Structure, dict]:
+
+
+def load_inputs(poscar_path: str, incar_path: str) -> tuple[Structure, dict[str, Any]]:
     """Load structure and INCAR template.
-    
+
     Args:
         poscar_path: Path to POSCAR file.
         incar_path: Path to INCAR file.
-        
+
     Returns:
         Tuple of (Structure, INCAR dict).
-        
     """
     print(f"Loading structure from {poscar_path}...")
     structure = Structure.from_file(poscar_path)
     print(f"Loading INCAR template from {incar_path}...")
-    base_incar_dict = Incar.from_file(incar_path).as_dict()
+    base_incar_dict = dict(Incar.from_file(incar_path))
     return structure, base_incar_dict
+
 
 def print_dry_run_summary(
     directory: str,
     encut_targets: list[ConvergenceTarget],
     kspacing_targets: list[ConvergenceTarget],
     potcar: Potcar,
-    job_script: str | None = None
+    job_script: str | None = None,
 ) -> None:
     """Print summary of what would be created in dry-run mode.
-    
+
     Args:
         directory: Base directory path.
         encut_targets: List of ENCUT test targets.
         kspacing_targets: List of KSPACING test targets.
         potcar: Potcar object.
         job_script: Optional path to job script file.
-        
     """
     print("\n=== DRY RUN - No files will be created ===\n")
     print(f"Would create base directory: {directory}\n")
@@ -341,17 +315,18 @@ def print_dry_run_summary(
     print("POTCARs will be included in all calculations")
     if job_script:
         print(f"Job script '{job_script}' will be copied to each directory")
-                    
+
+
 def execute_convergence_tests(
     directory: str,
     encut_targets: list[ConvergenceTarget],
     kspacing_targets: list[ConvergenceTarget],
     structure: Structure,
     potcar: Potcar,
-    job_script: str | None = None
+    job_script: str | None = None,
 ) -> None:
     """Execute convergence tests by creating directories and writing files.
-    
+
     Args:
         directory: Base directory path.
         encut_targets: List of ENCUT test targets.
@@ -359,75 +334,64 @@ def execute_convergence_tests(
         structure: Pymatgen Structure object.
         potcar: Potcar object.
         job_script: Optional path to job script file to copy.
-        
     """
     print(f"\nCreating directory structure at {directory}...")
     create_directory_structure(directory)
-    
     print(f"Generating {len(encut_targets)} ENCUT convergence tests...")
     execute_targets(encut_targets, structure, potcar, job_script)
-    
     print(f"Generating {len(kspacing_targets)} KSPACING convergence tests...")
     execute_targets(kspacing_targets, structure, potcar, job_script)
-    
-    print(f"\n✓ Complete! Created {len(encut_targets) + len(kspacing_targets)} tests in {directory}")
+    print(f"\nComplete! Created {len(encut_targets) + len(kspacing_targets)} tests in {directory}")
+
 
 def load_potcar(pseudopotentials: list[str] | None, potcar_file: str | None) -> Potcar:
-    """Load or create Potcar object.
-    
+    """Load or create a Potcar object.
+
     Args:
         pseudopotentials: List of pseudopotential names to create Potcar from.
         potcar_file: Path to existing POTCAR file to load.
-        
+
     Returns:
         Potcar object.
-        
+
     Raises:
         ValueError: If neither pseudopotentials nor potcar_file is provided.
-        
     """
-    potcar: Potcar
     if pseudopotentials:
-        potcar = Potcar(pseudopotentials)
-    elif potcar_file:
-        potcar = Potcar.from_file(potcar_file)
-    else:
-        raise ValueError("Either pseudopotentials or potcar_file must be provided")
-    return potcar
-                    
+        return Potcar(pseudopotentials)
+    if potcar_file:
+        potcar: Potcar = Potcar.from_file(potcar_file)
+        return potcar
+    raise ValueError("Either pseudopotentials or potcar_file must be provided")
+
+
 def main() -> None:
     """Main entry point for convergence testing script."""
     args = parse_args()
-    
-    # Validate and load inputs
+
     print("Validating inputs...")
     validate_inputs(args.poscar, args.incar, args.directory, job_script=args.job_script)
     structure, base_incar_dict = load_inputs(args.poscar, args.incar)
-    
-    # Load potcar
     potcar = load_potcar(args.pseudopotentials, args.potcar_file)
-    
-    # Calculate parameter ranges
+
     print("Calculating convergence test parameters...")
     reciprocal_lattice_vectors = structure.lattice.reciprocal_lattice_crystallographic.matrix
     kspacing_min, kspacing_max, step = args.kspacing
     kspacing_values = get_convergence_testing_kspacing(
-        reciprocal_lattice_vectors, 
-        (kspacing_min, kspacing_max), 
-        step
+        reciprocal_lattice_vectors,
+        (kspacing_min, kspacing_max),
+        step,
     )
     encut_min, encut_max, step = args.encut
     encut_values = np.arange(encut_min, encut_max + step, step)
-    
-    # Calculate targets
+
     encut_targets = calculate_encut_targets(
         args.directory, encut_values, args.base_kspacing, base_incar_dict
     )
     kspacing_targets = calculate_kspacing_targets(
         args.directory, kspacing_values, args.base_encut, base_incar_dict
     )
-    
-    # Execute or dry-run
+
     if args.dry_run:
         print_dry_run_summary(args.directory, encut_targets, kspacing_targets, potcar, args.job_script)
     else:

@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+"""Generate a weighted (fat) band structure from a VASP PROCAR."""
 
 import sys
 if sys.platform != "win32":
@@ -9,21 +10,18 @@ from vasppy import procar
 from vasppy.outcar import reciprocal_lattice_from_outcar
 import argparse
 
-# def x_axis( cartesian_k_points ):
-#    if cartesian_k_points is not None:
-#        x_axis = [ 0.0 ]
-#        for i in range( 1, len(cartesian_k_points) ):
-#            d = cartesian_k_points[i - 1] - cartesian_k_points[i]
-#            d = np.sqrt( np.dot( d, d) )
-#            x_axis.append( d + x_axis[-1] )
-#        x_axis = np.array( x_axis )
-#    else:
-#        x_axis = np.arange( len( cartesian_k_points ) )
-#    return x_axis
 
+def orbitals_with_l(l: str) -> list[int] | None:
+    """Return orbital indices for a given angular momentum label.
 
-def orbitals_with_l(l):
-    to_return = {
+    Args:
+        l: Angular momentum label; one of ``'s'``, ``'p'``, ``'d'``,
+           ``'f'``, or ``'all'``.
+
+    Returns:
+        List of orbital indices, or ``None`` for ``'all'``.
+    """
+    to_return: dict[str, list[int] | None] = {
         "s": [0],
         "p": [1, 2, 3],
         "d": [4, 5, 6, 7, 8],
@@ -33,8 +31,11 @@ def orbitals_with_l(l):
     return to_return[l]
 
 
-def main():
-    parser = argparse.ArgumentParser()
+def main() -> None:
+    """Entry point for the fat_bands command-line script."""
+    parser = argparse.ArgumentParser(
+        description="Generate a weighted (fat) band structure from a VASP PROCAR"
+    )
     parser.add_argument(
         "-i",
         "--ions",
@@ -95,15 +96,9 @@ def main():
     if args.l_angular_momentum:
         args.orbitals = orbitals_with_l(args.l_angular_momentum)
 
-    if args.xscaling:
-        reciprocal_lattice = reciprocal_lattice_from_outcar(
-            "OUTCAR"
-        )  # Move reading the reciprocal lattice to procar.py
-    else:
-        reciprocal_lattice = None
+    reciprocal_lattice = reciprocal_lattice_from_outcar("OUTCAR") if args.xscaling else None
 
-    pcar = procar.Procar()
-    pcar.read_from_file(args.procar)
+    pcar = procar.Procar.from_file(args.procar)
     pcar.print_weighted_band_structure(
         spins=args.spins,
         ions=args.ions,

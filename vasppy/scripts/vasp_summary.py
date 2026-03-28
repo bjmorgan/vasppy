@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+"""Collect information about VASP calculations into YAML format for further processing.
+
+Expects a series of directories (listed in ``result_dirs``) that each contain:
+    vasprun.xml
+    vaspmeta.yaml (additional metadata providing information about each calculation)
+"""
 
 import sys
 if sys.platform != "win32":
@@ -12,15 +18,13 @@ import argparse
 from vasppy.summary import Summary, find_vasp_calculations
 from vasppy.vaspmeta import VASPMeta
 
-"""Script for collecting information about VASP calculations into YAML format, for further processing.
 
-Expects a series of directories (listed in `result_dirs`) that each contain:
-    vasprun.xml
-    vaspmeta.yaml (additional metadata providing information about each calculation)
-"""
+def get_args() -> argparse.Namespace:
+    """Parse command-line arguments.
 
-
-def get_args():
+    Returns:
+        Parsed argument namespace.
+    """
     parser = argparse.ArgumentParser(description="Summarise a VASP calculation.")
     parser.add_argument(
         "-r",
@@ -51,11 +55,18 @@ def get_args():
         help="Maximum number of calculations to parse in parallel",
         type=int,
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
-def get_summary(p):
+def get_summary(p: str) -> Summary:
+    """Return a Summary object for the given path.
+
+    Args:
+        p: Path to a VASP calculation directory.
+
+    Returns:
+        Summary object for the calculation.
+    """
     return Summary(p)
 
 
@@ -63,7 +74,8 @@ def get_summary(p):
 # In fact, ideally the key, print method, and description would all be collected in a single object, which suggests writing this as a simple class.
 
 
-def main():
+def main() -> None:
+    """Entry point for the vasp_summary command-line script."""
     supported_flags = Summary.supported_flags
     to_print = [
         "title",
@@ -86,11 +98,8 @@ def main():
     titles = None
     args = get_args()
     if args.list:
-        for (
-            k,
-            v,
-        ) in supported_flags.items():
-            print("{}: {}".format(k.ljust(15), v))
+        for k, v in supported_flags.items():
+            print(f"{k.ljust(15)}: {v}")
         sys.exit()
     if args.file:
         with open(args.file, "r") as stream:
@@ -111,40 +120,33 @@ def main():
         path = ["."]
     if args.check:
         for p in path:
-            vaspmeta = Path("{}/vaspmeta.yaml".format(p))
+            vaspmeta = Path(f"{p}/vaspmeta.yaml")
             if not vaspmeta.is_file():
-                print("{} is missing vaspmeta.yaml".format(p))
-            vasprun = Path("{}/vasprun.xml".format(p))
+                print(f"{p} is missing vaspmeta.yaml")
+            vasprun = Path(f"{p}/vasprun.xml")
             if not vasprun.is_file():
-                print("{} is missing vasprun.xml".format(p))
+                print(f"{p} is missing vasprun.xml")
     else:
         if titles:
             # Only parse directories with matching vasp_meta titles
             matching_path = []
             for p in path:
-                vm = VASPMeta.from_file("{}/vaspmeta.yaml".format(p))
+                vm = VASPMeta.from_file(f"{p}/vaspmeta.yaml")
                 if vm.title in titles:
                     matching_path.append(p)
             path = matching_path
         if args.maxjobs:
-            len(path)
-            with Pool(args.maxjobs) as p:
+            with Pool(args.maxjobs) as pool:
                 if args.progress_bar:
                     summaries = list(
-                        tqdm.tqdm(p.imap(get_summary, path), total=len(path))
+                        tqdm.tqdm(pool.imap(get_summary, path), total=len(path))
                     )
                 else:
-                    summaries = p.map(get_summary, path)
+                    summaries = pool.map(get_summary, path)
         else:
-            if args.progress_bar:
-                path_iterator = tqdm.tqdm(path, unit="vasprun")
-            else:
-                path_iterator = path
+            path_iterator = tqdm.tqdm(path, unit="vasprun") if args.progress_bar else path
             summaries = [get_summary(p) for p in path_iterator]
-        if args.progress_bar:
-            iterable = tqdm.tqdm(summaries, unit="records")
-        else:
-            iterable = summaries
+        iterable = tqdm.tqdm(summaries, unit="records") if args.progress_bar else summaries
         for s in iterable:
             s.output(to_print=to_print)
 

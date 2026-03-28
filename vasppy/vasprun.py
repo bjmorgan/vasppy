@@ -1,6 +1,15 @@
 from lxml import etree  # type: ignore
 from pymatgen.core import Structure  # type: ignore
+from typing import TypedDict, cast
 import numpy as np
+
+
+class StructureData(TypedDict):
+    """TypedDict for structure data returned by parse_structure."""
+
+    lattice: list[list[float]]
+    frac_coords: list[list[float]]
+    selective_dynamics: list[list[bool]] | None
 
 
 def parse_varray(
@@ -26,7 +35,7 @@ def parse_varray(
     return m
 
 
-def parse_structure(structure: etree.Element) -> dict[str, object]:
+def parse_structure(structure: etree.Element) -> StructureData:
     """Parse ``<structure>`` data.
 
     Args:
@@ -44,10 +53,10 @@ def parse_structure(structure: etree.Element) -> dict[str, object]:
     sdyn = structure.find("varray/[@name='selective']")
     if sdyn is not None:
         sdyn = parse_varray(sdyn)
-    structure_dict: dict[str, object] = {
-        "lattice": latt,
-        "frac_coords": pos,
-        "selective_dynamics": sdyn,
+    structure_dict: StructureData = {
+        "lattice": cast(list[list[float]], latt),
+        "frac_coords": cast(list[list[float]], pos),
+        "selective_dynamics": cast(list[list[bool]] | None, sdyn),
     }
     return structure_dict
 

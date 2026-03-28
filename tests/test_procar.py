@@ -333,5 +333,246 @@ class ProcarSupportFunctionsTestCase(unittest.TestCase):
         )
 
 
+class KPointReprTestCase(unittest.TestCase):
+    """Tests for KPoint.__repr__."""
+
+    def test_repr_contains_index(self):
+        kp = procar.KPoint(index=3, frac_coords=np.array([0.1, 0.2, 0.3]), weight=0.5)
+        self.assertIn("3", repr(kp))
+
+    def test_repr_contains_weight(self):
+        kp = procar.KPoint(index=1, frac_coords=np.array([0.0, 0.0, 0.0]), weight=0.25)
+        self.assertIn("0.25", repr(kp))
+
+
+class TwoPointEffectiveMassRaisesTestCase(unittest.TestCase):
+    """Tests that two_point_effective_mass raises for bad inputs."""
+
+    def test_raises_valueerror_for_wrong_kpoint_count(self):
+        k_points = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]])
+        eigenvalues = np.array([0.0, 1.0, 4.0])
+        with self.assertRaises(ValueError):
+            procar.two_point_effective_mass(k_points, eigenvalues)
+
+    def test_raises_valueerror_for_wrong_eigenvalue_count(self):
+        k_points = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+        eigenvalues = np.array([0.0, 1.0, 2.0])
+        with self.assertRaises(ValueError):
+            procar.two_point_effective_mass(k_points, eigenvalues)
+
+
+class ProcarInitTestCase(unittest.TestCase):
+    """Tests for Procar.__init__."""
+
+    def test_invalid_negative_occupancies_raises(self):
+        with self.assertRaises(ValueError):
+            procar.Procar(negative_occupancies="ignore")
+
+    def test_valid_negative_occupancies_warn(self):
+        pcar = procar.Procar(negative_occupancies="warn")
+        self.assertEqual(pcar.negative_occupancies, "warn")
+
+    def test_valid_negative_occupancies_zero(self):
+        pcar = procar.Procar(negative_occupancies="zero")
+        self.assertEqual(pcar.negative_occupancies, "zero")
+
+    def test_default_spin(self):
+        pcar = procar.Procar()
+        self.assertEqual(pcar._spin_channels, 1)
+
+    def test_custom_spin(self):
+        pcar = procar.Procar(spin=2)
+        self.assertEqual(pcar._spin_channels, 2)
+
+
+class ProcarSanityCheckTestCase(unittest.TestCase):
+    """Tests for Procar.sanity_check."""
+
+    def _load_procar(self):
+        pcar = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            pcar._read_from_file(test_procar_filename)
+        return pcar
+
+    def test_sanity_check_passes_for_valid_data(self):
+        pcar = self._load_procar()
+        # Should not raise
+        pcar.sanity_check()
+
+    def test_sanity_check_raises_for_kpoint_mismatch(self):
+        pcar = self._load_procar()
+        pcar._number_of_k_points = 999
+        with self.assertRaises(ValueError):
+            pcar.sanity_check()
+
+    def test_sanity_check_raises_for_band_mismatch(self):
+        pcar = self._load_procar()
+        pcar._number_of_bands = 999
+        with self.assertRaises(ValueError):
+            pcar.sanity_check()
+
+
+class ProcarPropertyMismatchTestCase(unittest.TestCase):
+    """Tests that Procar properties raise ValueError on metadata mismatch."""
+
+    def _load_procar(self):
+        pcar = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            pcar._read_from_file(test_procar_filename)
+        return pcar
+
+    def test_number_of_k_points_raises_on_mismatch(self):
+        pcar = self._load_procar()
+        pcar._number_of_k_points = 999
+        with self.assertRaises(ValueError):
+            _ = pcar.number_of_k_points
+
+    def test_number_of_bands_raises_on_mismatch(self):
+        pcar = self._load_procar()
+        pcar._number_of_bands = 999
+        with self.assertRaises(ValueError):
+            _ = pcar.number_of_bands
+
+    def test_spin_channels_raises_on_mismatch(self):
+        pcar = self._load_procar()
+        pcar._spin_channels = 999
+        with self.assertRaises(ValueError):
+            _ = pcar.spin_channels
+
+    def test_number_of_ions_raises_on_mismatch(self):
+        pcar = self._load_procar()
+        pcar._number_of_ions = 999
+        with self.assertRaises(ValueError):
+            _ = pcar.number_of_ions
+
+    def test_number_of_projections_raises_on_mismatch(self):
+        pcar = self._load_procar()
+        pcar._number_of_projections = 999
+        with self.assertRaises(ValueError):
+            _ = pcar.number_of_projections
+
+
+class ProcarAddRaisesTestCase(unittest.TestCase):
+    """Tests that __add__ raises ValueError for incompatible Procars."""
+
+    def _load_procar(self, filename):
+        pcar = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            pcar._read_from_file(filename)
+        return pcar
+
+    def test_add_raises_for_mismatched_spin_channels(self):
+        pcar1 = self._load_procar(test_procar_filename)
+        pcar2 = self._load_procar(test_procar_spin_polarised_filename)
+        with self.assertRaises(ValueError):
+            _ = pcar1 + pcar2
+
+    def test_add_raises_for_mismatched_ions(self):
+        pcar1 = self._load_procar(test_procar_filename)
+        pcar2 = deepcopy(pcar1)
+        pcar2._number_of_ions = 999
+        with self.assertRaises(ValueError):
+            _ = pcar1 + pcar2
+
+    def test_add_raises_for_mismatched_bands(self):
+        pcar1 = self._load_procar(test_procar_filename)
+        pcar2 = deepcopy(pcar1)
+        pcar2._number_of_bands = 999
+        pcar2._data = pcar2._data[:, :2, :, :, :]
+        with self.assertRaises(ValueError):
+            _ = pcar1 + pcar2
+
+
+class ProcarXAxisTestCase(unittest.TestCase):
+    """Tests for Procar.x_axis."""
+
+    def _load_procar(self):
+        pcar = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            pcar._read_from_file(test_procar_filename)
+        return pcar
+
+    def test_x_axis_without_reciprocal_lattice(self):
+        pcar = self._load_procar()
+        x = pcar.x_axis()
+        self.assertEqual(len(x), pcar.number_of_k_points)
+        np.testing.assert_array_equal(x, np.arange(pcar.number_of_k_points))
+
+    def test_x_axis_with_reciprocal_lattice(self):
+        pcar = self._load_procar()
+        recip_lattice = np.eye(3) * 2 * np.pi
+        x = pcar.x_axis(recip_lattice)
+        self.assertEqual(len(x), pcar.number_of_k_points)
+        self.assertEqual(x[0], 0.0)
+
+    def test_x_axis_is_monotonically_increasing(self):
+        pcar = self._load_procar()
+        recip_lattice = np.eye(3) * 2 * np.pi
+        x = pcar.x_axis(recip_lattice)
+        self.assertTrue(np.all(np.diff(x) >= 0))
+
+
+class ProcarDeprecatedApiTestCase(unittest.TestCase):
+    """Tests for deprecated read_from_file public API."""
+
+    def test_read_from_file_issues_warning(self):
+        pcar = procar.Procar()
+        with self.assertWarns(UserWarning):
+            pcar.read_from_file(test_procar_filename)
+
+
+class ProcarSelectKPointsTestCase(unittest.TestCase):
+    """Tests for Procar.select_k_points."""
+
+    def _load_procar(self):
+        pcar = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            pcar._read_from_file(test_procar_filename)
+        return pcar
+
+    def test_select_k_points_reduces_count(self):
+        pcar = self._load_procar()
+        new_pcar = pcar.select_k_points([0])
+        self.assertEqual(new_pcar.number_of_k_points, 1)
+
+    def test_select_k_points_renumbers_indices(self):
+        pcar = self._load_procar()
+        new_pcar = pcar.select_k_points([0, 1])
+        self.assertEqual([kp.index for kp in new_pcar._k_points], [1, 2])
+
+
+class ProcarWeightedBandStructureTestCase(unittest.TestCase):
+    """Tests for Procar.weighted_band_structure."""
+
+    def _load_procar(self):
+        pcar = procar.Procar()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            pcar._read_from_file(test_procar_filename)
+        return pcar
+
+    def test_weighted_band_structure_shape(self):
+        pcar = self._load_procar()
+        bs = pcar.weighted_band_structure()
+        self.assertEqual(bs.shape[0], pcar.number_of_bands)
+        self.assertEqual(bs.shape[1], pcar.number_of_k_points)
+        self.assertEqual(bs.shape[2], 3)
+
+    def test_weighted_band_structure_with_e_fermi(self):
+        pcar = self._load_procar()
+        bs_no_efermi = pcar.weighted_band_structure(e_fermi=0.0)
+        bs_with_efermi = pcar.weighted_band_structure(e_fermi=5.0)
+        # Energies should be shifted
+        np.testing.assert_array_almost_equal(
+            bs_no_efermi[:, :, 1] - 5.0,
+            bs_with_efermi[:, :, 1],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

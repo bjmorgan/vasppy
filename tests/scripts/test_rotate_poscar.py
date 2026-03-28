@@ -1,6 +1,5 @@
 """Characterisation tests for the rotate_poscar script."""
 
-import math
 import os
 import unittest
 from unittest.mock import patch

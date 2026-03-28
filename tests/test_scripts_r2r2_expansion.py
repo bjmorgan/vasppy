@@ -1,7 +1,6 @@
 """Characterisation tests for r2r2_expansion script."""
 
 import numpy as np
-import pytest
 from numpy.testing import assert_allclose
 from pymatgen.core import Lattice, Structure
 

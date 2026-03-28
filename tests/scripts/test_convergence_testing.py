@@ -1,6 +1,6 @@
 """Unit tests for convergence_testing script."""
 import unittest
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock
 import numpy as np
 from io import StringIO
 from pathlib import Path

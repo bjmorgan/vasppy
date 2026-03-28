@@ -2,8 +2,6 @@ import unittest
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from unittest.mock import patch, MagicMock
-from io import StringIO
 
 from vasppy.doscar import Doscar, pdos_column_names
 
@@ -141,7 +139,8 @@ class TestDoscarInit(unittest.TestCase):
         self.assertAlmostEqual(doscar.efermi, 5.0)
 
     def test_spin_orbit_coupling_raises(self):
-        import tempfile, os
+        import tempfile
+        import os
         content = _make_doscar_string()
         tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".DOSCAR", delete=False)
         tmp.write(content)
@@ -227,7 +226,8 @@ class TestBareExceptRemoved(unittest.TestCase):
         """The bare except clause was a no-op (catch and re-raise).
         After removal, errors from read_projected_dos should still
         propagate naturally."""
-        import tempfile, os
+        import tempfile
+        import os
         # Create a DOSCAR with header claiming 2 atoms but no pDOS data
         content = _make_doscar_string(n_atoms=2, include_pdos=False)
         tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".DOSCAR", delete=False)
@@ -437,7 +437,8 @@ class TestPdosSelectFOrbitals(unittest.TestCase):
         return "".join(header_lines + tdos_lines + pdos_blocks)
 
     def _create_f_doscar(self) -> Doscar:
-        import os, tempfile
+        import os
+        import tempfile
         content = self._make_f_doscar_string()
         tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".DOSCAR", delete=False)
         tmp.write(content)
@@ -483,7 +484,6 @@ class TestPdosSum(unittest.TestCase):
 class TestPlotPdos(unittest.TestCase):
 
     def setUp(self):
-        import os
         path = _write_doscar_file(n_atoms=2)
         self.doscar = Doscar(path, species=["Fe", "O"])
         self._path = path

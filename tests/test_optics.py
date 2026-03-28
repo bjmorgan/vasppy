@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from unittest.mock import patch, call, MagicMock
+from unittest.mock import patch, call
 
 from vasppy.optics import (
     matrix_eigvals,

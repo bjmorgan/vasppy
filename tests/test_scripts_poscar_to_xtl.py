@@ -1,9 +1,6 @@
 """Integration tests for the poscar_to_xtl script."""
 
-import pytest
-from io import StringIO
 from pathlib import Path
-from unittest.mock import patch
 
 from vasppy.scripts.poscar_to_xtl import poscar_to_xtl_output
 

@@ -1,8 +1,6 @@
 """Integration tests for the check_species script."""
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 from vasppy.scripts.check_species import unique_species_from_structure
 

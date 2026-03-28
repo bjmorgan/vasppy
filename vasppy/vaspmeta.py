@@ -13,7 +13,7 @@ class VASPMeta:
         status: str,
         notes: str | None = None,
         type: str | None = None,
-        track: list[str] | None = None,
+        track: dict[str, str | None] | None = None,
     ) -> None:
         """Initialise a VASPMeta object.
 
@@ -26,9 +26,8 @@ class VASPMeta:
             type: Optional calculation type descriptor. Must be one of
                 ``'single-point'`` or ``'neb'`` if provided.
                 Defaults to None.
-            track: Optional list of filenames whose md5 checksums are
-                computed when summarising the calculation output.
-                Defaults to None.
+            track: Optional mapping of tracked filenames to optional renamed
+                output filenames. Defaults to None.
 
         Raises:
             ValueError: If *status* is not one of the expected values.
@@ -73,8 +72,6 @@ class VASPMeta:
             track = data.get("track")
             xargs: dict = {}
             if track:
-                if isinstance(track, str):
-                    track = [track]
                 xargs["track"] = track
             vaspmeta = VASPMeta(
                 data["title"],

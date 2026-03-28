@@ -196,6 +196,7 @@ class Summary:
                 set of registered print methods (internal consistency check).
         """
         self.directory = directory
+        self.vasprun: Vasprun | None = None
         with cd(directory):
             try:
                 self.meta = VASPMeta.from_file("vaspmeta.yaml")
@@ -263,7 +264,12 @@ class Summary:
 
         Returns:
             Dictionary mapping element symbol strings to float amounts.
+
+        Raises:
+            RuntimeError: If ``vasprun.xml`` could not be parsed.
         """
+        if self.vasprun is None:
+            raise RuntimeError("vasprun.xml could not be parsed")
         return self.vasprun.final_structure.composition.get_el_amt_dict()
 
     @property
@@ -272,7 +278,12 @@ class Summary:
 
         Returns:
             String describing the DFT functional used.
+
+        Raises:
+            RuntimeError: If ``vasprun.xml`` could not be parsed.
         """
+        if self.vasprun is None:
+            raise RuntimeError("vasprun.xml could not be parsed")
         return self.vasprun.run_type
 
     def potcars_are_pbe(self) -> bool:
@@ -280,7 +291,12 @@ class Summary:
 
         Returns:
             True if all POTCAR symbols contain ``'PBE'``, otherwise False.
+
+        Raises:
+            RuntimeError: If ``vasprun.xml`` could not be parsed.
         """
+        if self.vasprun is None:
+            raise RuntimeError("vasprun.xml could not be parsed")
         return all("PBE" in s for s in self.vasprun.potcar_symbols)
 
     def output(self, to_print: list[str]) -> None:
@@ -326,7 +342,7 @@ class Summary:
 
     def print_lreal(self) -> None:
         """Print the LREAL INCAR parameter."""
-        print(f"lreal: {self.vasprun.parameters['LREAL']}")
+        print(f"lreal: {self.vasprun.parameters['LREAL']}")  # type: ignore[union-attr]
 
     def print_stoichiometry(self) -> None:
         """Print the elemental stoichiometry."""
@@ -337,7 +353,7 @@ class Summary:
     def print_potcar(self) -> None:
         """Print the POTCAR species and symbols."""
         print("potcar:")
-        for e, p in zip(self.stoich, self.vasprun.potcar_symbols):
+        for e, p in zip(self.stoich, self.vasprun.potcar_symbols):  # type: ignore[union-attr]
             print(f"    - {e}: {p}")
 
     def print_energy(self) -> None:
@@ -351,7 +367,7 @@ class Summary:
             ValueError: If ``meta.type`` is set to an unsupported value.
         """
         if not self.meta.type:
-            print(f"energy: {self.vasprun.final_energy}")
+            print(f"energy: {self.vasprun.final_energy}")  # type: ignore[union-attr]
         elif self.meta.type == "neb":
             self.print_neb_energy()
         else:
@@ -385,8 +401,8 @@ class Summary:
     def print_kpoints(self) -> None:
         """Print the k-point scheme and grid."""
         print("k-points:")
-        print(f"    scheme: {self.vasprun.kpoints.style}")
-        print(f"    grid: {' '.join(str(k) for k in self.vasprun.kpoints.kpts[0])}")
+        print(f"    scheme: {self.vasprun.kpoints.style}")  # type: ignore[union-attr]
+        print(f"    grid: {' '.join(str(k) for k in self.vasprun.kpoints.kpts[0])}")  # type: ignore[union-attr]
 
     def print_functional(self) -> None:
         """Print the DFT functional."""
@@ -394,22 +410,22 @@ class Summary:
 
     def print_ibrion(self) -> None:
         """Print the IBRION INCAR parameter."""
-        print(f"ibrion: {self.vasprun.incar['IBRION']}")
+        print(f"ibrion: {self.vasprun.incar['IBRION']}")  # type: ignore[union-attr]
 
     def print_ediffg(self) -> None:
         """Print the EDIFFG INCAR parameter."""
-        print(f"ediffg: {self.vasprun.incar['EDIFFG']}")
+        print(f"ediffg: {self.vasprun.incar['EDIFFG']}")  # type: ignore[union-attr]
 
     def print_encut(self) -> None:
         """Print the ENCUT (or ENMAX) INCAR parameter."""
-        if "ENCUT" in self.vasprun.incar:
-            print(f"encut: {self.vasprun.incar['ENCUT']}")
-        elif "ENMAX" in self.vasprun.incar:
-            print(f"encut: {self.vasprun.incar['ENMAX']}")
+        if "ENCUT" in self.vasprun.incar:  # type: ignore[union-attr]
+            print(f"encut: {self.vasprun.incar['ENCUT']}")  # type: ignore[union-attr]
+        elif "ENMAX" in self.vasprun.incar:  # type: ignore[union-attr]
+            print(f"encut: {self.vasprun.incar['ENMAX']}")  # type: ignore[union-attr]
 
     def print_converged(self) -> None:
         """Print the convergence status."""
-        print(f"converged: {self.vasprun.converged}")
+        print(f"converged: {self.vasprun.converged}")  # type: ignore[union-attr]
 
     def print_vasprun_md5(self) -> None:
         """Print the md5 checksum of the vasprun.xml file."""
@@ -439,11 +455,11 @@ class Summary:
 
     def print_plus_u(self) -> None:
         """Print Dudarev DFT+U parameters if present."""
-        if "LDAUU" in self.vasprun.incar:
+        if "LDAUU" in self.vasprun.incar:  # type: ignore[union-attr]
             lqn = {0: "s", 1: "p", 2: "d", 3: "f"}
-            ldauu = self.vasprun.incar["LDAUU"]
-            ldauj = self.vasprun.incar["LDAUJ"]
-            ldaul = self.vasprun.incar["LDAUL"]
+            ldauu = self.vasprun.incar["LDAUU"]  # type: ignore[union-attr]
+            ldauj = self.vasprun.incar["LDAUJ"]  # type: ignore[union-attr]
+            ldaul = self.vasprun.incar["LDAUL"]  # type: ignore[union-attr]
             if any(v != 0 for v in ldauu):
                 print("ldau:")
                 for e, u, j, l in zip(self.stoich, ldauu, ldauj, ldaul):
@@ -452,12 +468,12 @@ class Summary:
 
     def print_cbm(self) -> None:
         """Print the conduction band minimum from the vasprun."""
-        print(f"cbm: {self.vasprun.eigenvalue_band_properties[1]}")
+        print(f"cbm: {self.vasprun.eigenvalue_band_properties[1]}")  # type: ignore[union-attr]
 
     def print_vbm(self) -> None:
         """Print the valence band maximum from the vasprun."""
-        print(f"vbm: {self.vasprun.eigenvalue_band_properties[2]}")
+        print(f"vbm: {self.vasprun.eigenvalue_band_properties[2]}")  # type: ignore[union-attr]
 
     def print_nelect(self) -> None:
         """Print the NELECT INCAR parameter."""
-        print(f"nelect: {self.vasprun.parameters['NELECT']}")
+        print(f"nelect: {self.vasprun.parameters['NELECT']}")  # type: ignore[union-attr]

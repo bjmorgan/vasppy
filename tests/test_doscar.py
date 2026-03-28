@@ -213,33 +213,10 @@ class TestNoPdosData(unittest.TestCase):
         doscar = _create_doscar(include_pdos=False, read_pdos=False)
         self.assertIsNone(doscar.pdos)
 
-    def test_doscar_without_pdos_read_pdos_true(self):
-        """Issue #14: When read_pdos=True but no pDOS data exists in the
-        file, the class should handle this gracefully rather than raising."""
-        doscar = _create_doscar(include_pdos=False, read_pdos=True)
-        self.assertIsNone(doscar.pdos)
-
-
-class TestBareExceptRemoved(unittest.TestCase):
-
-    def test_read_projected_dos_error_propagates(self):
-        """The bare except clause was a no-op (catch and re-raise).
-        After removal, errors from read_projected_dos should still
-        propagate naturally."""
-        import tempfile
-        import os
-        # Create a DOSCAR with header claiming 2 atoms but no pDOS data
-        content = _make_doscar_string(n_atoms=2, include_pdos=False)
-        tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".DOSCAR", delete=False)
-        tmp.write(content)
-        tmp.close()
-        try:
-            # With read_pdos=True and no pDOS data, this should handle
-            # the error gracefully (issue #14 fix)
-            doscar = Doscar(tmp.name, read_pdos=True)
-            self.assertIsNone(doscar.pdos)
-        finally:
-            os.unlink(tmp.name)
+    def test_doscar_without_pdos_read_pdos_true_raises(self):
+        """Requesting pDOS when none exists should raise."""
+        with self.assertRaises(ValueError):
+            _create_doscar(include_pdos=False, read_pdos=True)
 
 
 class TestPdosSelect(unittest.TestCase):

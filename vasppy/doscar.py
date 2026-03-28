@@ -108,10 +108,7 @@ class Doscar:
         self.read_header()
         self.read_total_dos()
         if read_pdos:
-            try:
-                self.read_projected_dos()
-            except (pd.errors.ParserError, pd.errors.EmptyDataError, ValueError):
-                self.pdos = None
+            self.read_projected_dos()
 
     @property
     def number_of_channels(self) -> int:
@@ -201,6 +198,8 @@ class Doscar:
         ``[atom_no, energy_value, lm-projection, spin]``.
         """
         pdos_list = [self.read_atomic_dos_as_df(i + 1) for i in range(self.number_of_atoms)]
+        if all(df.empty for df in pdos_list):
+            raise ValueError("No projected DOS data found in file")
         self.pdos = np.vstack([np.array(df) for df in pdos_list]).reshape(
             self.number_of_atoms,
             self.number_of_data_points,

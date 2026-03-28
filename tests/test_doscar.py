@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from unittest.mock import patch, MagicMock
 from io import StringIO
 
@@ -325,6 +326,239 @@ class TestDeprecatedPandasApi(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("error", FutureWarning)
             _create_doscar(n_atoms=1, n_points=3)
+
+
+class TestDoscarWithSpecies(unittest.TestCase):
+    """Tests for Doscar initialised with a species list."""
+
+    def test_species_is_stored(self):
+        import os
+        path = _write_doscar_file(n_atoms=2)
+        try:
+            doscar = Doscar(path, species=["Fe", "O"])
+            self.assertEqual(doscar.species, ["Fe", "O"])
+        finally:
+            os.unlink(path)
+
+    def test_ispin1_stored(self):
+        doscar = _create_doscar(ispin=1, read_pdos=False)
+        self.assertEqual(doscar.ispin, 1)
+
+    def test_lmax_stored(self):
+        doscar = _create_doscar(lmax=2, read_pdos=False)
+        self.assertEqual(doscar.lmax, 2)
+
+    def test_lorbit_stored(self):
+        doscar = _create_doscar(lorbit=11, read_pdos=False)
+        self.assertEqual(doscar.lorbit, 11)
+
+
+class TestNumberOfChannels(unittest.TestCase):
+
+    def test_lmax2_lorbit11(self):
+        doscar = _create_doscar(lmax=2, read_pdos=False)
+        self.assertEqual(doscar.number_of_channels, 9)
+
+    def test_lmax3_lorbit11(self):
+        import os
+        # Build a minimal f-states DOSCAR: 17 columns per energy point (energy + 16 channels * 2 spins)
+        # Use the same helper but override lmax when creating the Doscar
+        path = _write_doscar_file(n_atoms=1, n_points=3, include_pdos=False)
+        try:
+            doscar = Doscar(path, lmax=3, read_pdos=False)
+            self.assertEqual(doscar.number_of_channels, 16)
+        finally:
+            os.unlink(path)
+
+    def test_unsupported_lorbit_raises(self):
+        doscar = _create_doscar(lorbit=11, read_pdos=False)
+        doscar.lorbit = 10
+        with self.assertRaises(NotImplementedError):
+            _ = doscar.number_of_channels
+
+
+class TestProcessHeader(unittest.TestCase):
+
+    def test_process_header_sets_efermi(self):
+        doscar = _create_doscar(read_pdos=False)
+        self.assertAlmostEqual(doscar.efermi, 5.0)
+
+    def test_process_header_sets_number_of_data_points(self):
+        doscar = _create_doscar(n_points=5, read_pdos=False)
+        self.assertEqual(doscar.number_of_data_points, 5)
+
+
+class TestPdosSelectNoPdos(unittest.TestCase):
+    """Test that pdos_select raises TypeError when pdos is not available."""
+
+    def test_raises_typeerror_when_pdos_is_none(self):
+        doscar = _create_doscar(read_pdos=False)
+        with self.assertRaises(TypeError):
+            doscar.pdos_select()
+
+
+class TestPdosSelectAtomsList(unittest.TestCase):
+    """Test that non-list atoms argument raises TypeError."""
+
+    def test_atom_as_int_raises_typeerror(self):
+        doscar = _create_doscar(n_atoms=2)
+        with self.assertRaises(TypeError):
+            doscar.pdos_select(atoms=1)
+
+
+class TestPdosSelectFOrbitals(unittest.TestCase):
+    """Tests for f-orbital selection — requires lmax=3 pDOS data."""
+
+    def _make_f_doscar_string(self) -> str:
+        """Build a minimal DOSCAR with lmax=3, ispin=2 pDOS data."""
+        n_atoms, n_points, efermi = 1, 3, 0.0
+        header_lines = [
+            f"  {n_atoms}  {n_atoms}  0  0\n",
+            " 0.00000000E+00 0.00000000E+00 0.00000000E+00\n",
+            " 1.00000000\n",
+            "  CAR\n",
+            " unknown system\n",
+            f"   -10.000    10.000   {n_points}  {efermi:.4f}  1.0000\n",
+        ]
+        tdos_lines = []
+        for i in range(n_points):
+            e = -10.0 + i * 10.0
+            tdos_lines.append(f"  {e:.4f}  {float(i+1):.4f}  {float(i+1)*0.5:.4f}  0.0  0.0\n")
+        pdos_blocks = [f"   -10.000    10.000   {n_points}  {efermi:.4f}  1.0000\n"]
+        for i in range(n_points):
+            e = -10.0 + i * 10.0
+            # 16 channels * 2 spins = 32 values
+            vals = [f"{(ch + 1) * 0.01:.4f}" for ch in range(32)]
+            pdos_blocks.append(f"  {e:.4f}  " + "  ".join(vals) + "\n")
+        return "".join(header_lines + tdos_lines + pdos_blocks)
+
+    def _create_f_doscar(self) -> Doscar:
+        import os, tempfile
+        content = self._make_f_doscar_string()
+        tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".DOSCAR", delete=False)
+        tmp.write(content)
+        tmp.close()
+        try:
+            doscar = Doscar(tmp.name, lmax=3, ispin=2, read_pdos=True)
+        finally:
+            os.unlink(tmp.name)
+        return doscar
+
+    def test_f_orbital_all_channels(self):
+        doscar = self._create_f_doscar()
+        result = doscar.pdos_select(l="f")
+        self.assertEqual(result.shape[2], 7)
+
+    def test_f_orbital_specific_m(self):
+        doscar = self._create_f_doscar()
+        result = doscar.pdos_select(l="f", m=["xyz"])
+        self.assertEqual(result.shape[2], 1)
+
+
+class TestPdosSum(unittest.TestCase):
+
+    def setUp(self):
+        self.doscar = _create_doscar(n_atoms=2, n_points=3)
+
+    def test_pdos_sum_returns_1d_array(self):
+        result = self.doscar.pdos_sum()
+        self.assertEqual(result.ndim, 1)
+        self.assertEqual(result.shape[0], 3)
+
+    def test_pdos_sum_spin_up(self):
+        result = self.doscar.pdos_sum(spin="up")
+        self.assertEqual(result.ndim, 1)
+
+    def test_pdos_sum_single_atom(self):
+        result_all = self.doscar.pdos_sum()
+        result_atom0 = self.doscar.pdos_sum(atoms=[0])
+        # Sum over all atoms should be at least as large as one atom
+        self.assertTrue(np.all(result_all >= result_atom0 - 1e-10))
+
+
+class TestPlotPdos(unittest.TestCase):
+
+    def setUp(self):
+        import os
+        path = _write_doscar_file(n_atoms=2)
+        self.doscar = Doscar(path, species=["Fe", "O"])
+        self._path = path
+        self._remove_after = True
+
+    def tearDown(self):
+        import os
+        if self._remove_after:
+            try:
+                os.unlink(self._path)
+            except FileNotFoundError:
+                pass
+
+    def test_plot_pdos_returns_figure(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig = self.doscar.plot_pdos()
+        self.assertIsNotNone(fig)
+        plt.close("all")
+
+    def test_plot_pdos_with_axes_returns_none(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig_ext, ax = plt.subplots()
+        result = self.doscar.plot_pdos(ax=ax)
+        self.assertIsNone(result)
+        plt.close("all")
+
+    def test_plot_pdos_with_xrange(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig = self.doscar.plot_pdos(xrange=(-5.0, 5.0))
+        self.assertIsNotNone(fig)
+        plt.close("all")
+
+    def test_plot_pdos_with_to_plot(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig = self.doscar.plot_pdos(to_plot={"Fe": ["s"], "O": ["s"]})
+        self.assertIsNotNone(fig)
+        plt.close("all")
+
+    def test_plot_pdos_with_scaling(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig = self.doscar.plot_pdos(
+            to_plot={"Fe": ["s"], "O": ["s"]},
+            scaling={"Fe": {"s": 2.0}},
+        )
+        self.assertIsNotNone(fig)
+        plt.close("all")
+
+    def test_plot_pdos_legend_inside(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig = self.doscar.plot_pdos(legend_pos="upper right")
+        self.assertIsNotNone(fig)
+        plt.close("all")
+
+    def test_plot_pdos_no_total_dos(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig = self.doscar.plot_pdos(plot_total_dos=False)
+        self.assertIsNotNone(fig)
+        plt.close("all")
+
+    def test_plot_pdos_with_title(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig = self.doscar.plot_pdos(title="Test Title")
+        self.assertIsNotNone(fig)
+        plt.close("all")
+
+    def test_plot_pdos_with_ymax(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        fig = self.doscar.plot_pdos(ymax=10.0)
+        self.assertIsNotNone(fig)
+        plt.close("all")
 
 
 if __name__ == "__main__":

@@ -1,14 +1,25 @@
+"""Utility functions for file checksums, coordinate transforms, and context helpers."""
+
 import hashlib
 from monty.io import zopen  # type: ignore
 from pathlib import Path
 import os
 from contextlib import contextmanager
-from pymatgen.core import Structure # type: ignore
+from pymatgen.core import Structure  # type: ignore
 import numpy as np
+from typing import Generator
 
 
 @contextmanager
-def cd(path):
+def cd(path: str) -> Generator[None, None, None]:
+    """Context manager that temporarily changes the working directory.
+
+    Args:
+        path: The directory to change into for the duration of the context.
+
+    Yields:
+        None
+    """
     old_dir = os.getcwd()
     os.chdir(path)
     try:
@@ -18,14 +29,13 @@ def cd(path):
 
 
 def md5sum(string: str) -> str:
-    """Generate the md5 checksum for a string
+    """Generate the md5 checksum for a string.
 
     Args:
-        string (str: The string to be checksummed.
+        string: The string to be checksummed.
 
     Returns:
-        str: The hex checksum.
-
+        The hex checksum.
     """
     h = hashlib.new("md5")
     h.update(string.encode("utf-8"))
@@ -33,70 +43,64 @@ def md5sum(string: str) -> str:
 
 
 def file_md5(filename: str) -> str:
-    """Generate the md5 checksum for a file
+    """Generate the md5 checksum for a file.
 
     Args:
-        filename (str): The file to be checksummed.
+        filename: The file to be checksummed.
 
     Returns:
-        (str): The hex checksum
+        The hex checksum.
 
     Notes:
-        If the file is gzipped, the md5 checksum returned is
-        for the uncompressed ASCII file.
-
+        If the file is gzipped, the md5 checksum returned is for the
+        uncompressed ASCII file.
     """
     with zopen(filename, "r") as f:
         file_string = f.read()
-    
+
     if isinstance(file_string, bytes):
         file_string = file_string.decode()
-    
+
     return md5sum(file_string)
 
 
 def match_filename(filename: str) -> str | None:
-    """Checks whether a file exists, either as named, or as a a gzippped file (filename.gz)
+    """Check whether a file exists, either as named or as a gzipped variant.
 
     Args:
-        (str): The root filename.
+        filename: The root filename to look for.
 
     Returns:
-        (str|None): if the file exists (either as the root filename, or gzipped), the return
-            value will be the actual filename. If no matching filename is found the return
-            value is set to NoneStr
-
+        The actual filename (with or without ``.gz`` extension) if found,
+        otherwise None.
     """
-    f = next(
+    return next(
         (
-            "{}{}".format(filename, extension)
+            f"{filename}{extension}"
             for extension in ["", ".gz"]
-            if Path("{}{}".format(filename, extension)).is_file()
+            if Path(f"{filename}{extension}").is_file()
         ),
         None,
     )
-    return f
 
 
-def validate_checksum(filename, md5sum):
-    """
-    Compares the md5 checksum of a file with an expected value.
-    If the calculated and expected checksum values are not equal,
-    ValueError is raised.
-    If the filename `foo` is not found, will try to read a gzipped file named
-    `foo.gz`. In this case, the checksum is calculated for the unzipped file.
+def validate_checksum(filename: str, md5sum: str) -> None:
+    """Compare the md5 checksum of a file with an expected value.
+
+    If the filename *foo* is not found, will try to read a gzipped file named
+    *foo.gz*. In that case the checksum is calculated for the unzipped content.
 
     Args:
-        filename (str): Path for the file to be checksummed.
-        md5sum (str):  The expected hex checksum.
+        filename: Path of the file to be checksummed.
+        md5sum: The expected hex checksum.
 
-    Returns:
-        None
+    Raises:
+        ValueError: If the calculated and expected checksums do not match.
     """
-    filename = match_filename(filename)
-    md5_hash = file_md5(filename=filename)
+    actual_filename = match_filename(filename)
+    md5_hash = file_md5(filename=actual_filename)
     if md5_hash != md5sum:
-        raise ValueError("md5 checksums are inconsistent: {}".format(filename))
+        raise ValueError(f"md5 checksums are inconsistent: {actual_filename}")
 
 
 def dr_ij(
@@ -105,25 +109,19 @@ def dr_ij(
     indices_j: list[int] | None = None,
     self_reference: bool = False,
 ) -> np.ndarray:
-    """
-    Calculate all i-j interatomic distances for a single pymatgen Structure.
+    """Calculate all i-j interatomic distances for a single pymatgen Structure.
 
     Args:
-        structure (:obj:`pymatgen.Structure`): A pymatgen Structure
-        indices_i (:obj:`list(int)`, optional): List of indices for species i.
-            Optional, default is `None`.
-            If `indices_i` is not specified, then distances will be calculated between
-            all pairs of atoms.
-        indices_j (:obj:`list(int)`, optional): List of indices for species j.
-            Optional, default is `None`.
-            If `indices_j` is not specified, then `indices_j` will be set equal
-            to `indices_i`.
-        self_reference (bool, optional): If computing distances for i==j, whether
-            to include the i==j dr=0 terms. Optional, default is `False`.
+        structure: A pymatgen Structure.
+        indices_i: List of indices for species i. If not specified, distances
+            are calculated between all pairs of atoms. Defaults to None.
+        indices_j: List of indices for species j. If not specified,
+            *indices_j* is set equal to *indices_i*. Defaults to None.
+        self_reference: If computing distances for i==j, whether to include
+            the i==j dr=0 terms. Defaults to False.
 
     Returns:
-        np.array: N_i x N_j numpy array of i-j minimum image distances.
-
+        N_i x N_j NumPy array of i-j minimum image distances.
     """
     if indices_i is None:
         indices_i = list(range(len(structure)))
@@ -132,16 +130,16 @@ def dr_ij(
     lattice = structure.lattice
     i_frac_coords = structure.frac_coords[indices_i]
     j_frac_coords = structure.frac_coords[indices_j]
-    dr_ij = lattice.get_all_distances(i_frac_coords, j_frac_coords)
-    # If indices_i and indices_j contain common elements AND self_reference == False
-    # then we want to mask dr_ij to remove the i==j dr=0 terms
+    dr_ij_array = lattice.get_all_distances(i_frac_coords, j_frac_coords)
+    # If indices_i and indices_j share common elements and self_reference is False,
+    # mask out the i==j dr=0 terms.
     if (np.intersect1d(indices_i, indices_j).size > 0) and not self_reference:
-        mask = np.ones_like(dr_ij, dtype=bool)
+        mask = np.ones_like(dr_ij_array, dtype=bool)
         for i_loc, i in enumerate(indices_i):
             for j_loc, j in enumerate(indices_j):
                 if i == j:
                     mask[i_loc, j_loc] = 0
-        to_return = dr_ij[mask].reshape(len(indices_i), -1)
+        to_return = dr_ij_array[mask].reshape(len(indices_i), -1)
     else:
-        to_return = dr_ij
+        to_return = dr_ij_array
     return np.asarray(to_return)

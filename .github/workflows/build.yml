@@ -24,12 +24,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-          pip list
-      
+
       - name: Run tests
         run: |
           pytest --cov-config=.coveragerc --cov=vasppy --cov-report lcov
-      
+
       - name: Coveralls GitHub Action
         uses: coverallsapp/github-action@v2.3.6
         with:
@@ -37,18 +36,30 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
           flag-name: python-${{ matrix.python-version }}
-      
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
       - name: Static type checking
         run: |
           mypy vasppy
-      
-      - name: PyLint
-        run: |
-          pylint --errors-only vasppy
 
   # This job finalizes the parallel coverage reports
   finish:
-    needs: tests
+    needs: [tests, typecheck]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:

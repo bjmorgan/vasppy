@@ -1,6 +1,8 @@
 # Summary class and helper methods
 # Used for summarising VASP calculations as YAML
 
+from collections.abc import Callable
+
 from pymatgen.io.vasp.outputs import Vasprun  # type: ignore
 from pymatgen.analysis.transition_state import NEBAnalysis  # type: ignore
 from vasppy.vaspmeta import VASPMeta
@@ -202,7 +204,7 @@ class Summary:
                     f"vaspmeta.yaml not found in {directory}"
                 ) from exc
             self.parse_vasprun()
-        self.print_methods: dict[str, object] = {
+        self.print_methods: dict[str, Callable[[], None]] = {
             "title": self.print_title,
             "description": self.print_description,
             "notes": self.print_notes,
